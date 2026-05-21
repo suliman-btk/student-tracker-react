@@ -391,27 +391,56 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
 
 function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
   const [dragged, setDragged] = useState(null);
+  const [optimisticStatuses, setOptimisticStatuses] = useState({});
   const mutations = useStudyMutations();
   const tasks = getTasks(sprint);
-  const counts = countByStatus(tasks);
-  const inProgress = counts.find((item) => item.key === "In Progress")?.count || 0;
 
-  const setTaskStatus = (taskId, status) => {
+  // Clear optimistic entries when server data catches up
+  useEffect(() => {
+    if (Object.keys(optimisticStatuses).length === 0) return;
+    setOptimisticStatuses((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      tasks.forEach((task) => {
+        const serverStatus = statusKey(task.pivot_status || task.pivotStatus || task.status);
+        if (task.id in next && next[task.id] === serverStatus) {
+          delete next[task.id];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [tasks]);
+
+  const resolvedStatus = (task) =>
+    task.id in optimisticStatuses
+      ? optimisticStatuses[task.id]
+      : statusKey(task.pivot_status || task.pivotStatus || task.status);
+
+  const tasksWithResolved = tasks.map((t) => ({ ...t, _resolvedStatus: resolvedStatus(t) }));
+  const inProgress = tasksWithResolved.filter((t) => t._resolvedStatus === "In Progress").length;
+
+  const setTaskStatus = (taskId, newStatus, prevStatus) => {
     if (!sprint?.id) return;
-    mutations.updateSprintTaskStatus.mutate({ sprintId: sprint.id, taskId, status, spaceId });
+    setOptimisticStatuses((prev) => ({ ...prev, [taskId]: newStatus }));
+    mutations.updateSprintTaskStatus.mutate(
+      { sprintId: sprint.id, taskId, status: newStatus, spaceId },
+      { onError: () => setOptimisticStatuses((prev) => ({ ...prev, [taskId]: prevStatus })) }
+    );
   };
 
   const moveTask = (status) => {
     if (!dragged) return;
-    setTaskStatus(dragged.id, status);
+    const prev = resolvedStatus(dragged);
+    setTaskStatus(dragged.id, status, prev);
     setDragged(null);
   };
 
   const stepTask = (task, dir) => {
-    const current = statusKey(task.pivot_status || task.pivotStatus || task.status);
+    const current = resolvedStatus(task);
     const index = statusColumns.findIndex((col) => col.key === current);
     const next = statusColumns[index + dir];
-    if (next) setTaskStatus(task.id, next.key);
+    if (next) setTaskStatus(task.id, next.key, current);
   };
 
   if (loadingSprint) return <WorkspaceLoading label="Loading board..." />;
@@ -442,7 +471,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
 
       <div className="grid gap-4 xl:grid-cols-3">
         {statusColumns.map((col) => {
-          const colTasks = tasks.filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) === col.key);
+          const colTasks = tasksWithResolved.filter((task) => task._resolvedStatus === col.key);
           return (
             <section
               key={col.key}

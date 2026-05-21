@@ -1,10 +1,17 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext, useNavigate, useRouter, HeadContent, Scripts, useRouterState, } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { startAuthListener, useAuthStore } from "@/store/auth-store";
 import appCss from "../styles.css?url";
+function PageLoader() {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+    );
+}
 function NotFoundComponent() {
     return (<div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -66,7 +73,9 @@ function RootComponent() {
       </QueryClientProvider>);
     }
     return (<QueryClientProvider client={queryClient}>
-      {isAuthPage ? <Outlet /> : <AppShell><Outlet /></AppShell>}
+      {isAuthPage
+        ? <Suspense fallback={null}><Outlet /></Suspense>
+        : <AppShell><Suspense fallback={<PageLoader />}><Outlet /></Suspense></AppShell>}
       <Toaster position="bottom-right" richColors />
     </QueryClientProvider>);
 }

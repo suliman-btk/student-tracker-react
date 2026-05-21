@@ -1,11 +1,6 @@
+﻿import { lazy } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import WorkspacePage from "@/components/pages/WorkspacePage";
-
+const WorkspacePage = lazy(() => import("@/components/pages/WorkspacePage"));
 export const Route = createFileRoute("/spaces/$spaceId/board")({
-  component: BoardRoute,
+  component: function BoardRoute() { const { spaceId } = Route.useParams(); return <WorkspacePage tab="board" spaceId={spaceId} />; },
 });
-
-function BoardRoute() {
-  const { spaceId } = Route.useParams();
-  return <WorkspacePage tab="board" spaceId={spaceId} />;
-}

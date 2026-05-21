@@ -1,3 +1,4 @@
+﻿import { lazy } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { SocialPage } from "@/components/pages/SocialPage";
+const SocialPage = lazy(() => import("@/components/pages/SocialPage").then((m) => ({ default: m.SocialPage })));
 export const Route = createFileRoute("/social")({ component: SocialPage });
