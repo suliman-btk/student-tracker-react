@@ -11,4 +11,18 @@ export default defineConfig({
     tanstackStart: {
         server: { entry: "server" },
     },
+    // Dev-only proxy: forwards /api requests to the Laravel host server-side,
+    // sidestepping the host's broken CORS config (allowed_origins '*' with
+    // supports_credentials true emits no Access-Control-Allow-Origin header).
+    vite: {
+        server: {
+            proxy: {
+                "/api": {
+                    target: "https://student-tracker-server-main-w0iha2.laravel.cloud",
+                    changeOrigin: true,
+                    secure: true,
+                },
+            },
+        },
+    },
 });

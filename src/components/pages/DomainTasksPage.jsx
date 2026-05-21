@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDomain, useDomainTasks } from "@/lib/query-hooks";
+import CreateTaskModal from "@/components/study/CreateTaskModal";
 
 const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
 
@@ -18,6 +20,7 @@ export default function DomainTasksPage({ id }) {
   const { data: tasksPayload = [], isLoading: loadingTasks, error: tasksError } = useDomainTasks(id);
   const tasks = asArray(tasksPayload);
   const title = domainTitle(domain, id);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -38,10 +41,12 @@ export default function DomainTasksPage({ id }) {
             {(domain?.area_type || domain?.area || "General")} domain tasks from the Laravel API.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setModalOpen(true)}>
           <Plus className="h-4 w-4 mr-1.5" /> Add task
         </Button>
       </div>
+
+      <CreateTaskModal open={modalOpen} onOpenChange={setModalOpen} domainId={id} />
 
       {loadingDomain && (
         <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground flex items-center gap-2">

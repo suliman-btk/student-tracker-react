@@ -3,6 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   increment,
   limit,
   onSnapshot,
@@ -40,6 +41,63 @@ export async function setPresence(status, visible = true) {
     },
     { merge: true },
   );
+}
+
+export async function createFirestoreRoom({ name, focusDuration, breakDuration, hostUid, hostName, roomCode, isPrivate = false, allowVoiceDuringFocus = true, allowChatDuringFocus = true }) {
+  const docRef = await addDoc(collection(db, "pomodoro_rooms"), {
+    roomName: name,
+    focusDuration,
+    breakDuration,
+    hostUid,
+    hostName,
+    roomCode,
+    isPrivate,
+    allowVoiceDuringFocus,
+    allowChatDuringFocus,
+    phase: "idle",
+    isRunning: false,
+    isEnded: false,
+    roundsCompleted: 0,
+    memberCount: 0,
+    phaseEndsAt: null,
+    remainingSeconds: 0,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function joinRoomByCode(code) {
+  const q = query(collection(db, "pomodoro_rooms"), where("roomCode", "==", code.toUpperCase().trim()));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return snap.docs[0].id;
+}
+
+export async function updateRoomPhase(roomId, phase, durationMinutes) {
+  const data = { phase, isRunning: phase !== "idle" };
+  if (phase !== "idle" && durationMinutes) {
+    const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+    data.phaseEndsAt = endsAt;
+    data.remainingSeconds = durationMinutes * 60;
+  } else {
+    data.phaseEndsAt = null;
+    data.remainingSeconds = 0;
+  }
+  if (phase === "focus") data.roundsCompleted = increment(0);
+  await updateDoc(doc(db, "pomodoro_rooms", roomId), data);
+}
+
+export async function incrementRound(roomId) {
+  await updateDoc(doc(db, "pomodoro_rooms", roomId), { roundsCompleted: increment(1) });
+}
+
+export async function endRoom(roomId) {
+  await updateDoc(doc(db, "pomodoro_rooms", roomId), { isEnded: true, phase: "idle", isRunning: false, phaseEndsAt: null });
+}
+
+export async function updateMutedState(roomId, isMuted) {
+  const user = currentUserOrThrow();
+  await updateDoc(doc(db, "pomodoro_rooms", roomId, "members", user.uid), { isMuted });
 }
 
 export function watchPublicRooms(callback, onError) {
@@ -116,6 +174,11 @@ export async function uploadRoomFile(roomId, file) {
   });
   await sendRoomMessage(roomId, `[FILE]${file.name}|${fileUrl}|${fileType}`);
   return { id: docRef.id, fileName: file.name, fileUrl, fileType };
+}
+
+export async function updateAgoraUid(roomId, agoraUid) {
+  const user = currentUserOrThrow();
+  await updateDoc(doc(db, "pomodoro_rooms", roomId, "members", user.uid), { agoraUid });
 }
 
 export async function deleteRoomFile(roomId, fileId, fileUrl) {

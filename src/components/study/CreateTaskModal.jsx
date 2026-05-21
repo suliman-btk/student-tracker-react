@@ -1,0 +1,215 @@
+import { useEffect, useState } from "react";
+import { Loader2, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDomains, useStudyMutations } from "@/lib/query-hooks";
+
+const PRIORITIES = ["Lowest", "Low", "Medium", "High", "Critical", "Highest"];
+const DIFFICULTIES = ["Easy", "Medium", "Hard", "Very Hard"];
+const NO_DOMAIN = "__none__";
+const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
+
+function defaultDeadline() {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().slice(0, 10);
+}
+
+function emptyForm(domainId) {
+  return {
+    title: "",
+    domain_id: domainId ? String(domainId) : NO_DOMAIN,
+    deadline: defaultDeadline(),
+    expected_hours: 2,
+    priority: "Medium",
+    difficulty: "Medium",
+    task_type: "Normal",
+    description: "",
+  };
+}
+
+export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId, task }) {
+  const isEdit = Boolean(task?.id);
+  const lockedDomain = Boolean(domainId);
+  const { data: domainsPayload } = useDomains();
+  const domains = asArray(domainsPayload);
+  const { createTask, createDomainTask, updateTask } = useStudyMutations();
+  const mutation = isEdit ? updateTask : domainId ? createDomainTask : createTask;
+  const [form, setForm] = useState(emptyForm(domainId));
+  const [subtasks, setSubtasks] = useState([]);
+  const [subtaskDraft, setSubtaskDraft] = useState("");
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setError(null);
+    setSubtaskDraft("");
+    if (isEdit) {
+      setForm({
+        title: task.title || "",
+        domain_id: task.domain_id ? String(task.domain_id) : NO_DOMAIN,
+        deadline: (task.deadline || task.due_date || defaultDeadline()).slice(0, 10),
+        expected_hours: Number(task.expected_hours ?? 2),
+        priority: task.priority || "Medium",
+        difficulty: task.difficulty || "Medium",
+        task_type: task.task_type || "Normal",
+        description: task.description || "",
+      });
+      setSubtasks((task.subtasks || task.sub_tasks || []).map((s) => ({ title: s.title, status: s.status || "Pending" })));
+    } else {
+      setForm(emptyForm(domainId));
+      setSubtasks([]);
+    }
+  }, [open, isEdit, task, domainId]);
+
+  const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const addSubtask = () => {
+    if (!subtaskDraft.trim()) return;
+    setSubtasks((s) => [...s, { title: subtaskDraft.trim(), status: "Pending" }]);
+    setSubtaskDraft("");
+  };
+
+  const submit = (event) => {
+    event.preventDefault();
+    setError(null);
+    if (!form.title.trim()) {
+      setError("Title is required.");
+      return;
+    }
+    const body = {
+      title: form.title.trim(),
+      deadline: form.deadline,
+      expected_hours: Number(form.expected_hours) || 1,
+      priority: form.priority,
+      difficulty: form.difficulty,
+      task_type: form.task_type,
+      description: form.description || undefined,
+      subtasks: subtasks.length ? subtasks : undefined,
+    };
+    if (form.domain_id !== NO_DOMAIN) body.domain_id = Number(form.domain_id);
+    if (spaceId) body.space_id = spaceId;
+
+    let payload;
+    if (isEdit) payload = { id: task.id, body, spaceId };
+    else if (domainId) payload = { domainId, body };
+    else payload = body;
+
+    mutation.mutate(payload, {
+      onSuccess: () => onOpenChange(false),
+      onError: (err) => setError(err.message),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit task" : "New task"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" value={form.title} onChange={(e) => set("title")(e.target.value)} placeholder="What needs to be done?" />
+          </div>
+
+          {!lockedDomain && (
+            <div className="space-y-1.5">
+              <Label>Domain</Label>
+              <Select value={form.domain_id} onValueChange={set("domain_id")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_DOMAIN}>No domain</SelectItem>
+                  {domains.map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>{d.domain_name || d.name || `Domain ${d.id}`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="deadline">Deadline</Label>
+              <Input id="deadline" type="date" value={form.deadline} onChange={(e) => set("deadline")(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="hours">Expected hours</Label>
+              <Input id="hours" type="number" min="0" step="0.5" value={form.expected_hours} onChange={(e) => set("expected_hours")(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label>Priority</Label>
+              <Select value={form.priority} onValueChange={set("priority")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Difficulty</Label>
+              <Select value={form.difficulty} onValueChange={set("difficulty")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DIFFICULTIES.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={form.task_type} onValueChange={set("task_type")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="Emergency">Emergency</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="task-desc">Description</Label>
+            <Textarea id="task-desc" rows={2} value={form.description} onChange={(e) => set("description")(e.target.value)} placeholder="Optional" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Subtasks</Label>
+            {subtasks.map((s, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-1.5 text-sm">
+                <span className="flex-1">{s.title}</span>
+                <button type="button" onClick={() => setSubtasks((list) => list.filter((_, idx) => idx !== i))}>
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+            ))}
+            <div className="flex items-center gap-2">
+              <Input
+                value={subtaskDraft}
+                onChange={(e) => setSubtaskDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSubtask(); } }}
+                placeholder="Add a subtask"
+              />
+              <Button type="button" variant="outline" size="icon" onClick={addSubtask}><Plus className="h-4 w-4" /></Button>
+            </div>
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              {isEdit ? "Save changes" : "Create task"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

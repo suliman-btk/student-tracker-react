@@ -1,124 +1,736 @@
-import { rooms, feedPosts, friends, platforms, notifications, weeklyXP, heatmap, me, tasks, domains, spaces, calendarEvents } from "@/lib/mock";
+import { feedPosts, friends, platforms, notifications, weeklyXP, heatmap, me, tasks, domains, spaces, calendarEvents } from "@/lib/mock";
 import { Button } from "@/components/ui/button";
 import { Header } from "./SpacesPage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Users, Heart, MessageCircle, UserPlus, Search, BellRing, Check } from "lucide-react";
+import { Plus, Users, Heart, MessageCircle, UserPlus, Search, BellRing, Check, Mic, MicOff, LogOut, Send, Lock, Globe, Hash, Copy, Play, Pause, SkipForward, Square, ChevronRight } from "lucide-react";
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from "recharts";
-import { Link } from "@tanstack/react-router";
-import { usePlatformUsage } from "@/lib/query-hooks";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ArrowLeft, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { useTask, useTaskComments, useStudyMutations, useActiveSprint } from "@/lib/query-hooks";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import CreateTaskModal from "@/components/study/CreateTaskModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { focusApi, studyApi } from "@/lib/api";
+import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, watchRoom, watchRoomMembers, watchRoomMessages, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound } from "@/lib/realtime";
+import { createAgoraRoomClient } from "@/lib/agora";
+import { auth } from "@/lib/firebase";
+
+function generateRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+// ─── RoomsPage ───────────────────────────────────────────────────────────────
 
 export function RoomsPage() {
+  const navigate = useNavigate();
+  const [rooms, setRooms] = useState([]);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeError, setCodeError] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ name: "", focus_duration: 25, break_duration: 5, is_private: false, allowVoiceDuringFocus: true, allowChatDuringFocus: true });
+
+  useEffect(() => watchPublicRooms(setRooms, console.error), []);
+
+  const handleJoinByCode = async () => {
+    const code = codeInput.trim().toUpperCase();
+    if (code.length !== 6) { setCodeError("Code must be 6 characters"); return; }
+    setCodeLoading(true); setCodeError("");
+    try {
+      let firestoreId = null;
+      try {
+        const room = await focusApi.rooms.findByCode(code);
+        firestoreId = room?.firestore_room_id;
+      } catch {}
+      if (!firestoreId) firestoreId = await joinRoomByCode(code);
+      if (!firestoreId) { setCodeError("Room not found"); return; }
+      navigate({ to: "/rooms/$id", params: { id: firestoreId } });
+    } catch { setCodeError("Room not found"); }
+    finally { setCodeLoading(false); }
+  };
+
+  const handleCreate = async () => {
+    if (!form.name.trim()) return;
+    setCreating(true);
+    try {
+      const user = auth.currentUser;
+      const roomCode = generateRoomCode();
+      const firestoreId = await createFirestoreRoom({
+        name: form.name, focusDuration: form.focus_duration, breakDuration: form.break_duration,
+        hostUid: user?.uid, hostName: user?.displayName || user?.email?.split("@")[0] || "Host",
+        roomCode, isPrivate: form.is_private, allowVoiceDuringFocus: form.allowVoiceDuringFocus, allowChatDuringFocus: form.allowChatDuringFocus,
+      });
+      try { await focusApi.rooms.create({ name: form.name, focus_duration: form.focus_duration, break_duration: form.break_duration, firestore_room_id: firestoreId, is_private: form.is_private, allow_voice_during_focus: form.allowVoiceDuringFocus, allow_chat_during_focus: form.allowChatDuringFocus }); } catch {}
+      setShowCreate(false);
+      navigate({ to: "/rooms/$id", params: { id: firestoreId } });
+    } catch (e) { console.error(e); }
+    finally { setCreating(false); }
+  };
+
+  const phaseLabel = (r) => {
+    if (r.phase === "focus") return { label: "FOCUSING", cls: "bg-red-100 text-red-700" };
+    if (r.phase === "breakTime") return { label: "ON BREAK", cls: "bg-emerald-100 text-emerald-700" };
+    return { label: "WAITING", cls: "bg-muted text-muted-foreground" };
+  };
+
   return (
-    <div className="space-y-6">
-      <Header title="Group Study Rooms" subtitle="Co-work with friends in live Pomodoro sessions.">
-        <Button><Plus className="h-4 w-4 mr-1.5" /> New room</Button>
-      </Header>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {rooms.map((r) => (
-          <Link key={r.id} to="/rooms/$id" params={{ id: r.id }} className="rounded-xl border bg-card p-5 hover:shadow-md">
-            <div className="flex items-start justify-between">
-              <h3 className="font-semibold">{r.name}</h3>
-              <span className={`text-xs px-2 py-0.5 rounded-md ${r.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-muted"}`}>{r.status}</span>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <div>
+          <h1 className="text-xl font-bold">Group Study Rooms</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Co-work with friends in live Pomodoro sessions</p>
+        </div>
+        <Button onClick={() => setShowCreate(true)} size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> New room</Button>
+      </div>
+
+      {/* Join by code */}
+      <div className="px-6 py-3 border-b bg-muted/30">
+        <div className="flex gap-2 max-w-sm">
+          <div className="flex-1">
+            <Input
+              value={codeInput}
+              onChange={(e) => { setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6)); setCodeError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && handleJoinByCode()}
+              placeholder="Enter 6-char room code…"
+              className="font-mono tracking-widest h-9 text-sm"
+              maxLength={6}
+            />
+            {codeError && <p className="text-xs text-red-500 mt-1">{codeError}</p>}
+          </div>
+          <Button size="sm" onClick={handleJoinByCode} disabled={codeLoading || codeInput.length !== 6} className="h-9 gap-1">
+            {codeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />} Join
+          </Button>
+        </div>
+      </div>
+
+      {/* Room list — Discord channel style */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+        {rooms.length === 0 && (
+          <div className="text-center py-20 text-muted-foreground text-sm">No public rooms yet. Create one!</div>
+        )}
+        {rooms.map((r) => {
+          const { label, cls } = phaseLabel(r);
+          return (
+            <Link key={r.id} to="/rooms/$id" params={{ id: r.id }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/60 transition-colors group">
+              <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+                {r.isPrivate ? <Lock className="h-4 w-4" /> : <Hash className="h-4 w-4" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm truncate">{r.roomName || r.name}</span>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${cls} shrink-0`}>{label}</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {r.hostName} · {r.focusDuration || 25}m/{r.breakDuration || 5}m
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                <Users className="h-3.5 w-3.5" /> {r.memberCount || 0}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Create dialog */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Create study room</DialogTitle></DialogHeader>
+          <div className="space-y-5 py-2">
+            <div className="space-y-1.5">
+              <Label>Room name</Label>
+              <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Late Night Algo Crunch" />
             </div>
-            <div className="text-xs text-muted-foreground mt-1">{r.focus_duration}m focus · {r.break_duration}m break</div>
-            <div className="mt-4 flex items-center gap-1.5 text-sm"><Users className="h-3.5 w-3.5" /> {r.participants} studying</div>
-          </Link>
-        ))}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Focus: {form.focus_duration}m</Label>
+                <Slider min={5} max={90} step={5} value={[form.focus_duration]} onValueChange={([v]) => setForm((f) => ({ ...f, focus_duration: v }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Break: {form.break_duration}m</Label>
+                <Slider min={1} max={30} step={1} value={[form.break_duration]} onValueChange={([v]) => setForm((f) => ({ ...f, break_duration: v }))} />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Private room</Label>
+                  <p className="text-xs text-muted-foreground">Require approval to join</p>
+                </div>
+                <Switch checked={form.is_private} onCheckedChange={(v) => setForm((f) => ({ ...f, is_private: v }))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Voice during focus</Label>
+                  <p className="text-xs text-muted-foreground">Allow mic use in focus phase</p>
+                </div>
+                <Switch checked={form.allowVoiceDuringFocus} onCheckedChange={(v) => setForm((f) => ({ ...f, allowVoiceDuringFocus: v }))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Chat during focus</Label>
+                  <p className="text-xs text-muted-foreground">Allow messages in focus phase</p>
+                </div>
+                <Switch checked={form.allowChatDuringFocus} onCheckedChange={(v) => setForm((f) => ({ ...f, allowChatDuringFocus: v }))} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <Button onClick={handleCreate} disabled={creating || !form.name.trim()}>
+              {creating && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />} Create & Enter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── RoomDetailPage ──────────────────────────────────────────────────────────
+
+function useCountdown(room) {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    if (!room?.isRunning || !room?.phaseEndsAt) { setSecs(room?.remainingSeconds || 0); return; }
+    const tick = () => {
+      const end = room.phaseEndsAt?.toDate ? room.phaseEndsAt.toDate() : new Date(room.phaseEndsAt);
+      setSecs(Math.max(0, Math.round((end - Date.now()) / 1000)));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [room?.isRunning, room?.phaseEndsAt, room?.remainingSeconds]);
+  const mm = String(Math.floor(secs / 60)).padStart(2, "0");
+  const ss = String(secs % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+
+function TaskSkeleton() {
+  return (
+    <div className="space-y-2 animate-pulse">
+      <div className="flex justify-between">
+        <div className="h-4 bg-muted rounded w-48" />
+        <div className="h-4 bg-muted rounded w-8" />
+      </div>
+      <div className="h-2 bg-muted rounded w-full" />
+    </div>
+  );
+}
+
+function LeaveTaskSheet({ onDone, onSkip }) {
+  const { data: sprint, isLoading } = useActiveSprint();
+  const tasks = sprint?.tasks || [];
+  const [progress, setProgress] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const init = {};
+      tasks.forEach((t) => { init[t.id] = t.progress_percentage ?? 0; });
+      setProgress(init);
+    }
+  }, [isLoading, tasks.length]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await Promise.all(
+        tasks
+          .filter((t) => progress[t.id] !== (t.progress_percentage ?? 0))
+          .map((t) => studyApi.tasks.updateProgress(t.id, progress[t.id]))
+      );
+    } catch {}
+    finally { setSaving(false); onDone(); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-card border rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="p-6 border-b">
+          <h2 className="text-lg font-semibold">How did it go?</h2>
+          <p className="text-sm text-muted-foreground mt-1">Update your sprint task progress before leaving.</p>
+        </div>
+        <div className="p-6 space-y-5 max-h-[26rem] overflow-y-auto">
+          {isLoading && Array.from({ length: 4 }).map((_, i) => <TaskSkeleton key={i} />)}
+          {!isLoading && tasks.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">No tasks in active sprint.</p>
+          )}
+          {!isLoading && tasks.map((t) => (
+            <div key={t.id} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium truncate">{t.title}</span>
+                <span className="text-xs font-semibold text-primary shrink-0 ml-2 tabular-nums">{progress[t.id] ?? 0}%</span>
+              </div>
+              <Slider min={0} max={100} step={5} value={[progress[t.id] ?? 0]}
+                onValueChange={([v]) => setProgress((p) => ({ ...p, [t.id]: v }))} />
+            </div>
+          ))}
+        </div>
+        <div className="p-4 border-t flex gap-3 justify-end">
+          <Button variant="ghost" onClick={onSkip}>Skip</Button>
+          <Button onClick={handleSave} disabled={saving || isLoading} className="bg-primary hover:bg-primary/90">
+            {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />} Update & Leave
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
 
 export function RoomDetailPage({ id }) {
-  const r = rooms.find((x) => x.id === id) || rooms[0];
-  return (
-    <div className="space-y-6">
-      <Header title={r.name} subtitle={`${r.focus_duration}m focus · ${r.break_duration}m break`}>
-        <Button variant="outline">Leave room</Button>
-      </Header>
-      <div className="rounded-2xl border bg-card p-8 text-center">
-        <div className="text-7xl font-bold tabular-nums">23:42</div>
-        <div className="text-sm text-muted-foreground mt-2">Focus round 2 of 4</div>
-      </div>
-      <div className="grid sm:grid-cols-4 gap-3">
-        {friends.concat(friends).slice(0, 4).map((f, i) => (
-          <div key={i} className="rounded-xl border bg-card p-4 text-center">
-            <Avatar className="h-14 w-14 mx-auto"><AvatarImage src={f.avatar} /><AvatarFallback>U</AvatarFallback></Avatar>
-            <div className="mt-2 text-sm font-medium">{f.name}</div>
-            <div className="text-xs text-emerald-600">Focusing</div>
-          </div>
-        ))}
-      </div>
+  const navigate = useNavigate();
+  const currentUser = auth.currentUser;
+
+  const [room, setRoom] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [joined, setJoined] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [volumes, setVolumes] = useState({});
+  const [chatInput, setChatInput] = useState("");
+  const [showLeaveSheet, setShowLeaveSheet] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const agoraRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const autoJoinedRef = useRef(false);
+
+  const timer = useCountdown(room);
+
+  const isHost = room && currentUser && room.hostUid === currentUser.uid;
+  const phase = room?.phase || "idle";
+  const allowVoice = room?.allowVoiceDuringFocus !== false;
+  const allowChat = room?.allowChatDuringFocus !== false;
+  const voiceLocked = !allowVoice && phase === "focus";
+  const chatLocked = !allowChat && phase === "focus";
+
+  useEffect(() => {
+    const u1 = watchRoom(id, setRoom, console.error);
+    const u2 = watchRoomMembers(id, setMembers, console.error);
+    const u3 = watchRoomMessages(id, (msgs) => setMessages([...msgs].reverse()), console.error);
+    return () => { u1(); u2(); u3(); };
+  }, [id]);
+
+  // Auto-join: host auto-joins, others need explicit join
+  useEffect(() => {
+    if (!room || !currentUser || autoJoinedRef.current) return;
+    const alreadyIn = members.some((m) => m.uid === currentUser.uid);
+    if (alreadyIn) { setJoined(true); return; }
+    if (room.hostUid === currentUser.uid) {
+      autoJoinedRef.current = true;
+      joinRoom(id).then(() => initAgora().then(() => setJoined(true))).catch(console.error);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.hostUid, currentUser?.uid]);
+
+  useEffect(() => {
+    if (currentUser && members.some((m) => m.uid === currentUser.uid) && !joined) setJoined(true);
+  }, [members, currentUser, joined]);
+
+  useEffect(() => {
+    if (voiceLocked && agoraRef.current) { agoraRef.current.mute(true); setIsMuted(true); }
+  }, [voiceLocked]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Stop mic immediately on unmount (covers sidebar nav, back button, tab close)
+  useEffect(() => {
+    const stopOnUnload = () => { if (agoraRef.current) agoraRef.current.leave().catch(() => {}); };
+    window.addEventListener("beforeunload", stopOnUnload);
+    return () => {
+      window.removeEventListener("beforeunload", stopOnUnload);
+      if (agoraRef.current) {
+        agoraRef.current.leave().catch(() => {});
+        agoraRef.current = null;
+      }
+      // Also leave Firestore room membership silently
+      leaveRoom(id).catch(() => {});
+    };
+  }, [id]);
+
+  const initAgora = async () => {
+    const client = await createAgoraRoomClient({
+      roomId: id, uid: null,
+      onVolume: (vols) => { const m = {}; vols.forEach(({ uid, volume }) => { m[uid] = volume; }); setVolumes(m); },
+      onUserJoined: () => {}, onUserLeft: () => {},
+    });
+    agoraRef.current = client;
+    try { await updateAgoraUid(id, client.uid); } catch {}
+  };
+
+  const handleJoin = async () => {
+    if (joined || joining) return;
+    setJoining(true);
+    try {
+      await joinRoom(id);
+      await initAgora();
+      setJoined(true);
+    } catch (e) { console.error(e); }
+    finally { setJoining(false); }
+  };
+
+  const doLeave = async () => {
+    if (agoraRef.current) { await agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
+    await leaveRoom(id).catch(() => {});
+    navigate({ to: "/rooms" });
+  };
+
+  const handleLeaveClick = () => {
+    if (phase !== "idle") setShowLeaveSheet(true);
+    else doLeave();
+  };
+
+  const toggleMute = useCallback(async () => {
+    if (!agoraRef.current || voiceLocked) return;
+    const next = !isMuted;
+    agoraRef.current.mute(next);
+    setIsMuted(next);
+    await updateMutedState(id, next).catch(() => {});
+  }, [isMuted, voiceLocked, id]);
+
+  const handleSend = async () => {
+    const text = chatInput.trim();
+    if (!text || chatLocked) return;
+    setChatInput("");
+    await sendRoomMessage(id, text).catch(() => {});
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || chatLocked) return;
+    setUploading(true);
+    try { await uploadRoomFile(id, file); }
+    catch (err) { console.error(err); }
+    finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
+  };
+
+  const copyCode = () => {
+    if (room?.roomCode) { navigator.clipboard.writeText(room.roomCode); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); }
+  };
+
+  const handleStart = async () => { if (!isHost) return; await updateRoomPhase(id, "focus", room.focusDuration || 25); };
+  const handleSkip = async () => {
+    if (!isHost) return;
+    if (phase === "focus") { await incrementRound(id); await updateRoomPhase(id, "breakTime", room.breakDuration || 5); }
+    else await updateRoomPhase(id, "focus", room.focusDuration || 25);
+  };
+  const handleEnd = async () => { if (!isHost) return; await endRoom(id); };
+
+  if (!room) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
     </div>
   );
-}
 
-export function FeedPage() {
-  return (
-    <div className="space-y-6">
-      <Header title="Feed" subtitle="What your study circle is up to.">
-        <Button><Plus className="h-4 w-4 mr-1.5" /> New post</Button>
-      </Header>
-      <div className="max-w-2xl space-y-4">
-        <div className="rounded-xl border bg-card p-4">
-          <textarea placeholder="Share a note, win, or question…" className="w-full bg-transparent text-sm resize-none focus:outline-none" rows={2} />
-          <div className="flex justify-between items-center mt-2">
-            <div className="text-xs text-muted-foreground">Visible to friends</div>
-            <Button size="sm">Post</Button>
+  const phaseColor = phase === "focus" ? "text-red-500" : phase === "breakTime" ? "text-emerald-600" : "text-muted-foreground";
+  const phaseDot = phase === "focus" ? "bg-red-500" : phase === "breakTime" ? "bg-emerald-500" : "bg-muted-foreground";
+  const phaseLabel = phase === "focus" ? "FOCUSING" : phase === "breakTime" ? "ON BREAK" : "WAITING TO START";
+  const roundNum = (room.roundsCompleted || 0) + (phase === "focus" ? 1 : 0);
+
+  // ── LOBBY ─────────────────────────────────────────────────────────────────
+  if (phase === "idle") {
+    return (
+      <div className="flex flex-col h-full">
+        {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
+
+        <div className="flex items-center gap-3 px-6 py-4 border-b">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold truncate">{room.roomName || room.name}</h1>
+              {room.isPrivate && <Lock className="h-4 w-4 text-muted-foreground shrink-0" />}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">{room.focusDuration || 25}m focus · {room.breakDuration || 5}m break · Lobby</p>
+          </div>
+          {room.roomCode && (
+            <button onClick={copyCode} className="flex items-center gap-1.5 font-mono text-sm bg-muted hover:bg-muted/70 px-3 py-1.5 rounded-lg transition-colors">
+              <span className="tracking-widest font-semibold">{room.roomCode}</span>
+              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              {codeCopied && <span className="text-xs text-primary font-normal">Copied!</span>}
+            </button>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleLeaveClick} className="text-muted-foreground hover:text-destructive gap-1.5 shrink-0">
+            <LogOut className="h-4 w-4" /> Leave
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          {/* Room info chips */}
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs bg-muted px-3 py-1 rounded-full text-muted-foreground">
+              <Play className="h-3 w-3" /> {room.focusDuration || 25}m focus
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs bg-muted px-3 py-1 rounded-full text-muted-foreground">
+              {room.breakDuration || 5}m break
+            </span>
+            {room.isPrivate && <span className="inline-flex items-center gap-1.5 text-xs bg-muted px-3 py-1 rounded-full text-muted-foreground"><Lock className="h-3 w-3" /> Private</span>}
+            {!room.allowVoiceDuringFocus && <span className="inline-flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-3 py-1 rounded-full"><MicOff className="h-3 w-3" /> No voice in focus</span>}
+          </div>
+
+          {/* Members */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Members · {members.length}</p>
+            {members.length === 0 && joining && (
+              <div className="flex gap-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="border rounded-xl p-4 w-36 flex flex-col items-center gap-2 animate-pulse">
+                    <div className="h-12 w-12 rounded-full bg-muted" />
+                    <div className="h-3 w-20 rounded bg-muted" />
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {members.map((m) => (
+                <div key={m.uid} className="border rounded-xl bg-card p-4 flex flex-col items-center gap-2 text-center hover:shadow-sm transition-shadow">
+                  <div className="relative">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">{(m.displayName || "?")[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-card" />
+                  </div>
+                  <span className="text-sm font-medium truncate w-full">{m.displayName || "Member"}</span>
+                  {m.uid === room.hostUid
+                    ? <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">HOST</span>
+                    : <span className="text-xs text-muted-foreground">In lobby</span>}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        {feedPosts.map((p) => (
-          <article key={p.id} className="rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-9 w-9"><AvatarImage src={p.author.avatar} /><AvatarFallback>U</AvatarFallback></Avatar>
-              <div>
-                <div className="text-sm font-medium">{p.author.name}</div>
-                <div className="text-xs text-muted-foreground">{p.time} ago{p.subject_tag && ` · #${p.subject_tag}`}</div>
-              </div>
+
+        <div className="px-6 py-4 border-t flex items-center justify-between bg-card">
+          {!joined ? (
+            <Button onClick={handleJoin} disabled={joining} className="gap-2">
+              {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} Join lobby
+            </Button>
+          ) : isHost ? (
+            <Button onClick={handleStart} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Play className="h-4 w-4" /> Start Study Session
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Waiting for host to start…
             </div>
-            <p className="mt-3 text-sm leading-relaxed">{p.content}</p>
-            {p.attachment_type && (
-              <div className="mt-3 rounded-lg border bg-muted/40 p-3 text-sm">📎 Attached {p.attachment_type}</div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── ACTIVE SESSION — 3-panel ──────────────────────────────────────────────
+  return (
+    <div className="flex flex-col h-full">
+      {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
+
+      {/* Top bar — matches app header style */}
+      <div className="flex items-center gap-3 px-5 py-3 border-b bg-card shrink-0">
+        <h1 className="font-semibold text-base">{room.roomName || room.name}</h1>
+        {room.roomCode && (
+          <button onClick={copyCode} title="Copy room code"
+            className="flex items-center gap-1 font-mono text-xs bg-muted hover:bg-muted/70 px-2.5 py-1 rounded-md transition-colors">
+            <span className="tracking-widest">{room.roomCode}</span>
+            <Copy className="h-3 w-3 text-muted-foreground" />
+            {codeCopied && <span className="text-emerald-600 font-sans">✓</span>}
+          </button>
+        )}
+        <div className={`flex items-center gap-1.5 text-xs font-semibold ${phaseColor}`}>
+          <span className={`h-2 w-2 rounded-full ${phaseDot} ${phase === "focus" ? "animate-pulse" : ""}`} />
+          {phaseLabel}
+        </div>
+        <span className="text-xs text-muted-foreground">· Round {roundNum}</span>
+        <div className="ml-auto">
+          <Button variant="destructive" size="sm" onClick={handleLeaveClick} className="gap-1.5 h-8 text-xs">
+            <LogOut className="h-3.5 w-3.5" /> Leave
+          </Button>
+        </div>
+      </div>
+
+      {/* 3-panel body */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Left: Voice panel */}
+        <div className="w-56 shrink-0 border-r flex flex-col bg-background">
+          <div className="px-4 py-2.5 border-b">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Voice · {members.length}</p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-0.5">
+            {members.map((m) => {
+              const vol = volumes[m.agoraUid] || 0;
+              const speaking = vol > 5;
+              return (
+                <div key={m.uid}
+                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${speaking ? "bg-primary/5" : "hover:bg-muted/50"}`}>
+                  {/* Avatar with speaking animation */}
+                  <div className="relative shrink-0">
+                    {speaking && (
+                      <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                    )}
+                    <Avatar className={`h-8 w-8 relative ${speaking ? "ring-2 ring-primary ring-offset-1" : ""}`}>
+                      <AvatarFallback className={`text-xs font-semibold ${speaking ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                        {(m.displayName || "?")[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {m.isMuted && (
+                      <span className="absolute -bottom-0.5 -right-0.5 bg-red-500 rounded-full p-0.5">
+                        <MicOff className="h-2 w-2 text-white" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{m.displayName || "Member"}</p>
+                    <p className={`text-[10px] ${speaking ? "text-primary font-medium" : voiceLocked ? "text-red-500" : "text-muted-foreground"}`}>
+                      {voiceLocked ? "Blocked" : speaking ? "Speaking" : m.isMuted ? "Muted" : "Listening"}
+                    </p>
+                  </div>
+                  {/* Speaking wave bars */}
+                  {speaking && (
+                    <div className="flex items-end gap-px shrink-0" style={{ height: 16 }}>
+                      {[0.4, 1, 0.6, 0.9, 0.5].map((h, i) => (
+                        <span key={i} className="w-0.5 bg-primary rounded-full animate-bounce"
+                          style={{ height: `${h * 14}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Mic control */}
+          <div className="p-3 border-t">
+            <button
+              onClick={toggleMute}
+              disabled={voiceLocked}
+              className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all border
+                ${voiceLocked ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                : isMuted ? "bg-muted hover:bg-muted/70 text-foreground border-border"
+                : "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"}`}>
+              {voiceLocked ? <MicOff className="h-4 w-4" /> : isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {voiceLocked ? "Voice blocked" : isMuted ? "Unmute" : "Mute"}
+            </button>
+          </div>
+        </div>
+
+        {/* Center: Timer */}
+        <div className="flex-1 flex flex-col items-center justify-center p-8 gap-4 bg-background">
+          <div className={`text-[7rem] font-bold tabular-nums tracking-tight leading-none ${phaseColor}`}>
+            {timer}
+          </div>
+          <div className={`flex items-center gap-2 text-sm font-medium ${phaseColor}`}>
+            <span className={`h-2 w-2 rounded-full ${phaseDot} ${phase === "focus" ? "animate-pulse" : ""}`} />
+            {phaseLabel} · Round {roundNum}
+          </div>
+          {isHost && (
+            <div className="flex items-center gap-3 mt-6">
+              <button onClick={handleSkip}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted text-sm font-medium transition-colors">
+                <SkipForward className="h-4 w-4" />
+                {phase === "focus" ? "Start break" : "Start focus"}
+              </button>
+              <button onClick={handleEnd}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm font-medium transition-colors">
+                <Square className="h-4 w-4" /> End session
+              </button>
+            </div>
+          )}
+          {!isHost && (
+            <p className="text-xs text-muted-foreground mt-2">Host controls the session</p>
+          )}
+        </div>
+
+        {/* Right: Chat */}
+        <div className="w-72 shrink-0 border-l flex flex-col bg-card">
+          <div className="px-4 py-2.5 border-b flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-semibold">Chat</span>
+            {chatLocked && (
+              <span className="ml-auto flex items-center gap-1 text-[10px] text-red-500 font-semibold">
+                <Lock className="h-3 w-3" /> LOCKED
+              </span>
             )}
-            <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
-              <button className="inline-flex items-center gap-1 hover:text-foreground"><Heart className="h-4 w-4" /> {p.likes}</button>
-              <button className="inline-flex items-center gap-1 hover:text-foreground"><MessageCircle className="h-4 w-4" /> {p.comments}</button>
-            </div>
-          </article>
-        ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+            {messages.map((msg) => {
+              const isFile = msg.text?.startsWith("[FILE]");
+              const time = msg.sentAt?.toDate
+                ? new Date(msg.sentAt.toDate()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : "";
+              return (
+                <div key={msg.id}>
+                  <div className="flex items-baseline gap-1.5 mb-0.5">
+                    <span className="text-xs font-semibold">{msg.senderName}</span>
+                    <span className="text-[10px] text-muted-foreground">{time}</span>
+                  </div>
+                  {isFile ? (() => {
+                    const [, name, url, type] = msg.text.split("|");
+                    return type === "image"
+                      ? <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={name} className="mt-1 rounded-lg max-w-full max-h-40 object-cover border" /></a>
+                      : <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary underline mt-0.5">📎 {name}</a>;
+                  })() : <p className="text-sm break-words leading-snug">{msg.text}</p>}
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="px-3 py-2.5 border-t">
+            {chatLocked ? (
+              <div className="flex items-center justify-center gap-1.5 py-1.5 text-xs text-muted-foreground">
+                <Lock className="h-3 w-3" /> Chat locked during focus
+              </div>
+            ) : (
+              <div className="flex gap-1.5 items-center">
+                <Input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                  placeholder="Message…"
+                  className="h-8 text-sm flex-1"
+                />
+                <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                  className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                  title="Upload file">
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                </button>
+                <button onClick={handleSend}
+                  className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                  <Send className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-export function DiscoverPage() {
-  const people = [
-    { uid: "u_010", name: "Hassan A.", school: "Cairo Uni · CS", avatar: "https://i.pravatar.cc/64?img=33" },
-    { uid: "u_011", name: "Mira N.", school: "AUC · Math", avatar: "https://i.pravatar.cc/64?img=44" },
-    { uid: "u_012", name: "Tariq R.", school: "GUC · Engineering", avatar: "https://i.pravatar.cc/64?img=51" },
-  ];
-  return (
-    <div className="space-y-6">
-      <Header title="Discover" subtitle="Find study partners and mentors." />
-      <div className="relative max-w-md">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input className="w-full h-10 pl-8 pr-3 rounded-lg border bg-card" placeholder="Search by name or school…" />
-      </div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {people.map((p) => (
-          <div key={p.uid} className="rounded-xl border bg-card p-4 flex items-center gap-3">
-            <Avatar className="h-12 w-12"><AvatarImage src={p.avatar} /><AvatarFallback>U</AvatarFallback></Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium">{p.name}</div>
-              <div className="text-xs text-muted-foreground">{p.school}</div>
-            </div>
-            <Button size="sm" variant="outline"><UserPlus className="h-3.5 w-3.5 mr-1" /> Add</Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function ProfilePage({ uid }) {
   return (
@@ -148,68 +760,6 @@ export function ProfilePage({ uid }) {
   );
 }
 
-export function FriendsPage() {
-  return (
-    <div className="space-y-6">
-      <Header title="Friends" subtitle="Your circle, requests, and who's online." />
-      <div className="grid lg:grid-cols-3 gap-4">
-        {friends.map((f) => (
-          <div key={f.uid} className="rounded-xl border bg-card p-4 flex items-center gap-3">
-            <div className="relative">
-              <Avatar className="h-11 w-11"><AvatarImage src={f.avatar} /><AvatarFallback>U</AvatarFallback></Avatar>
-              {f.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" />}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium">{f.name}</div>
-              <div className="text-xs text-muted-foreground">{f.status}</div>
-            </div>
-            <Button size="sm" variant="ghost">Message</Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function PlatformsPage() {
-  const { data: usage = [], isLoading, error } = usePlatformUsage();
-  const rows = usage.length
-    ? usage.map((item) => ({
-        name: item.platform || item.name,
-        icon: item.icon || "•",
-        daily_minutes: Math.round((item.duration_seconds || item.daily_seconds || 0) / 60) || item.daily_minutes || 0,
-        limit: item.daily_limit_minutes || item.limit || 60,
-      }))
-    : platforms;
-  return (
-    <div className="space-y-6">
-      <Header title="Social Usage Tracker" subtitle="Built-in RAQIP tracker for study-day platform usage." />
-      {isLoading && <p className="text-sm text-muted-foreground">Loading usage from Laravel...</p>}
-      {error && <p className="text-sm text-destructive">{error.message}</p>}
-      <div className="grid sm:grid-cols-2 gap-3 max-w-3xl">
-        {rows.map((p) => {
-          const over = p.daily_minutes > p.limit;
-          return (
-            <div key={p.name} className="rounded-xl border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{p.icon}</span>
-                  <span className="font-medium">{p.name}</span>
-                </div>
-                <span className={`text-xs ${over ? "text-red-600" : "text-muted-foreground"}`}>
-                  {p.daily_minutes}m / {p.limit}m
-                </span>
-              </div>
-              <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-                <div className={`h-full ${over ? "bg-red-500" : "bg-primary"}`} style={{ width: `${Math.min(100, (p.daily_minutes/p.limit)*100)}%` }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export function AnalyticsPage() {
   return (
@@ -371,44 +921,186 @@ export function DomainDetailPage({ id }) {
   );
 }
 
+const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
+
 export function TaskDetailPage({ id }) {
-  const t = tasks.find((x) => x.id === id) || tasks[0];
+  const navigate = useNavigate();
+  const { data: task, isLoading, error } = useTask(id);
+  const { data: commentsPayload = [] } = useTaskComments(id);
+  const comments = asArray(commentsPayload);
+  const m = useStudyMutations();
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [progress, setProgress] = useState(null);
+  const [subtaskDraft, setSubtaskDraft] = useState("");
+  const [commentDraft, setCommentDraft] = useState("");
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading task...
+      </div>
+    );
+  }
+  if (error || !task) {
+    return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error?.message || "Task not found."}</div>;
+  }
+
+  const subtasks = task.subtasks || task.sub_tasks || [];
+  const progressValue = progress ?? task.progress_percentage ?? 0;
+  const domainName = task.domain?.domain_name || task.domain?.domainName || "—";
+
   return (
     <div className="space-y-6">
-      <Header title={t.title} subtitle={`${t.priority} · ${t.difficulty} · ${t.points} pts · due ${t.deadline}`}>
-        <Button variant="outline">Edit</Button>
-        <Button>Mark done</Button>
+      <button
+        onClick={() => (window.history.length > 1 ? window.history.back() : navigate({ to: "/" }))}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      </button>
+      <Header title={task.title} subtitle={`${task.priority || "Medium"} · ${task.difficulty || "Medium"} · ${task.points ?? 0} pts · due ${task.deadline || "—"}`}>
+        <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4 mr-1.5" /> Edit</Button>
+        <Button variant="outline" className="text-destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-4 w-4 mr-1.5" /> Delete</Button>
       </Header>
+
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
+          {task.description && (
+            <div className="rounded-xl border bg-card p-4">
+              <h3 className="font-semibold text-sm mb-2">Description</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{task.description}</p>
+            </div>
+          )}
+
           <div className="rounded-xl border bg-card p-4">
-            <h3 className="font-semibold text-sm mb-2">Progress</h3>
-            <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full bg-primary" style={{ width: `${t.progress_percentage}%` }} /></div>
-            <div className="text-xs text-muted-foreground mt-2">{t.progress_percentage}% complete · {t.expected_hours}h estimate</div>
+            <h3 className="font-semibold text-sm mb-3">Progress — {progressValue}%</h3>
+            <Slider min={0} max={100} step={5} value={[progressValue]} onValueChange={([v]) => setProgress(v)} />
+            <div className="mt-3 flex items-center gap-2">
+              <Button
+                size="sm"
+                disabled={m.updateTaskProgress.isPending || progress === null}
+                onClick={() => m.updateTaskProgress.mutate({ id, progress: progressValue }, { onSuccess: () => setProgress(null) })}
+              >
+                {m.updateTaskProgress.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                Save progress
+              </Button>
+              <span className="text-xs text-muted-foreground">{task.expected_hours || 0}h estimate</span>
+            </div>
           </div>
+
           <div className="rounded-xl border bg-card p-4">
             <h3 className="font-semibold text-sm mb-3">Subtasks</h3>
             <ul className="space-y-2">
-              {["Read 2 papers", "Draft section 2", "Cite sources"].map((s, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked={i===0} /> <span className={i===0?"line-through text-muted-foreground":""}>{s}</span></li>
-              ))}
+              {subtasks.map((s) => {
+                const done = (s.status || "Pending") === "Completed";
+                return (
+                  <li key={s.id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={done}
+                      onChange={() => m.toggleSubtask.mutate({ taskId: id, subtaskId: s.id })}
+                    />
+                    <span className={done ? "flex-1 line-through text-muted-foreground" : "flex-1"}>{s.title}</span>
+                    <button onClick={() => m.removeSubtask.mutate({ taskId: id, subtaskId: s.id })}>
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </li>
+                );
+              })}
+              {subtasks.length === 0 && <li className="text-sm text-muted-foreground">No subtasks yet.</li>}
             </ul>
+            <div className="mt-3 flex items-center gap-2">
+              <Input
+                value={subtaskDraft}
+                onChange={(e) => setSubtaskDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && subtaskDraft.trim()) {
+                    e.preventDefault();
+                    m.addSubtask.mutate({ taskId: id, body: { title: subtaskDraft.trim() } }, { onSuccess: () => setSubtaskDraft("") });
+                  }
+                }}
+                placeholder="Add a subtask"
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                disabled={!subtaskDraft.trim() || m.addSubtask.isPending}
+                onClick={() => m.addSubtask.mutate({ taskId: id, body: { title: subtaskDraft.trim() } }, { onSuccess: () => setSubtaskDraft("") })}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+
           <div className="rounded-xl border bg-card p-4">
             <h3 className="font-semibold text-sm mb-3">Comments</h3>
             <div className="space-y-3">
-              <div className="text-sm"><strong>Sara:</strong> I have a reference for section 2 — sending now.</div>
-              <textarea placeholder="Write a comment…" className="w-full rounded-md border bg-background p-2 text-sm" rows={2} />
+              {comments.map((c) => (
+                <div key={c.id} className="text-sm">
+                  <strong>{c.user?.name || c.user_name || "User"}:</strong> {c.content}
+                </div>
+              ))}
+              {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
+              <Textarea
+                value={commentDraft}
+                onChange={(e) => setCommentDraft(e.target.value)}
+                placeholder="Write a comment…"
+                rows={2}
+              />
+              <Button
+                size="sm"
+                disabled={!commentDraft.trim() || m.addComment.isPending}
+                onClick={() => m.addComment.mutate({ taskId: id, content: commentDraft.trim() }, { onSuccess: () => setCommentDraft("") })}
+              >
+                {m.addComment.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                Comment
+              </Button>
             </div>
           </div>
         </div>
+
         <div className="space-y-3">
-          <Stat label="Status" value={t.status} />
-          <Stat label="Priority" value={t.priority} />
-          <Stat label="Difficulty" value={t.difficulty} />
-          <Stat label="Domain" value={domains.find(d => d.id === t.domain_id)?.domain_name || "—"} />
+          <div className="rounded-xl border bg-card p-4">
+            <div className="text-xs text-muted-foreground mb-1.5">Status</div>
+            <Select
+              value={task.status || "To Do"}
+              onValueChange={(value) => m.updateTaskStatus.mutate({ id, status: value })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="To Do">To Do</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Done">Done</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Stat label="Priority" value={task.priority || "Medium"} />
+          <Stat label="Difficulty" value={task.difficulty || "Medium"} />
+          <Stat label="Domain" value={domainName} />
         </div>
       </div>
+
+      <CreateTaskModal open={editOpen} onOpenChange={setEditOpen} task={task} />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete task?</AlertDialogTitle>
+            <AlertDialogDescription>{task.title} will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                m.deleteTask.mutate({ id }, { onSuccess: () => (window.history.length > 1 ? window.history.back() : navigate({ to: "/" })) });
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

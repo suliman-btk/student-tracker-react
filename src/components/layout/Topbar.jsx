@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "@tanstack/react-router";
 
 export default function Topbar() {
   const { activeSpaceId, setActiveSpace, toggleAI } = useUI();
@@ -86,8 +87,9 @@ export default function Topbar() {
               <div className="text-xs text-muted-foreground font-normal">{email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings">Settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="text-destructive">Sign out</DropdownMenuItem>
           </DropdownMenuContent>

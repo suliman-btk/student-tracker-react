@@ -17,8 +17,12 @@ export async function createAgoraRoomClient({ roomId, uid, useServerToken = true
     }
   }
 
-  client.on("user-joined", (user) => onUserJoined?.(user));
-  client.on("user-left", (user) => onUserLeft?.(user));
+  client.on("user-published", async (user, mediaType) => {
+    await client.subscribe(user, mediaType);
+    if (mediaType === "audio") user.audioTrack?.play();
+    onUserJoined?.(user);
+  });
+  client.on("user-unpublished", (user) => onUserLeft?.(user));
   client.on("volume-indicator", (volumes) => onVolume?.(volumes));
   client.enableAudioVolumeIndicator();
 
@@ -32,8 +36,9 @@ export async function createAgoraRoomClient({ roomId, uid, useServerToken = true
     localAudioTrack,
     mute: (muted) => localAudioTrack.setMuted(muted),
     leave: async () => {
-      localAudioTrack.close();
-      await client.leave();
+      try { localAudioTrack.stop(); } catch {}
+      try { localAudioTrack.close(); } catch {}
+      try { await client.leave(); } catch {}
     },
   };
 }

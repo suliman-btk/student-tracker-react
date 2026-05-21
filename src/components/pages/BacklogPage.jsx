@@ -1,62 +1,100 @@
-import { tasks, aiSuggestions } from "@/lib/mock";
-import { Button } from "@/components/ui/button";
-import { Plus, X, Check, Sparkles } from "lucide-react";
-import { AIBadge } from "@/components/ai/AIBubble";
-import { Header } from "./SpacesPage";
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Loader2, Plus } from "lucide-react";
+import { Header } from "./SpacesPage";
+import { useBacklog, useSprints, useStudyMutations } from "@/lib/query-hooks";
+import CreateTaskModal from "@/components/study/CreateTaskModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
+const isCompleted = (s) => s.is_completed || s.completed || String(s.status || "").toLowerCase() === "completed";
 
 export default function BacklogPage() {
-  const [suggestions, setSuggestions] = useState(aiSuggestions);
-  const backlog = tasks.filter((t) => !t.sprint_id);
+  const { data: backlogPayload = [], isLoading, error } = useBacklog();
+  const { data: sprintsPayload = [] } = useSprints();
+  const backlog = asArray(backlogPayload);
+  const sprints = asArray(sprintsPayload).filter((s) => !isCompleted(s));
+  const { addTasksToSprint } = useStudyMutations();
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
-      <Header title="Backlog" subtitle="Tasks not yet in a sprint. AI suggestions appear inline.">
-        <Button><Plus className="h-4 w-4 mr-1.5" /> Add task</Button>
+      <Header title="Backlog" subtitle="Tasks not yet assigned to a sprint.">
+        <Button onClick={() => setModalOpen(true)}><Plus className="h-4 w-4 mr-1.5" /> Add task</Button>
       </Header>
 
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <AIBadge />
-          <h3 className="text-sm font-semibold">Coach suggestions</h3>
-          <Button variant="ghost" size="sm" className="ml-auto text-[color:var(--ai)]">
-            <Sparkles className="h-3.5 w-3.5 mr-1" /> Generate more
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {suggestions.map((s) => (
-            <div key={s.id} className="rounded-xl border border-dashed border-[color:var(--ai)]/40 bg-[color:var(--ai-soft)]/40 p-3 flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">{s.title}</div>
-                <div className="text-xs text-muted-foreground">{s.reason} · {s.expected_hours}h · {s.points} pts</div>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => setSuggestions(suggestions.filter((x) => x.id !== s.id))}>
-                <Check className="h-3.5 w-3.5 mr-1" /> Accept
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => setSuggestions(suggestions.filter((x) => x.id !== s.id))}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          {suggestions.length === 0 && <p className="text-sm text-muted-foreground">All caught up. Generate fresh suggestions anytime.</p>}
-        </div>
-      </section>
+      <CreateTaskModal open={modalOpen} onOpenChange={setModalOpen} />
 
-      <section className="space-y-2">
-        <h3 className="text-sm font-semibold">Backlog ({backlog.length})</h3>
-        <div className="space-y-2">
-          {backlog.map((t) => (
-            <div key={t.id} className="rounded-xl border bg-card p-3 flex items-center gap-3 hover:shadow-sm">
-              <div className="h-2 w-2 rounded-full bg-primary" />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">{t.title}</div>
-                <div className="text-xs text-muted-foreground">{t.priority} · {t.expected_hours}h · {t.points} pts · due {t.deadline}</div>
-              </div>
-              <Button size="sm" variant="ghost">Move to sprint</Button>
-            </div>
-          ))}
+      {isLoading && (
+        <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading backlog from Laravel...
         </div>
-      </section>
+      )}
+      {error && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error.message}</div>
+      )}
+
+      {!isLoading && !error && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold">Backlog ({backlog.length})</h3>
+          <div className="space-y-2">
+            {backlog.map((t) => (
+              <div key={t.id} className="rounded-xl border bg-card p-3 flex items-center gap-3 hover:shadow-sm">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <div className="flex-1 min-w-0">
+                  <Link to="/tasks/$id" params={{ id: String(t.id) }} className="text-sm font-medium hover:text-primary">
+                    {t.title || `Task ${t.id}`}
+                  </Link>
+                  <div className="text-xs text-muted-foreground">
+                    {(t.priority || "Medium")} · {(t.expected_hours ?? 0)}h · {(t.points ?? 0)} pts · due {t.deadline || "—"}
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="ghost" disabled={sprints.length === 0}>Move to sprint</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Add to sprint</DropdownMenuLabel>
+                    {sprints.map((s) => (
+                      <DropdownMenuItem
+                        key={s.id}
+                        onClick={() =>
+                          addTasksToSprint.mutate(
+                            {
+                              sprintId: s.id,
+                              taskIds: [t.id],
+                              spaceId: s.space_id || s.spaceId,
+                            },
+                            {
+                              onSuccess: () => toast.success(`"${t.title || "Task"}" moved to ${s.name || "sprint"}`),
+                              onError: (err) => toast.error(err.message),
+                            },
+                          )
+                        }
+                      >
+                        {s.name || `Sprint ${s.id}`}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+            {backlog.length === 0 && (
+              <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
+                Backlog is empty. Add a task to get started.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

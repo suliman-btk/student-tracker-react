@@ -1,169 +1,564 @@
-import { me, tasks, sprints, calendarEvents, weeklyXP, aiSuggestions } from "@/lib/mock";
-import { AIInsightCard, AIBadge } from "@/components/ai/AIBubble";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import {
+  AlertTriangle,
+  BrainCircuit,
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Sparkles,
+  Timer,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Flame, Trophy, Target, Clock, CheckCircle2, Plus } from "lucide-react";
-import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from "recharts";
-import { useState } from "react";
+import {
+  useActiveSprint,
+  useCapacityCheck,
+  useKanbanInsight,
+  usePomodoroSessions,
+  useProfile,
+  useSpaces,
+  useStandupToday,
+  useStudyMutations,
+  useTasks,
+  useUserStats,
+} from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
+import { cn } from "@/lib/utils";
+import StandupModal from "@/components/study/StandupModal";
+
+const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
+const DONE = ["done", "Done", "completed", "complete"];
+const PROG = ["in_progress", "In Progress", "doing"];
+const taskStatus = (t) => t?.pivot_status || t?.pivotStatus || t?.status;
+const isDone = (t) => DONE.includes(taskStatus(t));
+const isProg = (t) => PROG.includes(taskStatus(t));
+const PRIORITY_WEIGHT = { Critical: 4, Highest: 4, High: 3, Medium: 2, Low: 1, Lowest: 1 };
+
+function parseDate(v) {
+  if (!v) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function monthShort(m) {
+  return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m];
+}
+function fmtDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 export default function DashboardPage() {
-  const sprint = sprints.find((s) => s.is_active);
-  const sprintTasks = tasks.filter((t) => t.sprint_id === sprint?.id);
-  const done = sprintTasks.filter((t) => t.status === "Done").length;
-  const total = sprintTasks.length;
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  const { openAI } = useUI();
-  const [standup, setStandup] = useState({ y: "", t: "", b: "" });
-  const [reply, setReply] = useState(null);
+  const { activeSpaceId, setActiveSpace } = useUI();
+  const { data: spaces = [] } = useSpaces();
+  const { data: profile } = useProfile();
 
-  const submitStandup = () => {
-    setReply(null);
-    setTimeout(() => setReply(
-      "Solid plan. Yesterday's momentum on the lit review is great — keep that block first. The Dijkstra task is blocking 2 dependents; budget 90 min for the priority queue refactor before lunch. End the day with a 20-min review."
-    ), 800);
-  };
+  // Auto-select first space so sprint appears without user manually opening one
+  useEffect(() => {
+    if (!activeSpaceId && spaces.length > 0) {
+      setActiveSpace(spaces[0].id);
+    }
+  }, [activeSpaceId, spaces, setActiveSpace]);
+  const { data: stats } = useUserStats();
+  const { data: tasksPayload } = useTasks();
+  const { data: sprint } = useActiveSprint(activeSpaceId);
+  const { data: pomoPayload } = usePomodoroSessions();
+  const { data: standup } = useStandupToday();
+  const { weeklyPlan } = useStudyMutations();
+
+  const tasks = asArray(tasksPayload);
+  const pomodoro = asArray(pomoPayload);
+  const [standupOpen, setStandupOpen] = useState(false);
+  const [autoChecked, setAutoChecked] = useState(false);
+
+  const submitted = standup?.submitted;
+  const feedback = standup?.data?.ai_feedback || "";
+  const coaching = (feedback.match(/COACHING:\s*([\s\S]+?)(?=SUGGESTED TASK:|$)/) || [])[1]?.trim();
+  const suggestedTask = (feedback.match(/SUGGESTED TASK:\s*([\s\S]+)/) || [])[1]?.trim();
+
+  useEffect(() => {
+    if (standup && !submitted && !autoChecked) {
+      setAutoChecked(true);
+      setStandupOpen(true);
+    }
+  }, [standup, submitted, autoChecked]);
+
+  const firstName = (profile?.name || profile?.display_name || "there").split(" ")[0];
+  const streak = stats?.current_streak ?? 0;
+  const weeklyXp = stats?.weekly_xp ?? 0;
+  const totalXp = stats?.total_xp ?? 0;
+
+  const sprintTasks = sprint?.tasks || sprint?.tasks_data || [];
+  const sprintDone = sprintTasks.filter(isDone).length;
+  const sprintProg = sprintTasks.filter(isProg).length;
+  const sprintTodo = sprintTasks.length - sprintDone - sprintProg;
+  const sprintPct = sprintTasks.length ? Math.round((sprintDone / sprintTasks.length) * 100) : 0;
+  const sprintEnd = parseDate(sprint?.end_date || sprint?.endDate);
+  const daysLeft = sprintEnd ? Math.ceil((sprintEnd - new Date()) / 86400000) : null;
+
+  // AI Scrum Master — kanban insight from in-progress count.
+  const { data: kanban } = useKanbanInsight(sprint ? sprintProg : undefined);
+  // Sprint capacity check.
+  const sprintTaskIds = useMemo(() => sprintTasks.map((t) => t.id).filter(Boolean), [sprintTasks]);
+  const { data: capacity } = useCapacityCheck(sprintTaskIds);
+
+  // Heavy-week banner — client-side, 3-day sliding window over 14 days.
+  const heavyWeek = useMemo(() => {
+    const now = new Date();
+    for (let d = 0; d < 14; d++) {
+      const ws = new Date(now); ws.setDate(ws.getDate() + d);
+      const we = new Date(ws); we.setDate(we.getDate() + 3);
+      const count = tasks.filter((t) => {
+        const dl = parseDate(t.deadline || t.due_date);
+        return dl && !isDone(t) && dl >= new Date(ws.getTime() - 86400000) && dl < we;
+      }).length;
+      if (count >= 3) return `Heavy week: ${count} tasks due around ${monthShort(ws.getMonth())} ${ws.getDate()}–${we.getDate()}. Consider rescheduling.`;
+    }
+    return null;
+  }, [tasks]);
+
+  const urgentTasks = tasks.filter((t) => t.priority === "Critical" || t.task_type === "Emergency").slice(0, 4);
+
+  const workload = useMemo(() => {
+    const now = new Date();
+    const scores = [];
+    for (let w = 0; w < 17; w++) {
+      const start = new Date(now); start.setDate(start.getDate() + w * 7);
+      const end = new Date(start); end.setDate(end.getDate() + 7);
+      let score = 0;
+      tasks.forEach((t) => {
+        const dl = parseDate(t.deadline || t.due_date);
+        if (dl && !isDone(t) && dl > start && dl < end) score += PRIORITY_WEIGHT[t.priority] || 1;
+      });
+      scores.push({ start, score });
+    }
+    const max = Math.max(0, ...scores.map((s) => s.score));
+    const avg = scores.reduce((s, x) => s + x.score, 0) / scores.length;
+    const heavy = avg * 1.8;
+    return scores.map((s, i) => ({
+      label: i === 0 ? "Now" : i % 4 === 0 ? `${monthShort(s.start.getMonth())} ${s.start.getDate()}` : "",
+      score: s.score,
+      kind: s.score > 0 && s.score === max ? "Peak" : s.score >= heavy && s.score > 0 ? "Heavy" : "Normal",
+    }));
+  }, [tasks]);
+
+  const focus = useMemo(() => {
+    let completed = 0, abandoned = 0, minutes = 0;
+    const days = [0, 0, 0, 0, 0, 0, 0];
+    const now = new Date();
+    pomodoro.forEach((s) => {
+      const status = s.status || "";
+      if (status === "completed") completed += 1;
+      if (status === "abandoned") abandoned += 1;
+      minutes += Number(s.total_focus_minutes ?? s.totalFocusMinutes ?? 0);
+      const started = parseDate(s.started_at || s.startedAt || s.created_at);
+      if (started && (now - started) / 86400000 < 7) {
+        const idx = (started.getDay() + 6) % 7; // Mon=0
+        days[idx] += 1;
+      }
+    });
+    return { completed, abandoned, minutes, days };
+  }, [pomodoro]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Hey, {me.name.split(" ")[0]} 👋</h1>
-        <p className="text-sm text-muted-foreground">Here's your day. You're {pct}% through Sprint 7.</p>
+        <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Good day, {firstName} 👋</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {sprint && daysLeft !== null && (
+            <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-foreground">
+              Sprint · {Math.max(0, daysLeft)}d left
+            </span>
+          )}
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">✨ {weeklyXp} XP this week</span>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{totalXp} total XP</span>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">🔥 {streak}-day streak</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Stat icon={Flame} label="Streak" value={`${me.streak} days`} accent="text-orange-600" />
-        <Stat icon={Trophy} label="XP" value={me.xp.toLocaleString()} accent="text-yellow-600" />
-        <Stat icon={Target} label="Sprint progress" value={`${pct}%`} accent="text-primary" />
-        <Stat icon={Clock} label="Focus today" value="2h 15m" accent="text-[color:var(--ai)]" />
+      {heavyWeek && (
+        <div className="flex items-start gap-2 rounded-lg border px-4 py-3 text-sm" style={{ background: "#F2E8D4", color: "#6B4F1E" }}>
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{heavyWeek}</span>
+        </div>
+      )}
+
+      {/* AI Scrum Master + Today's Coaching — side by side */}
+      <div className="grid gap-4 lg:grid-cols-2">
+      {kanban && (kanban.warning || kanban.advice) && (
+        <div className="rounded-xl p-4" style={{ background: "#ECE7F4" }}>
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles className="h-4 w-4" style={{ color: "#4B3E73" }} />
+            <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#4B3E73" }}>AI Scrum Master</span>
+            <span className="ml-auto text-[11px] font-bold uppercase tracking-wider" style={{ color: "#4B3E73" }}>AI Insight</span>
+          </div>
+          {kanban.warning && <p className="text-sm leading-relaxed">{kanban.warning}</p>}
+          {kanban.advice && <p className="mt-2 text-sm leading-relaxed">{kanban.advice}</p>}
+        </div>
+      )}
+
+      {/* Today's Coaching */}
+      <div className="rounded-xl border-l-4 p-4" style={{ background: "#F1EDE2", borderColor: "#C9A66B" }}>
+        <div className="mb-2 flex items-center gap-2">
+          <BrainCircuit className="h-4 w-4" style={{ color: "#6B4F1E" }} />
+          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#6B4F1E" }}>Today's Coaching</span>
+          {submitted ? (
+            <span className="ml-auto text-xs text-emerald-700">Checked in</span>
+          ) : (
+            <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={() => setStandupOpen(true)}>Check in</Button>
+          )}
+        </div>
+        {coaching ? (
+          <p className="text-sm leading-relaxed">{coaching}</p>
+        ) : feedback ? (
+          <p className="whitespace-pre-line text-sm leading-relaxed">{feedback}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Do your 3-tap check-in to get today's coaching.</p>
+        )}
+        {suggestedTask && (
+          <div className="mt-2 flex items-start gap-1.5 text-sm" style={{ color: "#7C6FDB" }}>
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>Suggested: {suggestedTask}</span>
+          </div>
+        )}
+      </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-4">
-          <AIInsightCard
-            title="Daily Standup"
-            action={<Button size="sm" variant="ghost" onClick={() => openAI("standup")}>Open chat</Button>}
-          >
-            <div className="grid gap-2">
-              {[
-                { k: "y", label: "What did you do yesterday?" },
-                { k: "t", label: "What will you do today?" },
-                { k: "b", label: "Any blockers?" },
-              ].map((q) => (
-                <div key={q.k}>
-                  <label className="text-xs text-muted-foreground">{q.label}</label>
-                  <input
-                    value={standup[q.k]}
-                    onChange={(e) => setStandup({ ...standup, [q.k]: e.target.value })}
-                    className="mt-1 w-full h-9 px-3 rounded-md border bg-background text-sm"
-                    placeholder="Type a quick note…"
-                  />
+      {/* This Week's Plan */}
+      <WeeklyPlanCard mutation={weeklyPlan} />
+
+      {/* Urgent Tasks */}
+      {/* Sprint Progress + Urgent Tasks — side by side */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section>
+          <SectionHead label="Current Sprint" title="Sprint Progress" />
+          {sprint ? (
+            <div className="rounded-xl border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold">{sprint.name || "Active Sprint"}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {fmtDate(sprint.start_date)} – {fmtDate(sprint.end_date)}
+                  </p>
                 </div>
-              ))}
-              <Button onClick={submitStandup} size="sm" className="w-fit mt-1 bg-[color:var(--ai)] hover:bg-[color:var(--ai)]/90">
-                Get coaching
-              </Button>
-              {reply && (
-                <div className="mt-2 rounded-lg bg-[color:var(--ai-soft)] p-3 text-sm">
-                  <AIBadge className="mb-1" />
-                  <p className="leading-relaxed">{reply}</p>
+                <span className="text-2xl font-bold text-primary">{sprintPct}%</span>
+              </div>
+              <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
+                <div style={{ width: `${(sprintDone / Math.max(1, sprintTasks.length)) * 100}%`, background: "#6fa187" }} />
+                <div style={{ width: `${(sprintProg / Math.max(1, sprintTasks.length)) * 100}%`, background: "#27326b" }} />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
+                <Legend color="#6fa187" label="Done" value={sprintDone} />
+                <Legend color="#27326b" label="In Progress" value={sprintProg} />
+                <Legend color="#c9c9c2" label="To Do" value={sprintTodo} />
+              </div>
+              {capacity?.exceeds_capacity && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm" style={{ background: "#F2E8D4", color: "#6B4F1E" }}>
+                  <AlertTriangle className="h-4 w-4" />
+                  Sprint exceeds capacity by {Number(capacity.excess_hours || 0).toFixed(1)}h
                 </div>
               )}
             </div>
-          </AIInsightCard>
-
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="font-semibold">{sprint?.name}</h3>
-                <p className="text-xs text-muted-foreground">{sprint?.goal}</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{done}/{total} done</span>
+          ) : (
+            <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">
+              No active sprint. <Link to="/spaces" className="text-primary">Open a space</Link> to start one.
             </div>
-            <Progress value={pct} className="h-2 mb-4" />
-            <ul className="divide-y">
-              {sprintTasks.slice(0, 4).map((t) => (
-                <li key={t.id} className="py-2.5 flex items-center gap-3">
-                  <CheckCircle2 className={`h-4 w-4 ${t.status === "Done" ? "text-primary" : "text-muted-foreground/40"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate">{t.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {t.priority} · {t.expected_hours}h · due {t.deadline}
-                    </div>
-                  </div>
-                  <span className="text-xs px-2 py-0.5 rounded-md bg-muted">{t.status}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
+        </section>
 
-          <AIInsightCard
-            title="Suggested tasks for today"
-            action={<Button size="sm" variant="outline">Refresh</Button>}
-          >
+        <section>
+          <SectionHead label="Action Required" title="Urgent Tasks" />
+          {urgentTasks.length > 0 ? (
             <div className="space-y-2">
-              {aiSuggestions.slice(0, 3).map((s) => (
-                <div key={s.id} className="flex items-center gap-3 rounded-lg border bg-background p-2.5">
-                  <Plus className="h-4 w-4 text-[color:var(--ai)]" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{s.title}</div>
-                    <div className="text-xs text-muted-foreground">{s.reason}</div>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{s.expected_hours}h</span>
-                  <Button size="sm" variant="ghost">Add</Button>
-                </div>
-              ))}
+              {urgentTasks.map((t) => {
+                const isEmergency = t.task_type === "Emergency";
+                const rawDate = t.deadline || t.due_date;
+                const dueDate = rawDate ? new Date(rawDate) : null;
+                const formattedDue = dueDate && !Number.isNaN(dueDate.getTime())
+                  ? dueDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                  : null;
+                const overdue = dueDate && dueDate < new Date();
+                return (
+                  <Link
+                    key={t.id}
+                    to="/tasks/$id"
+                    params={{ id: String(t.id) }}
+                    className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 hover:bg-muted/40 transition-colors"
+                    style={{ borderLeft: `4px solid ${isEmergency ? "#BA1A1A" : "#dc2626"}` }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className={cn("truncate text-sm font-medium", isDone(t) && "text-muted-foreground line-through")}>{t.title}</div>
+                      <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span className="truncate">{t.domain?.domain_name || t.domain_name || "—"}</span>
+                        {formattedDue && (
+                          <>
+                            <span>·</span>
+                            <span className={overdue ? "text-red-500 font-medium" : ""}>
+                              Due {formattedDue}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                      style={{
+                        background: isEmergency ? "#FEE2E2" : "#FEF9C3",
+                        color: isEmergency ? "#991B1B" : "#854D0E",
+                      }}
+                    >
+                      {isEmergency ? "Emergency" : t.priority || "Critical"}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
-          </AIInsightCard>
-        </div>
+          ) : (
+            <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">No urgent tasks right now.</div>
+          )}
+        </section>
+      </div>
 
-        <div className="space-y-4">
+      {/* Workload Timeline + Focus Analytics — side by side */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Workload Timeline */}
+        <section>
+          <SectionHead label="Workload Planning" title="Workload Timeline" />
           <div className="rounded-xl border bg-card p-4">
-            <h3 className="font-semibold text-sm">This week's XP</h3>
-            <div className="h-32 mt-2">
+            <p className="mb-3 text-xs text-muted-foreground">Task density over the next 4 months</p>
+            <div className="h-40">
               <ResponsiveContainer>
-                <BarChart data={weeklyXP}>
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={11} />
+                <BarChart data={workload}>
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={10} interval={0} />
                   <Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }} />
-                  <Bar dataKey="xp" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+                    {workload.map((w, i) => (
+                      <Cell key={i} fill={w.kind === "Peak" ? "var(--primary)" : w.kind === "Heavy" ? "#BA1A1A" : "#E8E8EF"} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
-
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm">Upcoming</h3>
-              <Button size="sm" variant="ghost">View calendar</Button>
+            <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+              <Legend color="var(--primary)" label="Peak" />
+              <Legend color="#BA1A1A" label="Heavy" />
+              <Legend color="#E8E8EF" label="Normal" />
             </div>
-            <ul className="space-y-2">
-              {calendarEvents.slice(0, 4).map((e) => (
-                <li key={e.id} className="flex items-start gap-2 text-sm">
-                  <span className="mt-1.5 h-2 w-2 rounded-full shrink-0" style={{ background: e.color_hex }} />
-                  <div className="flex-1">
-                    <div className="font-medium truncate">{e.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {e.all_day ? "All day" : new Date(e.start_time).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
-        </div>
+        </section>
+
+        {/* Focus Analytics */}
+        <section>
+          <SectionHead label="Focus Habits" title="Focus Analytics" />
+          <div className="rounded-xl border bg-card p-4">
+            <div className="grid grid-cols-3 gap-3">
+              <FocusStat icon={CheckCircle2} color="#2E7D32" label="Completed" value={focus.completed} />
+              <FocusStat icon={Timer} color="var(--primary)" label="Focus Time" value={`${Math.floor(focus.minutes / 60)}h ${focus.minutes % 60}m`} />
+              <FocusStat icon={XCircle} color="#BA1A1A" label="Abandoned" value={focus.abandoned} />
+            </div>
+            <div className="mt-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sessions — last 7 days</div>
+            <div className="mt-2 flex items-end gap-1.5 h-16">
+              {focus.days.map((c, i) => {
+                const max = Math.max(1, ...focus.days);
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                    <div className="w-full rounded-sm bg-primary" style={{ height: `${c ? (c / max) * 48 : 3}px`, opacity: c ? 1 : 0.25 }} />
+                    <span className="text-[10px] text-muted-foreground">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
       </div>
+
+      {/* Activity Heatmap — full width, last */}
+      <section>
+        <SectionHead label="Study Activity" title="Activity Heatmap" />
+        <div className="rounded-xl border bg-card p-4">
+          <YearHeatmap activity={stats?.activity || {}} />
+        </div>
+      </section>
+
+      <StandupModal open={standupOpen} onOpenChange={setStandupOpen} />
     </div>
   );
 }
 
-function Stat({ icon: Icon, label, value, accent }) {
+function SectionHead({ label, title }) {
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className={`inline-flex h-8 w-8 items-center justify-center rounded-lg bg-muted ${accent}`}>
-        <Icon className="h-4 w-4" />
+    <div className="mb-2">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+    </div>
+  );
+}
+
+function Legend({ color, label, value }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+      {label}
+      {value !== undefined && <strong className="text-foreground">{value}</strong>}
+    </span>
+  );
+}
+
+function FocusStat({ icon: Icon, color, label, value }) {
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3 text-center">
+      <Icon className="mx-auto h-4 w-4" style={{ color }} />
+      <div className="mt-1.5 text-xl font-semibold">{value}</div>
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function WeeklyPlanCard({ mutation }) {
+  const plan = mutation.data;
+  const weekPlan = plan?.week_plan || {};
+  return (
+    <button
+      type="button"
+      onClick={() => !plan && mutation.mutate()}
+      className="w-full rounded-xl p-4 text-left"
+      style={{ background: "#E2EEDF" }}
+    >
+      <div className="flex items-center gap-3">
+        <CalendarDays className="h-5 w-5" style={{ color: "#2F5C45" }} />
+        <div className="flex-1">
+          <div className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#2F5C45" }}>This Week's Plan</div>
+          <div className="text-sm text-foreground/90">
+            {mutation.isPending ? "Generating your weekly plan..." : plan ? (plan.advice || "Your weekly plan is ready.") : "Tap to generate your AI weekly study plan"}
+          </div>
+        </div>
+        {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" style={{ color: "#2F5C45" }} />}
       </div>
-      <div className="mt-3 text-xs text-muted-foreground">{label}</div>
-      <div className="text-xl font-semibold">{value}</div>
+      {plan && (
+        <div className="mt-3 space-y-1.5">
+          {Object.entries(weekPlan).map(([day, items]) => (
+            <div key={day} className="text-sm">
+              <span className="font-medium">{day}:</span>{" "}
+              <span className="text-muted-foreground">
+                {Array.isArray(items) && items.length
+                  ? items.map((it) => `${it.task} (${it.hours}h)`).join(", ")
+                  : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </button>
+  );
+}
+
+function YearHeatmap({ activity }) {
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
+
+  const heatColor = (count) => {
+    if (!count) return "#E8E8EF";
+    if (count === 1) return "#B3B7DB";
+    if (count <= 3) return "#7880C0";
+    if (count <= 6) return "#4C56AF";
+    return "#000666";
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Week-columns covering the whole selected calendar year (Mon→Sun).
+  const yearEnd = new Date(year, 11, 31);
+  const gridStart = new Date(year, 0, 1);
+  gridStart.setDate(gridStart.getDate() - ((gridStart.getDay() + 6) % 7));
+  const weeks = [];
+  const cur = new Date(gridStart);
+  while (cur <= yearEnd) {
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      week.push(cur.getFullYear() === year ? new Date(cur) : null);
+      cur.setDate(cur.getDate() + 1);
+    }
+    weeks.push(week);
+  }
+
+  const keyOf = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  // Month label above the first week-column of each month.
+  const monthLabels = weeks.map((w, i) => {
+    const first = w.find(Boolean);
+    if (!first) return "";
+    const prev = i > 0 ? weeks[i - 1].find(Boolean) : null;
+    return !prev || prev.getMonth() !== first.getMonth() ? monthShort(first.getMonth()) : "";
+  });
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">{year}</span>
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setYear((y) => y - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              disabled={year >= currentYear}
+              onClick={() => setYear((y) => Math.min(currentYear, y + 1))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="flex gap-1 pl-8 text-[10px] text-muted-foreground">
+          {monthLabels.map((m, i) => (
+            <div key={i} className="flex-1 min-w-[16px]">{m}</div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
+            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+              <div key={i} className="flex flex-1 items-center">{i % 2 === 0 ? d : ""}</div>
+            ))}
+          </div>
+          <div className="flex flex-1 gap-1">
+            {weeks.map((week, wi) => (
+              <div key={wi} className="flex flex-1 flex-col gap-1">
+                {week.map((d, di) => {
+                  if (!d) return <div key={di} className="aspect-square min-h-[16px]" />;
+                  const future = d > today;
+                  const count = activity[keyOf(d)] || 0;
+                  return (
+                    <div
+                      key={di}
+                      className="aspect-square min-h-[16px] rounded-[3px]"
+                      style={{ background: future ? "#F3F3F3" : heatColor(count) }}
+                      title={future ? "" : `${monthShort(d.getMonth())} ${d.getDate()}: ${count} session(s)`}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-1.5 pt-1 text-[10px] text-muted-foreground">
+          Less
+          {["#E8E8EF", "#B3B7DB", "#7880C0", "#4C56AF", "#000666"].map((c) => (
+            <span key={c} className="h-3 w-3 rounded-sm" style={{ background: c }} />
+          ))}
+          More
+        </div>
+      </div>
     </div>
   );
 }

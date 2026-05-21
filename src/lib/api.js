@@ -37,7 +37,11 @@ export const studyApi = {
     update: (id, body) => apiRequest(`/study/tasks/${id}`, { method: "PATCH", body }).then(unwrapData),
     remove: (id) => apiRequest(`/study/tasks/${id}`, { method: "DELETE" }),
     updateStatus: (id, status) => apiRequest(`/study/tasks/${id}/status`, { method: "PATCH", body: { status } }).then(unwrapData),
-    updateProgress: (id, progress) => apiRequest(`/study/tasks/${id}/progress`, { method: "PATCH", body: { progress } }).then(unwrapData),
+    updateProgress: (id, progress, notes) =>
+      apiRequest(`/study/tasks/${id}/progress`, {
+        method: "PATCH",
+        body: { progress_percentage: progress, ...(notes !== undefined ? { notes } : {}) },
+      }).then(unwrapData),
     comments: (id) => apiRequest(`/study/tasks/${id}/comments`).then((p) => unwrapData(p, [])),
     addComment: (id, content) => apiRequest(`/study/tasks/${id}/comments`, { method: "POST", body: { content } }).then(unwrapData),
     addSubtask: (id, body) => apiRequest(`/study/tasks/${id}/subtasks`, { method: "POST", body }).then(unwrapData),
@@ -103,6 +107,7 @@ export const focusApi = {
     join: (id) => apiRequest(`/focus/rooms/${id}/join`, { method: "POST" }).then(unwrapData),
     leave: (id) => apiRequest(`/focus/rooms/${id}/leave`, { method: "POST" }).then(unwrapData),
     agoraToken: (params) => apiRequest("/focus/rooms/agora/token", { params }).then(unwrapData),
+    findByCode: (code) => apiRequest("/focus/rooms/find-by-code", { params: { code } }).then(unwrapData),
   },
 };
 
@@ -140,7 +145,8 @@ export const socialApi = {
 };
 
 export const aiApi = {
-  standupToday: () => apiRequest("/ai/daily-standup/today").then(unwrapData),
+  // Returns the raw { submitted, data } payload — callers need the submitted flag.
+  standupToday: () => apiRequest("/ai/daily-standup/today"),
   submitStandup: (body) => apiRequest("/ai/daily-standup", { method: "POST", body }).then(unwrapData),
   capacity: () => apiRequest("/ai/capacity").then(unwrapData),
   capacityCheck: (body) => apiRequest("/ai/capacity-check", { method: "POST", body }).then(unwrapData),

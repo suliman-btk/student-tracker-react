@@ -4,11 +4,11 @@ import AIDrawer from "./AIDrawer";
 
 export default function AppShell({ children }) {
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar />
-        <main className="flex-1 px-4 lg:px-8 py-6 max-w-[1280px] w-full mx-auto">
+        <main className="flex-1 overflow-y-auto w-full px-4 lg:px-8 py-6">
           {children}
         </main>
       </div>

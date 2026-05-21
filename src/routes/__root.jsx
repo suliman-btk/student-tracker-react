@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext, useNavigate, useRouter, HeadContent, Scripts, useRouterState, } from "@tanstack/react-router";
 import { useEffect } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { Toaster } from "@/components/ui/sonner";
 import { startAuthListener, useAuthStore } from "@/store/auth-store";
 import appCss from "../styles.css?url";
 function NotFoundComponent() {
@@ -66,5 +67,6 @@ function RootComponent() {
     }
     return (<QueryClientProvider client={queryClient}>
       {isAuthPage ? <Outlet /> : <AppShell><Outlet /></AppShell>}
+      <Toaster position="bottom-right" richColors />
     </QueryClientProvider>);
 }

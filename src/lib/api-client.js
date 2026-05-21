@@ -1,7 +1,13 @@
 import { getFreshIdToken } from "@/store/auth-store";
 
-export const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL || "https://student-tracker-server-main-w0iha2.laravel.cloud/api/v1").replace(/\/$/, "");
+// In dev, hit the relative path "/api/v1" so Vite's proxy forwards the request
+// server-side (avoids the broken CORS config on the Laravel host). In prod,
+// VITE_API_BASE_URL (or the absolute fallback) is used.
+const API_BASE_DEFAULT = import.meta.env.DEV
+  ? "/api/v1"
+  : "https://student-tracker-server-main-w0iha2.laravel.cloud/api/v1";
+
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL || API_BASE_DEFAULT).replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(message, { status, data } = {}) {

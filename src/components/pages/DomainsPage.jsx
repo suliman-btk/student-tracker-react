@@ -1,21 +1,53 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, MoreHorizontal, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Header } from "./SpacesPage";
-import { useDomains } from "@/lib/query-hooks";
+import { useDomains, useStudyMutations } from "@/lib/query-hooks";
+import CreateDomainModal from "@/components/study/CreateDomainModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-const priorityColor = { High: "bg-red-100 text-red-700", Medium: "bg-amber-100 text-amber-700", Low: "bg-emerald-100 text-emerald-700" };
+const priorityColor = {
+  Highest: "bg-red-100 text-red-700",
+  High: "bg-orange-100 text-orange-700",
+  Medium: "bg-amber-100 text-amber-700",
+  Low: "bg-blue-100 text-blue-700",
+  Lowest: "bg-emerald-100 text-emerald-700",
+};
 
 const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
 
 export default function DomainsPage() {
   const { data: domainsPayload = [], isLoading, error } = useDomains();
   const domains = asArray(domainsPayload);
+  const { toggleDomain, deleteDomain } = useStudyMutations();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+
+  const openCreate = () => { setEditing(null); setModalOpen(true); };
+  const openEdit = (domain) => { setEditing(domain); setModalOpen(true); };
 
   return (
     <div className="space-y-6">
       <Header title="Study Domains" subtitle="Subjects, exams, FYP, and other tracks you manage.">
-        <Button><Plus className="h-4 w-4 mr-1.5" /> New domain</Button>
+        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1.5" /> New domain</Button>
       </Header>
       {isLoading && (
         <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
@@ -34,9 +66,9 @@ export default function DomainsPage() {
               <th className="text-left px-4 py-2.5">Domain</th>
               <th className="text-left px-4 py-2.5">Area</th>
               <th className="text-left px-4 py-2.5">Priority</th>
-              <th className="text-left px-4 py-2.5">Difficulty</th>
               <th className="text-left px-4 py-2.5">Weekly target</th>
               <th className="text-left px-4 py-2.5">Active</th>
+              <th className="w-10 px-4 py-2.5" />
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -49,12 +81,29 @@ export default function DomainsPage() {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{d.area_type || d.area || "General"}</td>
                 <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-md ${priorityColor[d.priority] || "bg-muted"}`}>{d.priority || "Normal"}</span></td>
-                <td className="px-4 py-3 text-muted-foreground">{d.difficulty || "-"}</td>
                 <td className="px-4 py-3">{d.weekly_target_hours ?? d.weekly_hours ?? 0}h</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2 py-0.5 rounded-md ${d.is_active ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
                     {d.is_active ? "Active" : "Paused"}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => openEdit(d)}>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toggleDomain.mutate({ id: d.id })}>
+                        <Power className="mr-2 h-4 w-4" /> {d.is_active ? "Pause" : "Activate"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleting(d)}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
@@ -64,6 +113,38 @@ export default function DomainsPage() {
           <div className="p-8 text-center text-sm text-muted-foreground">No domains found.</div>
         )}
       </div>
+
+      <CreateDomainModal open={modalOpen} onOpenChange={setModalOpen} domain={editing} />
+
+      <AlertDialog open={Boolean(deleting)} onOpenChange={(o) => { if (!o) { setDeleting(null); setDeleteError(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete domain?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting?.domain_name || "This domain"} will be permanently removed. Domains with tasks cannot be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                setDeleteError(null);
+                deleteDomain.mutate(
+                  { id: deleting.id },
+                  {
+                    onSuccess: () => setDeleting(null),
+                    onError: (err) => setDeleteError(err.message),
+                  },
+                );
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

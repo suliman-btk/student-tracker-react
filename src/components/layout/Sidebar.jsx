@@ -5,16 +5,13 @@ import {
   Bell,
   Boxes,
   CalendarDays,
-  Compass,
   FolderTree,
+  Globe,
   LayoutDashboard,
   Loader2,
-  Rss,
   Settings,
-  ShieldAlert,
   Sparkles,
   Timer,
-  UserCircle,
   Users,
 } from "lucide-react";
 import { useSpaces } from "@/lib/query-hooks";
@@ -40,10 +37,7 @@ const groups = [
     items: [
       { to: "/focus", label: "Focus", icon: Timer },
       { to: "/rooms", label: "Group Rooms", icon: Users },
-      { to: "/feed", label: "Feed", icon: Rss },
-      { to: "/discover", label: "Discover", icon: Compass },
-      { to: "/friends", label: "Friends", icon: UserCircle },
-      { to: "/social/platforms", label: "Social Usage", icon: ShieldAlert },
+      { to: "/social", label: "Social", icon: Globe },
     ],
   },
   {
@@ -60,6 +54,36 @@ export default function Sidebar() {
   const { data: spacesPayload = [], isLoading: loadingSpaces, error: spacesError } = useSpaces();
   const spaces = Array.isArray(spacesPayload) ? spacesPayload : spacesPayload?.data || [];
 
+  const renderGroup = (g) => (
+    <div key={g.label} className="mt-4">
+      <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">{g.label}</div>
+      <ul className="space-y-0.5">
+        {g.items.map(({ to, label, icon: Icon, exact }) => {
+          const active = exact ? path === to : path === to || path.startsWith(to + "/");
+          return (
+            <li key={to}>
+              <Link
+                to={to}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    : "hover:bg-sidebar-accent/60 text-sidebar-foreground/80",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+
+  const overviewGroup = groups.find((g) => g.label === "Overview");
+  const otherGroups = groups.filter((g) => g.label !== "Overview");
+
   return (
     <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="px-5 py-5 flex items-center gap-2">
@@ -70,6 +94,7 @@ export default function Sidebar() {
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-6">
+        {overviewGroup && renderGroup(overviewGroup)}
         <div className="mt-4">
           <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Spaces</div>
           <div className="space-y-0.5">
@@ -129,32 +154,7 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
-        {groups.map((g) => (
-          <div key={g.label} className="mt-4">
-            <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">{g.label}</div>
-            <ul className="space-y-0.5">
-              {g.items.map(({ to, label, icon: Icon, exact }) => {
-                const active = exact ? path === to : path === to || path.startsWith(to + "/");
-                return (
-                  <li key={to}>
-                    <Link
-                      to={to}
-                      className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                        active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "hover:bg-sidebar-accent/60 text-sidebar-foreground/80"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+        {otherGroups.map(renderGroup)}
       </nav>
       <div className="m-3 rounded-xl border border-sidebar-border bg-sidebar-accent/50 p-3">
         <div className="flex items-center gap-2 text-sm font-medium">
