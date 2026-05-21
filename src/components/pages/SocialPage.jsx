@@ -587,9 +587,18 @@ function PostCard({ post, currentUserId }) {
   });
 
   const author = post.author || post.user || {};
-  const name = author.name || author.display_name || "User";
-  const avatar = author.avatar_url || author.avatar || "";
-  const authorUid = String(author.id || author.uid || "");
+  if (import.meta.env.DEV && (author.name === undefined && author.display_name === undefined)) {
+    console.log("[PostCard] unknown author shape:", JSON.stringify(post).slice(0, 400));
+  }
+  const name =
+    author.name || author.display_name || author.full_name || author.username ||
+    post.author_name || post.user_name ||
+    (author.email ? author.email.split("@")[0] : null) ||
+    "Unknown";
+  const avatar =
+    author.avatar_url || author.avatar || author.profile_photo_url ||
+    author.photo_url || author.picture || post.author_avatar || "";
+  const authorUid = String(author.id || author.uid || post.author_id || post.user_id || "");
   const isMine = currentUserId && (authorUid === String(currentUserId));
 
   return (

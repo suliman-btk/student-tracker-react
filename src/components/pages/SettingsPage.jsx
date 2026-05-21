@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Lock, Hourglass, RefreshCcw, ChevronRight, Loader2, Check, User, FileText, Building2, GraduationCap } from "lucide-react";
+import { Globe, Lock, Hourglass, RefreshCcw, ChevronRight, Loader2, Check, User, FileText, Building2, GraduationCap, ArrowLeft } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -107,9 +107,17 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Timezone, privacy, and social limits</p>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => window.history.back()}
+          className="h-8 w-8 grid place-items-center rounded-full hover:bg-muted text-muted-foreground transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+          <p className="text-sm text-muted-foreground">Timezone, privacy, and social limits</p>
+        </div>
       </div>
 
       {/* ── Account ── */}
