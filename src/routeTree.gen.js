@@ -7,16 +7,14 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as SprintsRouteImport } from './routes/sprints';
 import { Route as SpacesRouteImport } from './routes/spaces';
+import { Route as SocialRouteImport } from './routes/social';
 import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as RoomsRouteImport } from './routes/rooms';
 import { Route as RegisterRouteImport } from './routes/register';
 import { Route as NotificationsRouteImport } from './routes/notifications';
 import { Route as LoginRouteImport } from './routes/login';
-import { Route as FriendsRouteImport } from './routes/friends';
 import { Route as FocusRouteImport } from './routes/focus';
-import { Route as FeedRouteImport } from './routes/feed';
 import { Route as DomainsRouteImport } from './routes/domains';
-import { Route as DiscoverRouteImport } from './routes/discover';
 import { Route as CalendarRouteImport } from './routes/calendar';
 import { Route as BoardRouteImport } from './routes/board';
 import { Route as BacklogRouteImport } from './routes/backlog';
@@ -24,7 +22,6 @@ import { Route as AnalyticsRouteImport } from './routes/analytics';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as TasksIdRouteImport } from './routes/tasks.$id';
 import { Route as SprintsIdRouteImport } from './routes/sprints.$id';
-import { Route as SocialPlatformsRouteImport } from './routes/social.platforms';
 import { Route as RoomsIdRouteImport } from './routes/rooms.$id';
 import { Route as ProfileUidRouteImport } from './routes/profile.$uid';
 import { Route as DomainsIdRouteImport } from './routes/domains.$id';
@@ -41,6 +38,11 @@ const SprintsRoute = SprintsRouteImport.update({
 const SpacesRoute = SpacesRouteImport.update({
     id: '/spaces',
     path: '/spaces',
+    getParentRoute: () => rootRouteImport,
+});
+const SocialRoute = SocialRouteImport.update({
+    id: '/social',
+    path: '/social',
     getParentRoute: () => rootRouteImport,
 });
 const SettingsRoute = SettingsRouteImport.update({
@@ -68,29 +70,14 @@ const LoginRoute = LoginRouteImport.update({
     path: '/login',
     getParentRoute: () => rootRouteImport,
 });
-const FriendsRoute = FriendsRouteImport.update({
-    id: '/friends',
-    path: '/friends',
-    getParentRoute: () => rootRouteImport,
-});
 const FocusRoute = FocusRouteImport.update({
     id: '/focus',
     path: '/focus',
     getParentRoute: () => rootRouteImport,
 });
-const FeedRoute = FeedRouteImport.update({
-    id: '/feed',
-    path: '/feed',
-    getParentRoute: () => rootRouteImport,
-});
 const DomainsRoute = DomainsRouteImport.update({
     id: '/domains',
     path: '/domains',
-    getParentRoute: () => rootRouteImport,
-});
-const DiscoverRoute = DiscoverRouteImport.update({
-    id: '/discover',
-    path: '/discover',
     getParentRoute: () => rootRouteImport,
 });
 const CalendarRoute = CalendarRouteImport.update({
@@ -126,11 +113,6 @@ const TasksIdRoute = TasksIdRouteImport.update({
 const SprintsIdRoute = SprintsIdRouteImport.update({
     id: '/sprints/$id',
     path: '/sprints/$id',
-    getParentRoute: () => rootRouteImport,
-});
-const SocialPlatformsRoute = SocialPlatformsRouteImport.update({
-    id: '/social/platforms',
-    path: '/social/platforms',
     getParentRoute: () => rootRouteImport,
 });
 const RoomsIdRoute = RoomsIdRouteImport.update({
@@ -179,18 +161,16 @@ const rootRouteChildren = {
     BacklogRoute: BacklogRoute,
     BoardRoute: BoardRoute,
     CalendarRoute: CalendarRoute,
-    DiscoverRoute: DiscoverRoute,
     DomainsRoute: DomainsRoute,
     DomainsIdRoute: DomainsIdRoute,
-    FeedRoute: FeedRoute,
     FocusRoute: FocusRoute,
-    FriendsRoute: FriendsRoute,
     LoginRoute: LoginRoute,
     NotificationsRoute: NotificationsRoute,
     RegisterRoute: RegisterRoute,
     RoomsRoute: RoomsRoute,
     RoomsIdRoute: RoomsIdRoute,
     SettingsRoute: SettingsRoute,
+    SocialRoute: SocialRoute,
     SpacesRoute: SpacesRoute,
     SpacesSpaceIdRoute: SpacesSpaceIdRoute,
     SpacesSpaceIdSummaryRoute: SpacesSpaceIdSummaryRoute,
@@ -201,7 +181,6 @@ const rootRouteChildren = {
     SprintsIdRoute: SprintsIdRoute,
     TasksIdRoute: TasksIdRoute,
     ProfileUidRoute: ProfileUidRoute,
-    SocialPlatformsRoute: SocialPlatformsRoute,
 };
 export const routeTree = rootRouteImport
     ._addFileChildren(rootRouteChildren)

@@ -157,6 +157,24 @@ export async function sendRoomMessage(roomId, text) {
   });
 }
 
+export async function uploadPostAttachment(file) {
+  const user = currentUserOrThrow();
+  const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+  const storageRef = ref(storage, `posts/${user.uid}/${Date.now()}_${safeName}`);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  const type = file.type?.startsWith("image/") ? "image" : file.type === "application/pdf" ? "pdf" : "document";
+  return { url, type, name: file.name, size: file.size };
+}
+
+export async function uploadUserAvatar(file) {
+  const user = currentUserOrThrow();
+  const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+  const storageRef = ref(storage, `avatars/${user.uid}/${Date.now()}_${safeName}`);
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+}
+
 export async function uploadRoomFile(roomId, file) {
   const user = currentUserOrThrow();
   const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");

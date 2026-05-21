@@ -1,13 +1,17 @@
-import { feedPosts, friends, platforms, notifications, weeklyXP, heatmap, me, tasks, domains, spaces, calendarEvents } from "@/lib/mock";
+import { friends, notifications, weeklyXP, heatmap, me, tasks, domains, spaces, calendarEvents } from "@/lib/mock";
 import { Button } from "@/components/ui/button";
 import { Header } from "./SpacesPage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Users, Heart, MessageCircle, UserPlus, Search, BellRing, Check, Mic, MicOff, LogOut, Send, Lock, Globe, Hash, Copy, Play, Pause, SkipForward, Square, ChevronRight } from "lucide-react";
+import { Plus, Users, MessageCircle, BellRing, Check, Mic, MicOff, LogOut, Send, Lock, Globe, Hash, Copy, Play, Pause, SkipForward, Square, ChevronRight } from "lucide-react";
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, Loader2, Pencil, Trash2, X } from "lucide-react";
-import { useTask, useTaskComments, useStudyMutations, useActiveSprint } from "@/lib/query-hooks";
+import { useTask, useTaskComments, useStudyMutations, useActiveSprint, useProfile } from "@/lib/query-hooks";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { socialApi, userApi } from "@/lib/api";
+import { Pencil as PencilIcon, Flame, Trophy, UserPlus as UserPlusIcon, UserCheck, UserX } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -732,29 +736,212 @@ export function RoomDetailPage({ id }) {
 }
 
 
-export function ProfilePage({ uid }) {
+function initialsOf(name = "") {
+  return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function statusBadge(status) {
+  if (status === "studying") return { label: "Studying", dot: "bg-emerald-500", text: "text-emerald-600" };
+  if (status === "on_break") return { label: "On Break", dot: "bg-orange-400", text: "text-orange-600" };
+  return { label: "Idle", dot: "bg-gray-400", text: "text-muted-foreground" };
+}
+
+function ActivityHeatmap({ activity }) {
+  // activity: array of { date: 'YYYY-MM-DD', level: 0-4 } for last 12 weeks
+  const cells = activity && activity.length > 0
+    ? activity
+    : Array.from({ length: 84 }, () => ({ level: 0 }));
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border bg-card overflow-hidden">
-        <div className="h-32 bg-gradient-to-br from-primary to-[color:var(--ai)]" />
-        <div className="p-6 flex items-end gap-4 -mt-12">
-          <Avatar className="h-24 w-24 border-4 border-card"><AvatarImage src={me.avatar} /><AvatarFallback>AY</AvatarFallback></Avatar>
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold">{me.name}</h2>
-            <div className="text-sm text-muted-foreground">@{uid} · Level {me.level} · {me.xp.toLocaleString()} XP</div>
-          </div>
-          <Button>Follow</Button>
+    <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(12, 1fr)", gridAutoFlow: "column", gridTemplateRows: "repeat(7, 1fr)" }}>
+      {cells.slice(0, 84).map((c, i) => {
+        const shade = ["bg-muted", "bg-primary/20", "bg-primary/40", "bg-primary/70", "bg-primary"][c.level || 0] || "bg-muted";
+        return <div key={i} className={`aspect-square rounded-sm ${shade}`} title={c.date} />;
+      })}
+    </div>
+  );
+}
+
+export function ProfilePage({ uid }) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const { data: myProfile } = useProfile();
+  const myUid = String(myProfile?.id || myProfile?.uid || "");
+  const isSelf = !uid || String(uid) === myUid;
+
+  // Self uses /user/profile + /user/profile/stats; others use /social/users/{uid}/profile
+  const { data: otherProfile, isLoading: loadingOther } = useQuery({
+    queryKey: ["social", "users", String(uid), "profile"],
+    queryFn: () => socialApi.discovery.profile(uid),
+    enabled: !isSelf && !!uid,
+    retry: 1,
+  });
+
+  const { data: myStats } = useQuery({
+    queryKey: ["user", "stats"],
+    queryFn: userApi.stats,
+    enabled: isSelf,
+    retry: false,
+  });
+
+  const { data: friendsList = [] } = useQuery({
+    queryKey: ["social", "friends"],
+    queryFn: socialApi.friends.list,
+    retry: 1,
+  });
+
+  const profile = isSelf ? myProfile : otherProfile;
+  const stats = isSelf ? myStats : otherProfile?.stats;
+  const activity = isSelf ? myStats?.activity : otherProfile?.activity;
+
+  const name = profile?.name || profile?.display_name || "User";
+  const avatar = profile?.avatar_url || profile?.avatar || "";
+  const university = profile?.university || "";
+  const bio = profile?.bio || "";
+  const gradYear = profile?.graduation_year;
+  const status = profile?.study_status || "idle";
+  const badge = statusBadge(status);
+
+  // Connection state for non-self
+  const friends = Array.isArray(friendsList) ? friendsList : friendsList?.data || [];
+  const friendIds = new Set(friends.map((f) => String(f.id || f.uid)));
+  const isFriend = !isSelf && friendIds.has(String(uid));
+  const isPending = !isSelf && (otherProfile?.friend_status === "pending");
+
+  const { mutate: sendReq, isPending: sending } = useMutation({
+    mutationFn: () => socialApi.friends.send(uid),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["social", "users", String(uid), "profile"] });
+      toast.success("Connection request sent");
+    },
+    onError: () => toast.error("Could not send request"),
+  });
+
+  const { mutate: removeFriend, isPending: removing } = useMutation({
+    mutationFn: () => socialApi.friends.remove(uid),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["social", "friends"] });
+      toast.success("Removed connection");
+    },
+  });
+
+  if (!isSelf && loadingOther) {
+    return <div className="text-sm text-muted-foreground">Loading profile…</div>;
+  }
+
+  if (!isSelf && !otherProfile) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/social" })}>
+          <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
+        </Button>
+        <div className="rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
+          Profile not found or private.
         </div>
       </div>
-      <div className="grid lg:grid-cols-3 gap-4">
-        <div className="rounded-xl border bg-card p-4">
-          <h3 className="font-semibold text-sm mb-2">Weekly XP</h3>
-          <div className="h-32"><ResponsiveContainer><BarChart data={weeklyXP}><XAxis dataKey="day" fontSize={11} /><Bar dataKey="xp" fill="var(--primary)" radius={[4,4,0,0]} /></BarChart></ResponsiveContainer></div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-4">
+      {!isSelf && (
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/social" })}>
+          <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
+        </Button>
+      )}
+
+      {/* Header */}
+      <div className="rounded-2xl border bg-card overflow-hidden">
+        <div className="h-32 bg-gradient-to-br from-primary to-[color:var(--ai,theme(colors.primary))]" />
+        <div className="px-6 pb-6 -mt-12">
+          <div className="flex items-end justify-between gap-4">
+            <Avatar className="h-24 w-24 border-4 border-card">
+              <AvatarImage src={avatar} />
+              <AvatarFallback className="text-xl">{initialsOf(name)}</AvatarFallback>
+            </Avatar>
+            <div className="flex gap-2 pb-1">
+              {isSelf ? (
+                <Button size="sm" onClick={() => navigate({ to: "/settings" })}>
+                  <PencilIcon className="h-3.5 w-3.5 mr-1.5" /> Edit profile
+                </Button>
+              ) : isFriend ? (
+                <Button size="sm" variant="outline" disabled={removing} onClick={() => removeFriend()}>
+                  <UserCheck className="h-3.5 w-3.5 mr-1.5" /> Connected
+                </Button>
+              ) : isPending ? (
+                <Button size="sm" variant="outline" disabled>
+                  <UserX className="h-3.5 w-3.5 mr-1.5" /> Pending
+                </Button>
+              ) : (
+                <Button size="sm" disabled={sending} onClick={() => sendReq()}>
+                  <UserPlusIcon className="h-3.5 w-3.5 mr-1.5" /> Connect
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">{name}</h2>
+              <span className={`inline-flex items-center gap-1 text-xs ${badge.text}`}>
+                <span className={`h-2 w-2 rounded-full ${badge.dot}`} />
+                {badge.label}
+              </span>
+            </div>
+            {(university || gradYear) && (
+              <div className="text-sm text-muted-foreground mt-0.5">
+                {university}{university && gradYear && " · "}{gradYear && `Class of ${gradYear}`}
+              </div>
+            )}
+            {bio && <p className="text-sm mt-2">{bio}</p>}
+          </div>
         </div>
-        <div className="rounded-xl border bg-card p-4 lg:col-span-2">
-          <h3 className="font-semibold text-sm mb-3">Activity</h3>
-          <Heatmap />
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-xl border bg-card p-4 text-center">
+          <div className="text-2xl font-bold">{stats?.sessions_count ?? stats?.total_sessions ?? 0}</div>
+          <div className="text-xs text-muted-foreground mt-1">Sessions</div>
         </div>
+        <div className="rounded-xl border bg-card p-4 text-center">
+          <div className="text-2xl font-bold">{Math.round(stats?.total_focus_hours ?? 0)}h</div>
+          <div className="text-xs text-muted-foreground mt-1">Focus hours</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4 text-center">
+          <div className="text-2xl font-bold">{stats?.streak ?? stats?.current_streak ?? 0}</div>
+          <div className="text-xs text-muted-foreground mt-1">Day streak</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4 text-center">
+          <div className="text-2xl font-bold">{profile?.friends_count ?? friends.length}</div>
+          <div className="text-xs text-muted-foreground mt-1">Connections</div>
+        </div>
+      </div>
+
+      {/* Streak cards */}
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-orange-500/10 grid place-items-center">
+            <Flame className="h-6 w-6 text-orange-500" />
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Current streak</div>
+            <div className="text-lg font-bold">{stats?.streak ?? stats?.current_streak ?? 0} days</div>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-amber-500/10 grid place-items-center">
+            <Trophy className="h-6 w-6 text-amber-500" />
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Longest streak</div>
+            <div className="text-lg font-bold">{stats?.longest_streak ?? stats?.max_streak ?? 0} days</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Activity heatmap */}
+      <div className="rounded-xl border bg-card p-4">
+        <h3 className="font-semibold text-sm mb-3">Activity — last 12 weeks</h3>
+        <ActivityHeatmap activity={activity} />
       </div>
     </div>
   );
@@ -805,22 +992,106 @@ function Heatmap() {
 }
 
 export function NotificationsPage() {
+  const qc = useQueryClient();
+  const { data: requests = [], isLoading: loadingReq } = useQuery({
+    queryKey: ["social", "friends", "requests"],
+    queryFn: socialApi.friends.requests,
+    retry: 1,
+  });
+
+  const { mutate: accept } = useMutation({
+    mutationFn: (uid) => socialApi.friends.accept(uid),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["social", "friends"] });
+      toast.success("Connection accepted");
+    },
+  });
+
+  const { mutate: reject } = useMutation({
+    mutationFn: (uid) => socialApi.friends.reject(uid),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["social", "friends", "requests"] }),
+  });
+
+  const reqList = Array.isArray(requests) ? requests : requests?.data || [];
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <Header title="Notifications">
         <Button variant="outline"><Check className="h-4 w-4 mr-1.5" /> Mark all read</Button>
       </Header>
-      <div className="rounded-xl border bg-card divide-y">
-        {notifications.map((n) => (
-          <div key={n.id} className={`p-4 flex items-start gap-3 ${!n.read ? "bg-primary/[0.03]" : ""}`}>
-            <div className="h-9 w-9 rounded-lg bg-muted grid place-items-center"><BellRing className="h-4 w-4" /></div>
-            <div className="flex-1">
-              <div className="text-sm font-medium">{n.title}</div>
-              <div className="text-xs text-muted-foreground">{n.body}</div>
+
+      {/* Friend requests section */}
+      <div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          Connection requests
+        </div>
+        <div className="rounded-xl border bg-card">
+          {loadingReq ? (
+            <div className="p-4 text-sm text-muted-foreground">Loading…</div>
+          ) : reqList.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">No pending requests.</div>
+          ) : (
+            <div className="divide-y">
+              {reqList.map((req) => {
+                const user = req.sender || req.user || req;
+                const name = user.name || user.display_name || "User";
+                const avatar = user.avatar_url || user.avatar || "";
+                const uid = String(user.id || req.sender_id || "");
+                const university = user.university || "";
+                return (
+                  <div key={uid} className="p-4 flex items-center gap-3">
+                    {uid ? (
+                      <Link to="/profile/$uid" params={{ uid }}>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={avatar} />
+                          <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+                        </Avatar>
+                      </Link>
+                    ) : (
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={avatar} />
+                        <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {uid ? (
+                        <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium hover:underline">{name}</Link>
+                      ) : (
+                        <div className="text-sm font-medium">{name}</div>
+                      )}
+                      <div className="text-xs text-muted-foreground">wants to connect{university && ` · ${university}`}</div>
+                    </div>
+                    <Button size="sm" onClick={() => accept(uid)}>
+                      <Check className="h-3.5 w-3.5 mr-1" /> Accept
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => reject(uid)}>
+                      <X className="h-3.5 w-3.5 mr-1" /> Decline
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-xs text-muted-foreground">{n.time}</div>
-          </div>
-        ))}
+          )}
+        </div>
+      </div>
+
+      {/* Activity section */}
+      <div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          Activity
+        </div>
+        <div className="rounded-xl border bg-card divide-y">
+          {notifications.map((n) => (
+            <div key={n.id} className={`p-4 flex items-start gap-3 ${!n.read ? "bg-primary/[0.03]" : ""}`}>
+              <div className="h-9 w-9 rounded-lg bg-muted grid place-items-center"><BellRing className="h-4 w-4" /></div>
+              <div className="flex-1">
+                <div className="text-sm font-medium">{n.title}</div>
+                <div className="text-xs text-muted-foreground">{n.body}</div>
+              </div>
+              <div className="text-xs text-muted-foreground">{n.time}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

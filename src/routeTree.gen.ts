@@ -11,16 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SprintsRouteImport } from './routes/sprints'
 import { Route as SpacesRouteImport } from './routes/spaces'
+import { Route as SocialRouteImport } from './routes/social'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as FocusRouteImport } from './routes/focus'
-import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DomainsRouteImport } from './routes/domains'
-import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BoardRouteImport } from './routes/board'
 import { Route as BacklogRouteImport } from './routes/backlog'
@@ -29,7 +27,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TasksIdRouteImport } from './routes/tasks.$id'
 import { Route as SprintsIdRouteImport } from './routes/sprints.$id'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
-import { Route as SocialPlatformsRouteImport } from './routes/social.platforms'
 import { Route as RoomsIdRouteImport } from './routes/rooms.$id'
 import { Route as ProfileUidRouteImport } from './routes/profile.$uid'
 import { Route as DomainsIdRouteImport } from './routes/domains.$id'
@@ -47,6 +44,11 @@ const SprintsRoute = SprintsRouteImport.update({
 const SpacesRoute = SpacesRouteImport.update({
   id: '/spaces',
   path: '/spaces',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialRoute = SocialRouteImport.update({
+  id: '/social',
+  path: '/social',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -74,29 +76,14 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FriendsRoute = FriendsRouteImport.update({
-  id: '/friends',
-  path: '/friends',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FocusRoute = FocusRouteImport.update({
   id: '/focus',
   path: '/focus',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedRoute = FeedRouteImport.update({
-  id: '/feed',
-  path: '/feed',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DomainsRoute = DomainsRouteImport.update({
   id: '/domains',
   path: '/domains',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DiscoverRoute = DiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -138,11 +125,6 @@ const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
   id: '/$spaceId',
   path: '/$spaceId',
   getParentRoute: () => SpacesRoute,
-} as any)
-const SocialPlatformsRoute = SocialPlatformsRouteImport.update({
-  id: '/social/platforms',
-  path: '/social/platforms',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const RoomsIdRoute = RoomsIdRouteImport.update({
   id: '/$id',
@@ -191,22 +173,19 @@ export interface FileRoutesByFullPath {
   '/backlog': typeof BacklogRoute
   '/board': typeof BoardRoute
   '/calendar': typeof CalendarRoute
-  '/discover': typeof DiscoverRoute
   '/domains': typeof DomainsRouteWithChildren
-  '/feed': typeof FeedRoute
   '/focus': typeof FocusRoute
-  '/friends': typeof FriendsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
   '/rooms': typeof RoomsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/social': typeof SocialRoute
   '/spaces': typeof SpacesRouteWithChildren
   '/sprints': typeof SprintsRouteWithChildren
   '/domains/$id': typeof DomainsIdRoute
   '/profile/$uid': typeof ProfileUidRoute
   '/rooms/$id': typeof RoomsIdRoute
-  '/social/platforms': typeof SocialPlatformsRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRouteWithChildren
   '/sprints/$id': typeof SprintsIdRoute
   '/tasks/$id': typeof TasksIdRoute
@@ -222,22 +201,19 @@ export interface FileRoutesByTo {
   '/backlog': typeof BacklogRoute
   '/board': typeof BoardRoute
   '/calendar': typeof CalendarRoute
-  '/discover': typeof DiscoverRoute
   '/domains': typeof DomainsRouteWithChildren
-  '/feed': typeof FeedRoute
   '/focus': typeof FocusRoute
-  '/friends': typeof FriendsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
   '/rooms': typeof RoomsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/social': typeof SocialRoute
   '/spaces': typeof SpacesRouteWithChildren
   '/sprints': typeof SprintsRouteWithChildren
   '/domains/$id': typeof DomainsIdRoute
   '/profile/$uid': typeof ProfileUidRoute
   '/rooms/$id': typeof RoomsIdRoute
-  '/social/platforms': typeof SocialPlatformsRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRouteWithChildren
   '/sprints/$id': typeof SprintsIdRoute
   '/tasks/$id': typeof TasksIdRoute
@@ -254,22 +230,19 @@ export interface FileRoutesById {
   '/backlog': typeof BacklogRoute
   '/board': typeof BoardRoute
   '/calendar': typeof CalendarRoute
-  '/discover': typeof DiscoverRoute
   '/domains': typeof DomainsRouteWithChildren
-  '/feed': typeof FeedRoute
   '/focus': typeof FocusRoute
-  '/friends': typeof FriendsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
   '/rooms': typeof RoomsRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/social': typeof SocialRoute
   '/spaces': typeof SpacesRouteWithChildren
   '/sprints': typeof SprintsRouteWithChildren
   '/domains/$id': typeof DomainsIdRoute
   '/profile/$uid': typeof ProfileUidRoute
   '/rooms/$id': typeof RoomsIdRoute
-  '/social/platforms': typeof SocialPlatformsRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRouteWithChildren
   '/sprints/$id': typeof SprintsIdRoute
   '/tasks/$id': typeof TasksIdRoute
@@ -287,22 +260,19 @@ export interface FileRouteTypes {
     | '/backlog'
     | '/board'
     | '/calendar'
-    | '/discover'
     | '/domains'
-    | '/feed'
     | '/focus'
-    | '/friends'
     | '/login'
     | '/notifications'
     | '/register'
     | '/rooms'
     | '/settings'
+    | '/social'
     | '/spaces'
     | '/sprints'
     | '/domains/$id'
     | '/profile/$uid'
     | '/rooms/$id'
-    | '/social/platforms'
     | '/spaces/$spaceId'
     | '/sprints/$id'
     | '/tasks/$id'
@@ -318,22 +288,19 @@ export interface FileRouteTypes {
     | '/backlog'
     | '/board'
     | '/calendar'
-    | '/discover'
     | '/domains'
-    | '/feed'
     | '/focus'
-    | '/friends'
     | '/login'
     | '/notifications'
     | '/register'
     | '/rooms'
     | '/settings'
+    | '/social'
     | '/spaces'
     | '/sprints'
     | '/domains/$id'
     | '/profile/$uid'
     | '/rooms/$id'
-    | '/social/platforms'
     | '/spaces/$spaceId'
     | '/sprints/$id'
     | '/tasks/$id'
@@ -349,22 +316,19 @@ export interface FileRouteTypes {
     | '/backlog'
     | '/board'
     | '/calendar'
-    | '/discover'
     | '/domains'
-    | '/feed'
     | '/focus'
-    | '/friends'
     | '/login'
     | '/notifications'
     | '/register'
     | '/rooms'
     | '/settings'
+    | '/social'
     | '/spaces'
     | '/sprints'
     | '/domains/$id'
     | '/profile/$uid'
     | '/rooms/$id'
-    | '/social/platforms'
     | '/spaces/$spaceId'
     | '/sprints/$id'
     | '/tasks/$id'
@@ -381,20 +345,17 @@ export interface RootRouteChildren {
   BacklogRoute: typeof BacklogRoute
   BoardRoute: typeof BoardRoute
   CalendarRoute: typeof CalendarRoute
-  DiscoverRoute: typeof DiscoverRoute
   DomainsRoute: typeof DomainsRouteWithChildren
-  FeedRoute: typeof FeedRoute
   FocusRoute: typeof FocusRoute
-  FriendsRoute: typeof FriendsRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   RegisterRoute: typeof RegisterRoute
   RoomsRoute: typeof RoomsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  SocialRoute: typeof SocialRoute
   SpacesRoute: typeof SpacesRouteWithChildren
   SprintsRoute: typeof SprintsRouteWithChildren
   ProfileUidRoute: typeof ProfileUidRoute
-  SocialPlatformsRoute: typeof SocialPlatformsRoute
   TasksIdRoute: typeof TasksIdRoute
 }
 
@@ -412,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/spaces'
       fullPath: '/spaces'
       preLoaderRoute: typeof SpacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social': {
+      id: '/social'
+      path: '/social'
+      fullPath: '/social'
+      preLoaderRoute: typeof SocialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -449,13 +417,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/friends': {
-      id: '/friends'
-      path: '/friends'
-      fullPath: '/friends'
-      preLoaderRoute: typeof FriendsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/focus': {
       id: '/focus'
       path: '/focus'
@@ -463,25 +424,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FocusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feed': {
-      id: '/feed'
-      path: '/feed'
-      fullPath: '/feed'
-      preLoaderRoute: typeof FeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/domains': {
       id: '/domains'
       path: '/domains'
       fullPath: '/domains'
       preLoaderRoute: typeof DomainsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/discover': {
-      id: '/discover'
-      path: '/discover'
-      fullPath: '/discover'
-      preLoaderRoute: typeof DiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -539,13 +486,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/spaces/$spaceId'
       preLoaderRoute: typeof SpacesSpaceIdRouteImport
       parentRoute: typeof SpacesRoute
-    }
-    '/social/platforms': {
-      id: '/social/platforms'
-      path: '/social/platforms'
-      fullPath: '/social/platforms'
-      preLoaderRoute: typeof SocialPlatformsRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/rooms/$id': {
       id: '/rooms/$id'
@@ -675,20 +615,17 @@ const rootRouteChildren: RootRouteChildren = {
   BacklogRoute: BacklogRoute,
   BoardRoute: BoardRoute,
   CalendarRoute: CalendarRoute,
-  DiscoverRoute: DiscoverRoute,
   DomainsRoute: DomainsRouteWithChildren,
-  FeedRoute: FeedRoute,
   FocusRoute: FocusRoute,
-  FriendsRoute: FriendsRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   RegisterRoute: RegisterRoute,
   RoomsRoute: RoomsRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  SocialRoute: SocialRoute,
   SpacesRoute: SpacesRouteWithChildren,
   SprintsRoute: SprintsRouteWithChildren,
   ProfileUidRoute: ProfileUidRoute,
-  SocialPlatformsRoute: SocialPlatformsRoute,
   TasksIdRoute: TasksIdRoute,
 }
 export const routeTree = rootRouteImport
