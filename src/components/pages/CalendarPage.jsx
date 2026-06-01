@@ -42,7 +42,7 @@ export default function CalendarPage() {
   const { activeSpaceId } = useUI();
 
   const { data: eventsPayload = [] } = useCalendarEvents();
-  const { data: sprintsPayload = [], isLoading } = useSprints();
+  const { data: sprintsPayload = [] } = useSprints();
   const { data: tasksPayload = [] } = useTasks();
   const events = asArray(eventsPayload);
   const sprints = asArray(sprintsPayload);
@@ -84,41 +84,29 @@ export default function CalendarPage() {
 
   return (
     <div className="-mx-4 lg:-mx-8 -my-6 h-[calc(100vh-3.5rem)] flex bg-background">
-      <aside className="hidden md:flex w-64 shrink-0 border-r flex-col p-4 gap-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="w-fit"><Plus className="h-4 w-4 mr-1.5" /> Create</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => openNewEvent(cursor)}>New event</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTaskModalOpen(true)}>New task</DropdownMenuItem>
-            <DropdownMenuItem onClick={newSprint}>New sprint</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <MiniMonth cursor={cursor} onPick={setCursor} />
-        <div>
-          <div className="text-xs font-semibold text-muted-foreground mb-2">Sprints</div>
-          {isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
-          {ranges.map((r) => (
-            <div key={r.id} className="flex items-center gap-2 text-sm py-1">
-              <span className={cn("h-3 w-3 rounded-sm", r.active ? "bg-emerald-500" : "bg-muted-foreground/40")} />
-              <span className="truncate">{r.name}</span>
-            </div>
-          ))}
-          {!isLoading && ranges.length === 0 && <p className="text-xs text-muted-foreground">No sprints yet.</p>}
-        </div>
-      </aside>
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="h-14 border-b flex items-center px-4 gap-2">
+        <div className="h-16 border-b flex items-center px-4 gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="gap-1.5 shadow-sm"><Plus className="h-4 w-4" /> Create</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => openNewEvent(cursor)}>New event</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTaskModalOpen(true)}>New task</DropdownMenuItem>
+              <DropdownMenuItem onClick={newSprint}>New sprint</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Today</Button>
-          <Button size="icon" variant="ghost" onClick={() => setCursor(addDays(cursor, -30))}><ChevronLeft className="h-4 w-4" /></Button>
-          <Button size="icon" variant="ghost" onClick={() => setCursor(addDays(cursor, 30))}><ChevronRight className="h-4 w-4" /></Button>
-          <h2 className="font-semibold ml-2">{cursor.toLocaleString("en", { month: "long", year: "numeric" })}</h2>
-          <div className="ml-auto flex rounded-md border p-0.5">
+          <div className="flex items-center">
+            <Button size="icon" variant="ghost" onClick={() => setCursor(addDays(cursor, -30))}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={() => setCursor(addDays(cursor, 30))}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+          <h2 className="text-lg font-semibold ml-1">{cursor.toLocaleString("en", { month: "long", year: "numeric" })}</h2>
+          <div className="ml-auto flex rounded-lg border bg-muted/40 p-0.5">
             {VIEWS.map((v) => (
               <button key={v}
                 onClick={() => setView(v)}
-                className={cn("px-3 py-1 text-sm rounded", view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}>
+                className={cn("px-3 py-1 text-sm rounded-md transition-colors", view === v ? "bg-background text-foreground shadow-sm font-medium" : "text-muted-foreground hover:text-foreground")}>
                 {v}
               </button>
             ))}
@@ -175,30 +163,6 @@ function SprintBar({ sprint }) {
   );
 }
 
-function MiniMonth({ cursor, onPick }) {
-  const start = startOfMonth(cursor);
-  const offset = start.getDay();
-  const cells = Array.from({ length: 42 }, (_, i) => addDays(start, i - offset));
-  return (
-    <div>
-      <div className="text-sm font-semibold mb-2">{cursor.toLocaleString("en", { month: "long", year: "numeric" })}</div>
-      <div className="grid grid-cols-7 text-[10px] text-muted-foreground mb-1">
-        {["S","M","T","W","T","F","S"].map((d, i) => <div key={i} className="text-center">{d}</div>)}
-      </div>
-      <div className="grid grid-cols-7 gap-0.5">
-        {cells.map((d, i) => (
-          <button key={i} onClick={() => onPick(d)}
-            className={cn("h-6 text-xs rounded grid place-items-center hover:bg-muted",
-              sameDay(d, cursor) && "bg-primary text-primary-foreground hover:bg-primary",
-              d.getMonth() !== cursor.getMonth() && "text-muted-foreground/40")}>
-            {d.getDate()}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskClick, onDayClick }) {
   const start = startOfMonth(cursor);
   const offset = start.getDay();
@@ -206,9 +170,9 @@ function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskCli
   const today = new Date();
   return (
     <div className="h-full flex flex-col">
-      <div className="grid grid-cols-7 border-b text-xs uppercase text-muted-foreground">
+      <div className="grid grid-cols-7 border-b bg-muted/20 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => (
-          <div key={d} className="px-2 py-2 border-r last:border-r-0">{d}</div>
+          <div key={d} className="px-2 py-2 text-center">{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 grid-rows-6 flex-1">
@@ -226,13 +190,14 @@ function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskCli
               key={i}
               onClick={() => onDayClick(d)}
               className={cn(
-                "group border-r border-b p-1.5 overflow-hidden cursor-pointer hover:bg-muted/40",
-                otherMonth && "bg-muted/30",
-                sprint && !otherMonth && "bg-emerald-500/[0.07]",
+                "group border-r border-b border-border/60 p-1.5 overflow-hidden cursor-pointer transition-colors hover:bg-muted/40",
+                "[&:nth-child(7n)]:border-r-0",
+                otherMonth && "bg-muted/20 text-muted-foreground",
+                sprint && !otherMonth && "bg-emerald-500/[0.06]",
               )}
             >
-              <div className={cn("text-xs mb-1 flex items-center gap-1", otherMonth && "text-muted-foreground/50")}>
-                <span className={cn("inline-grid place-items-center h-5 min-w-5 px-1 rounded-full",
+              <div className={cn("mb-1 flex items-center justify-center", otherMonth && "opacity-60")}>
+                <span className={cn("grid h-6 min-w-6 place-items-center rounded-full px-1 text-xs",
                   isToday && "bg-primary text-primary-foreground font-semibold")}>{d.getDate()}</span>
               </div>
               <div className="space-y-1">

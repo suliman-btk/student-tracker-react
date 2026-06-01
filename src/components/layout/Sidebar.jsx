@@ -1,7 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   AlertCircle,
-  BarChart3,
   Bell,
   Boxes,
   CalendarDays,
@@ -15,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { useSpaces } from "@/lib/query-hooks";
+import { useUI } from "@/store/ui";
 import { cn } from "@/lib/utils";
 
 const groups = [
@@ -22,7 +22,6 @@ const groups = [
     label: "Overview",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
   {
@@ -51,6 +50,7 @@ const groups = [
 
 export default function Sidebar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { activeSpaceId, setActiveSpace } = useUI();
   const { data: spacesPayload = [], isLoading: loadingSpaces, error: spacesError } = useSpaces();
   const spaces = Array.isArray(spacesPayload) ? spacesPayload : spacesPayload?.data || [];
 
@@ -128,13 +128,14 @@ export default function Sidebar() {
               )}
               <ul className="space-y-0.5 border-l border-sidebar-border pl-2">
                 {spaces.map((space) => {
-                  const active = path.startsWith(`/spaces/${space.id}`);
+                  const active = path.startsWith(`/spaces/${space.id}`) || String(activeSpaceId) === String(space.id);
                   const color = space.color_hex || space.color || "var(--primary)";
                   return (
                     <li key={space.id}>
                       <Link
                         to="/spaces/$spaceId/summary"
                         params={{ spaceId: String(space.id) }}
+                        onClick={() => setActiveSpace(space.id)}
                         className={cn(
                           "flex min-w-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                           active

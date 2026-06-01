@@ -59,22 +59,25 @@ function RootComponent() {
     const isAuthPage = path === "/login" || path === "/register";
     const navigate = useNavigate();
     const { user, loading, initialized } = useAuthStore();
+    // Logged-out visitors can see the public landing page at "/" (no app shell).
+    const isPublicLanding = path === "/" && !user;
+    const isPublic = isAuthPage || isPublicLanding;
     useEffect(() => {
         startAuthListener();
     }, []);
     useEffect(() => {
         if (!initialized || loading) return;
-        if (!user && !isAuthPage) navigate({ to: "/login" });
+        if (!user && !isAuthPage && path !== "/") navigate({ to: "/login" });
         if (user && isAuthPage) navigate({ to: "/" });
-    }, [initialized, loading, user, isAuthPage, navigate]);
+    }, [initialized, loading, user, isAuthPage, path, navigate]);
     if (!initialized || loading) {
         return (<QueryClientProvider client={queryClient}>
         <div className="min-h-screen grid place-items-center bg-background text-sm text-muted-foreground">Loading RAQIP...</div>
       </QueryClientProvider>);
     }
     return (<QueryClientProvider client={queryClient}>
-      {isAuthPage
-        ? <Suspense fallback={null}><Outlet /></Suspense>
+      {isPublic
+        ? <Suspense fallback={<PageLoader />}><Outlet /></Suspense>
         : <AppShell><Suspense fallback={<PageLoader />}><Outlet /></Suspense></AppShell>}
       <Toaster position="bottom-right" richColors />
     </QueryClientProvider>);

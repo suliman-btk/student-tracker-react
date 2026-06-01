@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStudyMutations } from "@/lib/query-hooks";
+import DateTimePicker from "@/components/study/DateTimePicker";
 import { cn } from "@/lib/utils";
 
 const COLORS = ["#1A4D2E", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#0891b2"];
@@ -129,12 +130,12 @@ export default function CreateEventModal({ open, onOpenChange, event, initialDat
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="ev-start">Start</Label>
-              <Input id="ev-start" type="datetime-local" value={form.start} onChange={(e) => set("start")(e.target.value)} />
+              <Label>Start</Label>
+              <DateTimePicker value={form.start} onChange={set("start")} showTime={!form.all_day} placeholder="Start date" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ev-end">End</Label>
-              <Input id="ev-end" type="datetime-local" value={form.end} onChange={(e) => set("end")(e.target.value)} />
+              <Label>End</Label>
+              <DateTimePicker value={form.end} onChange={set("end")} showTime={!form.all_day} placeholder="End date" />
             </div>
           </div>
 

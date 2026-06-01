@@ -1256,26 +1256,10 @@ export function TaskDetailPage({ id }) {
   const [subtaskDraft, setSubtaskDraft] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
 
-  if (isLoading) {
-    return (
-      <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading task...
-      </div>
-    );
-  }
-  if (error || !task) {
-    return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error?.message || "Task not found."}</div>;
-  }
+  const subtasks = task?.subtasks || task?.sub_tasks || [];
 
-  const subtasks = task.subtasks || task.sub_tasks || [];
-  const serverProgress = task.progress_percentage ?? 0;
-  const progressValue = progress ?? serverProgress;
-  const isProgressDirty = progress !== null && progress !== lastSavedProgress.current;
-  const domainName = task.domain?.domain_name || task.domain?.domainName || "—";
-  const displayStatus = localStatus ?? task.status ?? "To Do";
-  const estHours = task.expected_hours != null ? `${parseFloat(task.expected_hours)}h` : null;
-
-  // Clear optimistic subtask entries once server data reflects the expected value
+  // Clear optimistic subtask entries once server data reflects the expected value.
+  // Must run on every render (above the early returns) to keep hook order stable.
   useEffect(() => {
     if (Object.keys(optimisticSubtasks).length === 0) return;
     setOptimisticSubtasks((prev) => {
@@ -1291,6 +1275,24 @@ export function TaskDetailPage({ id }) {
       return changed ? next : prev;
     });
   }, [subtasks]);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading task...
+      </div>
+    );
+  }
+  if (error || !task) {
+    return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error?.message || "Task not found."}</div>;
+  }
+
+  const serverProgress = task.progress_percentage ?? 0;
+  const progressValue = progress ?? serverProgress;
+  const isProgressDirty = progress !== null && progress !== lastSavedProgress.current;
+  const domainName = task.domain?.domain_name || task.domain?.domainName || "—";
+  const displayStatus = localStatus ?? task.status ?? "To Do";
+  const estHours = task.expected_hours != null ? `${parseFloat(task.expected_hours)}h` : null;
 
   return (
     <div className="space-y-6">
