@@ -1185,28 +1185,6 @@ function Toggle({ label, defaultOn }) {
   );
 }
 
-export function SpaceMembersPage({ id }) {
-  const space = spaces.find((s) => s.id === id) || spaces[0];
-  const members = friends.map((f, i) => ({ ...f, role: i === 0 ? "Owner" : "Member" }));
-  return (
-    <div className="space-y-6">
-      <Header title={`${space.name} — Members`} subtitle="Manage roles and invites.">
-        <Button><Plus className="h-4 w-4 mr-1.5" /> Invite</Button>
-      </Header>
-      <div className="rounded-xl border bg-card divide-y">
-        {members.map((m) => (
-          <div key={m.uid} className="p-3 flex items-center gap-3">
-            <Avatar className="h-9 w-9"><AvatarImage src={m.avatar} /><AvatarFallback>U</AvatarFallback></Avatar>
-            <div className="flex-1"><div className="text-sm font-medium">{m.name}</div><div className="text-xs text-muted-foreground">{m.status}</div></div>
-            <span className="text-xs px-2 py-0.5 rounded-md bg-muted">{m.role}</span>
-            <Button size="sm" variant="ghost">Manage</Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function DomainDetailPage({ id }) {
   const d = domains.find((x) => x.id === id) || domains[0];
   const domainTasks = tasks.filter((t) => t.domain_id === d.id);
@@ -1241,6 +1219,22 @@ function fmtDeadline(raw) {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
+const PRIORITY_COLOR = {
+  Critical: "bg-rose-500", Highest: "bg-rose-500", High: "bg-rose-400",
+  Medium: "bg-amber-400", Low: "bg-sky-400", Lowest: "bg-sky-300",
+};
+const STATUS_STYLE = {
+  "Done":        { pill: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
+  "In Progress": { pill: "bg-primary/10 text-primary",     dot: "bg-primary" },
+  "To Do":       { pill: "bg-muted text-muted-foreground", dot: "bg-muted-foreground/50" },
+};
+function normStatus(s = "") {
+  const v = String(s).toLowerCase().replace(/[-_ ]/g, "");
+  if (v === "done" || v === "completed") return "Done";
+  if (v === "inprogress" || v === "doing") return "In Progress";
+  return "To Do";
+}
+
 export function TaskDetailPage({ id }) {
   const navigate = useNavigate();
   const { data: task, isLoading, error } = useTask(id);
@@ -1258,8 +1252,6 @@ export function TaskDetailPage({ id }) {
 
   const subtasks = task?.subtasks || task?.sub_tasks || [];
 
-  // Clear optimistic subtask entries once server data reflects the expected value.
-  // Must run on every render (above the early returns) to keep hook order stable.
   useEffect(() => {
     if (Object.keys(optimisticSubtasks).length === 0) return;
     setOptimisticSubtasks((prev) => {
@@ -1267,10 +1259,7 @@ export function TaskDetailPage({ id }) {
       let changed = false;
       subtasks.forEach((s) => {
         const serverDone = (s.status || "Pending") === "Completed";
-        if (s.id in next && next[s.id] === serverDone) {
-          delete next[s.id];
-          changed = true;
-        }
+        if (s.id in next && next[s.id] === serverDone) { delete next[s.id]; changed = true; }
       });
       return changed ? next : prev;
     });
@@ -1278,83 +1267,176 @@ export function TaskDetailPage({ id }) {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading task...
+      <div className="flex h-64 items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" /> Loading task…
       </div>
     );
   }
   if (error || !task) {
-    return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error?.message || "Task not found."}</div>;
+    return <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive">{error?.message || "Task not found."}</div>;
   }
 
-  const serverProgress = task.progress_percentage ?? 0;
-  const progressValue = progress ?? serverProgress;
+  const serverProgress  = task.progress_percentage ?? 0;
+  const progressValue   = progress ?? serverProgress;
   const isProgressDirty = progress !== null && progress !== lastSavedProgress.current;
-  const domainName = task.domain?.domain_name || task.domain?.domainName || "—";
-  const displayStatus = localStatus ?? task.status ?? "To Do";
-  const estHours = task.expected_hours != null ? `${parseFloat(task.expected_hours)}h` : null;
+  const domainName      = task.domain?.domain_name || task.domain?.domainName || "—";
+  const displayStatus   = normStatus(localStatus ?? task.status);
+  const estHours        = task.expected_hours != null ? `${parseFloat(task.expected_hours)}h` : null;
+  const doneSubtasks    = subtasks.filter((s) => {
+    const serverDone = (s.status || "Pending") === "Completed";
+    return s.id in optimisticSubtasks ? optimisticSubtasks[s.id] : serverDone;
+  }).length;
+  const ss = STATUS_STYLE[displayStatus] || STATUS_STYLE["To Do"];
+
+  // progress ring SVG
+  const R = 28; const C = 2 * Math.PI * R;
+  const dash = (progressValue / 100) * C;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-0">
+      {/* Back */}
       <button
         onClick={() => (window.history.length > 1 ? window.history.back() : navigate({ to: "/" }))}
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-5"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
-      <Header title={task.title} subtitle={[task.priority, task.difficulty, task.points != null ? `${task.points} pts` : null, `due ${fmtDeadline(task.deadline)}`].filter(Boolean).join(" · ")}>
-        <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4 mr-1.5" /> Edit</Button>
-        <Button variant="outline" className="text-destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-4 w-4 mr-1.5" /> Delete</Button>
-      </Header>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-4">
-          {task.description && (
-            <div className="rounded-xl border bg-card p-4">
-              <h3 className="font-semibold text-sm mb-2">Description</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{task.description}</p>
+      {/* Hero header */}
+      <div className="relative rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-primary/10 via-background to-[color:var(--ai)]/10 border p-6">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/[0.08] to-[color:var(--ai)]/[0.05]" />
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+          {/* Progress ring */}
+          <div className="shrink-0 relative h-16 w-16 grid place-items-center">
+            <svg className="-rotate-90" width="64" height="64">
+              <circle cx="32" cy="32" r={R} fill="none" stroke="currentColor" strokeWidth="5" className="text-muted/40" />
+              <circle
+                cx="32" cy="32" r={R} fill="none"
+                stroke="url(#pg)" strokeWidth="5"
+                strokeDasharray={`${dash} ${C - dash}`}
+                strokeLinecap="round"
+                className="transition-all duration-500"
+              />
+              <defs>
+                <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="var(--color-primary)" />
+                  <stop offset="100%" stopColor="var(--color-ai)" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <span className="absolute text-xs font-bold">{progressValue}%</span>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${ss.pill}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${ss.dot}`} />
+                {displayStatus}
+              </span>
+              {task.priority && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
+                  <span className={`h-1.5 w-1.5 rounded-full ${PRIORITY_COLOR[task.priority] || "bg-muted-foreground"}`} />
+                  {task.priority}
+                </span>
+              )}
+              {task.points != null && (
+                <span className="rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-xs font-medium">{task.points} pts</span>
+              )}
             </div>
+            <h1 className="text-2xl font-bold tracking-tight truncate">{task.title}</h1>
+            <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
+              {task.difficulty && <span>{task.difficulty} difficulty</span>}
+              {estHours && <span>· {estHours} estimated</span>}
+              {task.deadline && <span>· Due {fmtDeadline(task.deadline)}</span>}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 h-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteOpen(true)}>
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-5">
+        {/* ── Left column ── */}
+        <div className="lg:col-span-2 space-y-5">
+
+          {/* Description */}
+          {task.description && (
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold mb-2.5 flex items-center gap-2">
+                <span className="h-5 w-1 rounded-full bg-primary" />
+                Description
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{task.description}</p>
+            </section>
           )}
 
-          <div className="rounded-xl border bg-card p-4">
-            <h3 className="font-semibold text-sm mb-3">Progress — {progressValue}%</h3>
-            <Slider min={0} max={100} step={5} value={[progressValue]} onValueChange={([v]) => setProgress(v)} />
-            <div className="mt-3 flex items-center gap-2">
+          {/* Progress */}
+          <section className="rounded-2xl border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <span className="h-5 w-1 rounded-full bg-primary" />
+                Progress
+              </h2>
+              <span className="text-sm font-bold text-primary">{progressValue}%</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-muted overflow-hidden mb-4">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary to-[color:var(--ai)] transition-all duration-300"
+                style={{ width: `${progressValue}%` }}
+              />
+            </div>
+            <Slider min={0} max={100} step={5} value={[progressValue]} onValueChange={([v]) => setProgress(v)} className="mb-4" />
+            <div className="flex items-center gap-3">
               <Button
                 size="sm"
                 disabled={m.updateTaskProgress.isPending || !isProgressDirty}
-                onClick={() => {
-                  lastSavedProgress.current = progressValue;
-                  m.updateTaskProgress.mutate({ id, progress: progressValue });
-                }}
+                onClick={() => { lastSavedProgress.current = progressValue; m.updateTaskProgress.mutate({ id, progress: progressValue }); }}
               >
                 {m.updateTaskProgress.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
                 Save progress
               </Button>
               {estHours && <span className="text-xs text-muted-foreground">{estHours} estimate</span>}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-xl border bg-card p-4">
-            <h3 className="font-semibold text-sm mb-3">Subtasks</h3>
-            <ul className="space-y-1.5">
+          {/* Subtasks */}
+          <section className="rounded-2xl border bg-card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <span className="h-5 w-1 rounded-full bg-primary" />
+                Subtasks
+              </h2>
+              {subtasks.length > 0 && (
+                <span className="text-xs text-muted-foreground">{doneSubtasks}/{subtasks.length} done</span>
+              )}
+            </div>
+            {subtasks.length > 0 && (
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-3">
+                <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${Math.round((doneSubtasks / subtasks.length) * 100)}%` }} />
+              </div>
+            )}
+            <ul className="space-y-1">
               {subtasks.map((s) => {
                 const serverDone = (s.status || "Pending") === "Completed";
                 const done = s.id in optimisticSubtasks ? optimisticSubtasks[s.id] : serverDone;
                 return (
-                  <li key={s.id} className="flex items-center gap-2.5 group rounded-lg px-2 py-1.5 hover:bg-muted/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={done}
-                      className="h-4 w-4 rounded accent-primary cursor-pointer"
-                      onChange={() => {
+                  <li key={s.id} className="flex items-center gap-3 group rounded-xl px-3 py-2.5 hover:bg-muted/50 transition-colors">
+                    <button
+                      className={`h-5 w-5 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${done ? "bg-emerald-500 border-emerald-500 text-white" : "border-border hover:border-primary"}`}
+                      onClick={() => {
                         setOptimisticSubtasks((prev) => ({ ...prev, [s.id]: !done }));
-                        m.toggleSubtask.mutate(
-                          { taskId: id, subtaskId: s.id },
-                          { onError: () => setOptimisticSubtasks((prev) => ({ ...prev, [s.id]: done })) }
-                        );
+                        m.toggleSubtask.mutate({ taskId: id, subtaskId: s.id }, { onError: () => setOptimisticSubtasks((prev) => ({ ...prev, [s.id]: done })) });
                       }}
-                    />
+                    >
+                      {done && <Check className="h-3 w-3" />}
+                    </button>
                     <span className={`flex-1 text-sm ${done ? "line-through text-muted-foreground" : ""}`}>{s.title}</span>
                     <button
                       onClick={() => m.removeSubtask.mutate({ taskId: id, subtaskId: s.id })}
@@ -1365,7 +1447,7 @@ export function TaskDetailPage({ id }) {
                   </li>
                 );
               })}
-              {subtasks.length === 0 && <li className="text-sm text-muted-foreground py-1">No subtasks yet.</li>}
+              {subtasks.length === 0 && <li className="text-sm text-muted-foreground py-2 px-3">No subtasks yet.</li>}
             </ul>
             <div className="mt-3 flex items-center gap-2">
               <Input
@@ -1377,78 +1459,90 @@ export function TaskDetailPage({ id }) {
                     m.addSubtask.mutate({ taskId: id, body: { title: subtaskDraft.trim() } }, { onSuccess: () => setSubtaskDraft("") });
                   }
                 }}
-                placeholder="Add a subtask"
+                placeholder="Add a subtask…"
+                className="h-9"
               />
-              <Button
-                size="icon"
-                variant="outline"
+              <Button size="icon" variant="outline" className="h-9 w-9 shrink-0"
                 disabled={!subtaskDraft.trim() || m.addSubtask.isPending}
                 onClick={() => m.addSubtask.mutate({ taskId: id, body: { title: subtaskDraft.trim() } }, { onSuccess: () => setSubtaskDraft("") })}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-xl border bg-card p-4">
-            <h3 className="font-semibold text-sm mb-3">Comments</h3>
-            <div className="space-y-3">
+          {/* Comments */}
+          <section className="rounded-2xl border bg-card p-5">
+            <h2 className="text-sm font-semibold flex items-center gap-2 mb-4">
+              <span className="h-5 w-1 rounded-full bg-primary" />
+              Comments
+              {comments.length > 0 && <span className="ml-auto text-xs text-muted-foreground font-normal">{comments.length}</span>}
+            </h2>
+            <div className="space-y-4">
               {comments.map((c) => {
                 const author = c.user || {};
-                const name = author.name || author.display_name || c.user_name || "User";
+                const name   = author.name || author.display_name || c.user_name || "User";
                 const avatar = author.avatar_url || author.avatar || "";
-                const createdAt = c.created_at || c.createdAt || "";
+                const ts     = c.created_at || c.createdAt || "";
                 return (
-                  <div key={c.id} className="flex items-start gap-2.5">
+                  <div key={c.id} className="flex items-start gap-3">
                     <Avatar className="h-8 w-8 shrink-0 mt-0.5">
                       <AvatarImage src={avatar} />
-                      <AvatarFallback className="text-xs">{name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">{name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="rounded-xl bg-muted/50 px-3 py-2">
-                        <div className="text-xs font-semibold mb-0.5">{name}</div>
-                        <div className="text-sm">{c.content}</div>
+                      <div className="rounded-2xl rounded-tl-sm bg-muted/60 px-4 py-2.5">
+                        <div className="text-xs font-semibold text-foreground mb-1">{name}</div>
+                        <div className="text-sm text-foreground/90">{c.content}</div>
                       </div>
-                      {createdAt && (
-                        <div className="text-[11px] text-muted-foreground mt-1 pl-1">{fmtDeadline(createdAt)}</div>
-                      )}
+                      {ts && <div className="text-[11px] text-muted-foreground mt-1 pl-1">{fmtDeadline(ts)}</div>}
                     </div>
                   </div>
                 );
               })}
-              {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
+              {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet. Start the conversation.</p>}
+            </div>
+            <div className="mt-4 flex gap-2">
               <Textarea
                 value={commentDraft}
                 onChange={(e) => setCommentDraft(e.target.value)}
                 placeholder="Write a comment…"
                 rows={2}
+                className="resize-none rounded-xl flex-1"
               />
               <Button
-                size="sm"
+                size="icon"
+                className="h-full w-10 shrink-0 rounded-xl self-end"
                 disabled={!commentDraft.trim() || m.addComment.isPending}
                 onClick={() => m.addComment.mutate({ taskId: id, content: commentDraft.trim() }, { onSuccess: () => setCommentDraft("") })}
               >
-                {m.addComment.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-                Comment
+                {m.addComment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               </Button>
             </div>
-          </div>
+          </section>
         </div>
 
-        <div className="space-y-3">
-          <div className="rounded-xl border bg-card p-4">
-            <div className="text-xs text-muted-foreground mb-1.5">Status</div>
+        {/* ── Right sidebar ── */}
+        <div className="space-y-4">
+          {/* Status picker */}
+          <div className="rounded-2xl border bg-card p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5">Status</div>
             <Select
               value={displayStatus}
               onValueChange={(value) => {
                 setLocalStatus(value);
                 m.updateTaskStatus.mutate({ id, status: value }, {
                   onSuccess: () => setLocalStatus(null),
-                  onError: () => { setLocalStatus(null); toast.error("Failed to update status"); },
+                  onError:   () => { setLocalStatus(null); toast.error("Failed to update status"); },
                 });
               }}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${(STATUS_STYLE[displayStatus] || STATUS_STYLE["To Do"]).dot}`} />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="To Do">To Do</SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
@@ -1456,23 +1550,40 @@ export function TaskDetailPage({ id }) {
               </SelectContent>
             </Select>
           </div>
-          <Stat label="Priority" value={task.priority || "Medium"} />
-          <Stat label="Difficulty" value={task.difficulty || "Medium"} />
-          <Stat label="Domain" value={domainName} />
+
+          {/* Meta cards */}
+          <div className="rounded-2xl border bg-card divide-y overflow-hidden">
+            {[
+              { label: "Priority",   value: task.priority   || "Medium",  dot: PRIORITY_COLOR[task.priority] },
+              { label: "Difficulty", value: task.difficulty || "Medium",  dot: null },
+              { label: "Domain",     value: domainName,                   dot: null },
+              ...(estHours ? [{ label: "Estimated", value: estHours, dot: null }] : []),
+              ...(task.points != null ? [{ label: "Points", value: `${task.points} pts`, dot: null }] : []),
+            ].map(({ label, value, dot }) => (
+              <div key={label} className="flex items-center justify-between px-4 py-3">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  {dot && <span className={`h-2 w-2 rounded-full ${dot}`} />}
+                  {value}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <Suspense fallback={null}><CreateTaskModal open={editOpen} onOpenChange={setEditOpen} task={task} /></Suspense>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete task?</AlertDialogTitle>
-            <AlertDialogDescription>{task.title} will be permanently removed.</AlertDialogDescription>
+            <AlertDialogDescription>"{task.title}" will be permanently removed.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={(e) => {
                 e.preventDefault();
                 m.deleteTask.mutate({ id }, { onSuccess: () => (window.history.length > 1 ? window.history.back() : navigate({ to: "/" })) });

@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Loader2,
   Settings,
-  Sparkles,
   Timer,
   Users,
 } from "lucide-react";
@@ -157,15 +156,6 @@ export default function Sidebar() {
         </div>
         {otherGroups.map(renderGroup)}
       </nav>
-      <div className="m-3 rounded-xl border border-sidebar-border bg-sidebar-accent/50 p-3">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="h-4 w-4 text-[color:var(--ai)]" />
-          AI Scrum Coach
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Active across Dashboard, Spaces, Domains & Focus.
-        </p>
-      </div>
     </aside>
   );
 }

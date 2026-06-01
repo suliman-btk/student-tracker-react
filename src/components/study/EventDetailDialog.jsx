@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CalendarClock, Loader2, Pencil, Repeat, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useStudyMutations } from "@/lib/query-hooks";
+import { cn } from "@/lib/utils";
 
 function fmt(value, allDay) {
   if (!value) return "—";
@@ -24,16 +26,42 @@ function fmt(value, allDay) {
     : d.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+function localDate(value) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const SCOPES = [
+  { value: "single", label: "Only this event" },
+  { value: "future", label: "This and future events" },
+  { value: "all", label: "All events" },
+];
+
 export default function EventDetailDialog({ open, onOpenChange, event, onEdit }) {
   const { deleteEvent } = useStudyMutations();
+  const [scope, setScope] = useState("single");
   if (!event) return null;
+
+  const isRecurring = Boolean(event.recurrence_type);
+
+  const confirmDelete = (e) => {
+    e.preventDefault();
+    const args = isRecurring
+      ? { id: event.id, scope, occurrence_date: localDate(event.start_time) }
+      : { id: event.id };
+    deleteEvent.mutate(args, {
+      onSuccess: () => { toast.success("Event deleted"); onOpenChange(false); },
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm" style={{ background: event.color_hex || "#1A4D2E" }} />
+            <span className="h-3 w-3 rounded-sm" style={{ background: event.color_hex || "#4f46e5" }} />
             {event.title}
           </DialogTitle>
         </DialogHeader>
@@ -51,7 +79,7 @@ export default function EventDetailDialog({ open, onOpenChange, event, onEdit })
           {event.description && <p className="whitespace-pre-line">{event.description}</p>}
         </div>
         <DialogFooter>
-          <AlertDialog>
+          <AlertDialog onOpenChange={(o) => o && setScope("single")}>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="text-destructive">
                 <Trash2 className="mr-1.5 h-4 w-4" /> Delete
@@ -59,20 +87,34 @@ export default function EventDetailDialog({ open, onOpenChange, event, onEdit })
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete event?</AlertDialogTitle>
-                <AlertDialogDescription>{event.title} will be permanently removed.</AlertDialogDescription>
+                <AlertDialogTitle>Delete {isRecurring ? "recurring event" : "event"}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {isRecurring
+                    ? `Choose which occurrences of "${event.title}" to remove.`
+                    : `${event.title} will be permanently removed.`}
+                </AlertDialogDescription>
               </AlertDialogHeader>
+              {isRecurring && (
+                <div className="space-y-1.5 py-1">
+                  {SCOPES.map((s) => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => setScope(s.value)}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors",
+                        scope === s.value ? "border-foreground bg-muted/60" : "hover:bg-muted/40",
+                      )}
+                    >
+                      {s.label}
+                      <span className={cn("h-3.5 w-3.5 rounded-full border", scope === s.value && "bg-foreground")} />
+                    </button>
+                  ))}
+                </div>
+              )}
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => {
-                    e.preventDefault();
-                    deleteEvent.mutate(
-                      { id: event.id },
-                      { onSuccess: () => { toast.success("Event deleted"); onOpenChange(false); } },
-                    );
-                  }}
-                >
+                <AlertDialogAction onClick={confirmDelete}>
                   {deleteEvent.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
                   Delete
                 </AlertDialogAction>

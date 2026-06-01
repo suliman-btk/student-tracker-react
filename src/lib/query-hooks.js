@@ -21,8 +21,6 @@ export const qk = {
     sprints: (spaceId) => ["study", "sprints", String(spaceId || "all")],
     activeSprint: (spaceId) => ["study", "sprints", "active", String(spaceId || "all")],
     sprint: (id) => ["study", "sprints", String(id)],
-    members: (spaceId) => ["study", "spaces", String(spaceId), "members"],
-    invitations: ["study", "invitations"],
     notifications: ["study", "notifications"],
     calendar: (params) => ["study", "calendar", params || {}],
   },
@@ -145,14 +143,6 @@ export function useCalendarEvents(params) {
     queryKey: qk.study.calendar(params),
     queryFn: () => studyApi.calendar.list(params),
     retry: 1,
-  });
-}
-
-export function useSpaceMembers(spaceId) {
-  return useQuery({
-    queryKey: qk.study.members(spaceId),
-    queryFn: () => studyApi.members.list(spaceId),
-    enabled: enabledAuth(spaceId),
   });
 }
 
@@ -446,7 +436,8 @@ export function useStudyMutations() {
       onError: toastError,
     }),
     deleteEvent: useMutation({
-      mutationFn: ({ id }) => studyApi.calendar.remove(id),
+      mutationFn: ({ id, scope, occurrence_date }) =>
+        studyApi.calendar.remove(id, scope ? { scope, occurrence_date } : undefined),
       onSuccess: () => qc.invalidateQueries({ queryKey: ["study", "calendar"] }),
       onError: toastError,
     }),

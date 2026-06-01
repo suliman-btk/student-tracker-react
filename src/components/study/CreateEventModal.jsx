@@ -9,13 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useStudyMutations } from "@/lib/query-hooks";
+import { useStudyMutations, useDomains } from "@/lib/query-hooks";
 import DateTimePicker from "@/components/study/DateTimePicker";
 import { cn } from "@/lib/utils";
 
-const COLORS = ["#1A4D2E", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#0891b2"];
+const COLORS = ["#4f46e5", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#0891b2"];
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const NONE = "none";
+const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
 
 function toLocalInput(value, fallbackDate) {
   const d = value ? new Date(value) : fallbackDate;
@@ -24,10 +25,12 @@ function toLocalInput(value, fallbackDate) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function CreateEventModal({ open, onOpenChange, event, initialDate, spaceId }) {
+export default function CreateEventModal({ open, onOpenChange, event, initialDate }) {
   const isEdit = Boolean(event?.id);
   const { createEvent, updateEvent } = useStudyMutations();
   const mutation = isEdit ? updateEvent : createEvent;
+  const { data: domainsPayload } = useDomains();
+  const domains = asArray(domainsPayload);
   const [form, setForm] = useState(null);
   const [error, setError] = useState(null);
 
@@ -47,6 +50,7 @@ export default function CreateEventModal({ open, onOpenChange, event, initialDat
         recurrence_end_date: (event.recurrence_end_date || "").slice(0, 10),
         color_hex: event.color_hex || COLORS[0],
         reminder_minutes: event.reminder_minutes ?? "",
+        domain_id: event.domain_id != null ? String(event.domain_id) : NONE,
       });
     } else {
       const base = initialDate ? new Date(initialDate) : new Date();
@@ -65,6 +69,7 @@ export default function CreateEventModal({ open, onOpenChange, event, initialDat
         recurrence_end_date: "",
         color_hex: COLORS[0],
         reminder_minutes: "",
+        domain_id: NONE,
       });
     }
   }, [open, isEdit, event, initialDate]);
@@ -92,8 +97,8 @@ export default function CreateEventModal({ open, onOpenChange, event, initialDat
       all_day: form.all_day,
       color_hex: form.color_hex,
       reminder_minutes: form.reminder_minutes === "" ? undefined : Number(form.reminder_minutes),
+      domain_id: form.domain_id && form.domain_id !== NONE ? Number(form.domain_id) : null,
     };
-    if (spaceId && !isEdit) body.space_id = spaceId;
     if (form.recurrence_type !== NONE) {
       body.recurrence_type = form.recurrence_type;
       body.recurrence_interval = Number(form.recurrence_interval) || 1;
@@ -137,6 +142,19 @@ export default function CreateEventModal({ open, onOpenChange, event, initialDat
               <Label>End</Label>
               <DateTimePicker value={form.end} onChange={set("end")} showTime={!form.all_day} placeholder="End date" />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Domain</Label>
+            <Select value={form.domain_id} onValueChange={set("domain_id")}>
+              <SelectTrigger><SelectValue placeholder="No domain" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>No domain</SelectItem>
+                {domains.map((d) => (
+                  <SelectItem key={d.id} value={String(d.id)}>{d.domain_name || d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

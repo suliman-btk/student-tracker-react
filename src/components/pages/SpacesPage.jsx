@@ -92,7 +92,7 @@ export default function SpacesPage() {
             <div className="text-xs text-muted-foreground mt-1">{s.template} · {s.role}</div>
             <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Users className="h-3.5 w-3.5" /> {s.members_count ?? s.members ?? 1} member{(s.members_count ?? s.members) === 1 ? "" : "s"}
+                <Users className="h-3.5 w-3.5" /> Personal
               </div>
               <span className="text-xs text-primary font-medium">Open {">"}</span>
             </div>

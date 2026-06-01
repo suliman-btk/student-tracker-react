@@ -65,23 +65,13 @@ export const studyApi = {
       apiRequest(`/study/sprints/${id}/tasks/${taskId}/status`, { method: "PATCH", body: { status } }).then(unwrapData),
   },
   spacesTasks: (spaceId, task_ids) => apiRequest(`/study/spaces/${spaceId}/tasks`, { method: "POST", body: { task_ids } }).then(unwrapData),
-  members: {
-    list: (spaceId) => apiRequest(`/study/spaces/${spaceId}/members`).then((p) => unwrapData(p, [])),
-    remove: (spaceId, userId) => apiRequest(`/study/spaces/${spaceId}/members/${userId}`, { method: "DELETE" }),
-    updateRole: (spaceId, userId, role) => apiRequest(`/study/spaces/${spaceId}/members/${userId}/role`, { method: "PATCH", body: { role } }).then(unwrapData),
-  },
-  invitations: {
-    send: (spaceId, identifier) => apiRequest(`/study/spaces/${spaceId}/invite`, { method: "POST", body: { identifier } }).then(unwrapData),
-    accept: (token) => apiRequest(`/study/invitations/${token}/accept`, { method: "POST" }).then(unwrapData),
-    decline: (token) => apiRequest(`/study/invitations/${token}/decline`, { method: "POST" }).then(unwrapData),
-    pending: () => apiRequest("/study/invitations/pending").then((p) => unwrapData(p, [])),
-  },
   calendar: {
     list: (params) => apiRequest("/study/calendar/events", { params }).then((p) => unwrapData(p, [])),
     create: (body) => apiRequest("/study/calendar/events", { method: "POST", body }).then(unwrapData),
     show: (id) => apiRequest(`/study/calendar/events/${id}`).then(unwrapData),
     update: (id, body) => apiRequest(`/study/calendar/events/${id}`, { method: "PATCH", body }).then(unwrapData),
-    remove: (id) => apiRequest(`/study/calendar/events/${id}`, { method: "DELETE" }),
+    // opts: { scope: "single" | "future" | "all", occurrence_date: "YYYY-MM-DD" }
+    remove: (id, opts) => apiRequest(`/study/calendar/events/${id}`, { method: "DELETE", body: opts }),
   },
   notifications: {
     list: (params) => apiRequest("/study/notifications", { params }),

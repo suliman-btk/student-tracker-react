@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useStudyMutations } from "@/lib/query-hooks";
 import { cn } from "@/lib/utils";
 
-const COLORS = ["#1A4D2E", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#16a34a", "#0891b2"];
+const COLORS = ["#4f46e5", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#16a34a", "#0891b2"];
 
 export default function CreateSpaceModal({ open, onOpenChange, space }) {
   const isEdit = Boolean(space?.id);

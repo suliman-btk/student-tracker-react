@@ -84,18 +84,55 @@ export default function CalendarPage() {
 
   return (
     <div className="-mx-4 lg:-mx-8 -my-6 h-[calc(100vh-3.5rem)] flex bg-background">
+      {/* Calendar side panel */}
+      <aside className="hidden md:flex w-64 shrink-0 flex-col gap-5 border-r bg-card/40 p-4 overflow-y-auto scrollbar-thin">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="w-full justify-center gap-1.5 shadow-sm h-11 rounded-xl text-[15px]">
+              <Plus className="h-4 w-4" /> Create
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[14.5rem]">
+            <DropdownMenuItem onClick={() => openNewEvent(cursor)}>New event</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTaskModalOpen(true)}>New task</DropdownMenuItem>
+            <DropdownMenuItem onClick={newSprint}>New sprint</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <MiniMonth cursor={cursor} onPick={setCursor} />
+
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sprints</span>
+            <span className="text-[11px] text-muted-foreground">{ranges.length}</span>
+          </div>
+          <div className="space-y-1">
+            {ranges.map((r) => {
+              const fmt = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+              return (
+                <div
+                  key={r.id}
+                  className={cn(
+                    "flex items-start gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                    r.active ? "bg-emerald-500/10" : "hover:bg-muted/60",
+                  )}
+                >
+                  <span className={cn("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", r.active ? "bg-emerald-500" : "bg-muted-foreground/40")} />
+                  <div className="min-w-0">
+                    <div className="truncate font-medium leading-tight">{r.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{fmt(r.from)} – {fmt(r.to)}</div>
+                  </div>
+                  {r.active && <span className="ml-auto text-[10px] font-semibold text-emerald-600 uppercase">Now</span>}
+                </div>
+              );
+            })}
+            {ranges.length === 0 && <p className="px-2.5 text-xs text-muted-foreground">No sprints yet.</p>}
+          </div>
+        </div>
+      </aside>
+
       <div className="flex-1 flex flex-col min-w-0">
         <div className="h-16 border-b flex items-center px-4 gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="gap-1.5 shadow-sm"><Plus className="h-4 w-4" /> Create</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => openNewEvent(cursor)}>New event</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTaskModalOpen(true)}>New task</DropdownMenuItem>
-              <DropdownMenuItem onClick={newSprint}>New sprint</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Today</Button>
           <div className="flex items-center">
             <Button size="icon" variant="ghost" onClick={() => setCursor(addDays(cursor, -30))}><ChevronLeft className="h-4 w-4" /></Button>
@@ -163,6 +200,52 @@ function SprintBar({ sprint }) {
   );
 }
 
+function MiniMonth({ cursor, onPick }) {
+  const start = startOfMonth(cursor);
+  const offset = start.getDay();
+  const cells = Array.from({ length: 42 }, (_, i) => addDays(start, i - offset));
+  const today = new Date();
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-semibold">{cursor.toLocaleString("en", { month: "long", year: "numeric" })}</span>
+        <div className="flex">
+          <button onClick={() => onPick(addDays(start, -1))} className="h-6 w-6 grid place-items-center rounded-md text-muted-foreground hover:bg-muted">
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => onPick(addDays(startOfMonth(addDays(start, 35)), 0))} className="h-6 w-6 grid place-items-center rounded-md text-muted-foreground hover:bg-muted">
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-7 text-[10px] text-muted-foreground mb-1">
+        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => <div key={i} className="text-center">{d}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-0.5">
+        {cells.map((d, i) => {
+          const isToday = sameDay(d, today);
+          const selected = sameDay(d, cursor);
+          return (
+            <button
+              key={i}
+              onClick={() => onPick(d)}
+              className={cn(
+                "h-7 text-xs rounded-full grid place-items-center transition-colors",
+                d.getMonth() !== cursor.getMonth() && "text-muted-foreground/40",
+                !selected && isToday && "text-primary font-semibold",
+                !selected && "hover:bg-muted",
+                selected && "bg-primary text-primary-foreground font-semibold hover:bg-primary",
+              )}
+            >
+              {d.getDate()}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskClick, onDayClick }) {
   const start = startOfMonth(cursor);
   const offset = start.getDay();
@@ -216,7 +299,7 @@ function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskCli
                     key={`e${e.id}`}
                     onClick={(ev) => { ev.stopPropagation(); onEventClick(e); }}
                     className="block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] text-white"
-                    style={{ background: e.color_hex || "#1A4D2E" }}
+                    style={{ background: e.color_hex || "#4f46e5" }}
                   >
                     {e.all_day ? e.title : `${new Date(e.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ${e.title}`}
                   </button>
@@ -284,7 +367,7 @@ function TimeGrid({ days, cursor, events, onEventClick }) {
                     key={e.id}
                     onClick={() => onEventClick(e)}
                     className="absolute left-1 right-1 rounded-md px-2 py-1 text-left text-white text-xs shadow-sm overflow-hidden"
-                    style={{ top, height: h, background: e.color_hex || "#1A4D2E" }}
+                    style={{ top, height: h, background: e.color_hex || "#4f46e5" }}
                   >
                     <div className="font-semibold truncate">{e.title}</div>
                     <div className="opacity-90">{s.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div>
