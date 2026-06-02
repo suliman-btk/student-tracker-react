@@ -62,6 +62,32 @@ export async function apiRequest(path, { method = "GET", body, params, auth = tr
   return data;
 }
 
+// Multipart upload — same auth as apiRequest, but lets the browser set the
+// multipart/form-data boundary (do NOT set Content-Type manually).
+export async function apiUpload(path, formData, { auth = true, signal } = {}) {
+  const token = auth ? await getFreshIdToken() : null;
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    signal,
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  const data = await parseResponse(response);
+  if (!response.ok) {
+    const message =
+      data?.message ||
+      data?.error ||
+      (typeof data === "string" ? data : null) ||
+      `${response.status} ${response.statusText}`;
+    throw new ApiError(message, { status: response.status, data });
+  }
+  return data;
+}
+
 export const unwrapData = (payload, fallback = null) => {
   if (payload == null) return fallback;
   if (Array.isArray(payload)) return payload;

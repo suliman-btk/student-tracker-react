@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft, CalendarDays, CheckCircle2, Circle, Clock3,
-  Loader2, Plus, TrendingUp, AlertCircle, BarChart2,
+  Loader2, Plus, Sparkles, TrendingUp, AlertCircle, BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDomain, useDomainTasks } from "@/lib/query-hooks";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
+import ImportTasksDialog from "@/components/study/ImportTasksDialog";
 
 const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
 
@@ -47,6 +48,7 @@ export default function DomainTasksPage({ id }) {
   const { data: tasksPayload = [], isLoading: loadingTasks, error: tasksError } = useDomainTasks(id);
   const tasks = asArray(tasksPayload);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [filter, setFilter] = useState("All");
 
   const title = domain?.domain_name || domain?.name || `Domain ${id}`;
@@ -84,12 +86,18 @@ export default function DomainTasksPage({ id }) {
             {domain?.area_type || domain?.area || "General"} · {domain?.priority || "Normal"} priority
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-1.5" /> Add task
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Sparkles className="h-4 w-4 mr-1.5 text-[color:var(--ai)]" /> Import with AI
+          </Button>
+          <Button onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-1.5" /> Add task
+          </Button>
+        </div>
       </div>
 
       <CreateTaskModal open={modalOpen} onOpenChange={setModalOpen} domainId={id} />
+      <ImportTasksDialog open={importOpen} onOpenChange={setImportOpen} domainId={id} />
 
       {loadingDomain && (
         <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground flex items-center gap-2">

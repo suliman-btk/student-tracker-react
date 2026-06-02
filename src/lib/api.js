@@ -1,4 +1,4 @@
-import { apiRequest, crud, unwrapData } from "./api-client";
+import { apiRequest, apiUpload, crud, unwrapData } from "./api-client";
 
 export const userApi = {
   profile: () => apiRequest("/user/profile").then(unwrapData),
@@ -28,6 +28,8 @@ export const studyApi = {
     toggleActive: (id) => apiRequest(`/study/domains/${id}/toggle-active`, { method: "PATCH" }).then(unwrapData),
     tasks: (domainId) => apiRequest(`/study/domains/${domainId}/tasks`).then((p) => unwrapData(p, [])),
     createTask: (domainId, body) => apiRequest(`/study/domains/${domainId}/tasks`, { method: "POST", body }).then(unwrapData),
+    bulkTasks: (domainId, tasks) =>
+      apiRequest(`/study/domains/${domainId}/tasks/bulk`, { method: "POST", body: { tasks } }).then((p) => unwrapData(p, [])),
   },
   tasks: {
     list: (params) => apiRequest("/study/tasks", { params }).then((p) => unwrapData(p, [])),
@@ -72,6 +74,8 @@ export const studyApi = {
     update: (id, body) => apiRequest(`/study/calendar/events/${id}`, { method: "PATCH", body }).then(unwrapData),
     // opts: { scope: "single" | "future" | "all", occurrence_date: "YYYY-MM-DD" }
     remove: (id, opts) => apiRequest(`/study/calendar/events/${id}`, { method: "DELETE", body: opts }),
+    bulkCreate: (events) =>
+      apiRequest("/study/calendar/events/bulk", { method: "POST", body: { events } }).then((p) => unwrapData(p, [])),
   },
   notifications: {
     list: (params) => apiRequest("/study/notifications", { params }),
@@ -151,6 +155,17 @@ export const aiApi = {
   applyMultiSprintPlan: (body) => apiRequest("/ai/multi-sprint-plan/apply", { method: "POST", body }).then(unwrapData),
   weeklyPlan: (body) => apiRequest("/ai/weekly-plan", { method: "POST", body }).then(unwrapData),
   scrumCoach: (kind, body) => apiRequest(`/ai/${kind}`, { method: "POST", body }).then(unwrapData),
+  extractTasks: (file, domainId) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (domainId != null) fd.append("domain_id", String(domainId));
+    return apiUpload("/ai/extract-tasks", fd).then((p) => unwrapData(p)?.tasks ?? []);
+  },
+  extractSchedule: (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiUpload("/ai/extract-schedule", fd).then((p) => unwrapData(p)?.events ?? []);
+  },
 };
 
 export const api = { user: userApi, study: studyApi, focus: focusApi, social: socialApi, ai: aiApi };

@@ -16,6 +16,7 @@ import CreateSprintModal from "@/components/study/CreateSprintModal";
 import CreateEventModal from "@/components/study/CreateEventModal";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
 import EventDetailDialog from "@/components/study/EventDetailDialog";
+import ImportScheduleDialog from "@/components/study/ImportScheduleDialog";
 
 const VIEWS = ["Month", "Week", "Day"];
 const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
@@ -51,6 +52,7 @@ export default function CalendarPage() {
   const [sprintModalOpen, setSprintModalOpen] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [importScheduleOpen, setImportScheduleOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [createDate, setCreateDate] = useState(null);
   const [detailEvent, setDetailEvent] = useState(null);
@@ -96,6 +98,7 @@ export default function CalendarPage() {
             <DropdownMenuItem onClick={() => openNewEvent(cursor)}>New event</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setTaskModalOpen(true)}>New task</DropdownMenuItem>
             <DropdownMenuItem onClick={newSprint}>New sprint</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setImportScheduleOpen(true)}>Import schedule (AI)</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -182,6 +185,7 @@ export default function CalendarPage() {
         event={detailEvent}
         onEdit={openEditEvent}
       />
+      <ImportScheduleDialog open={importScheduleOpen} onOpenChange={setImportScheduleOpen} />
     </div>
   );
 }

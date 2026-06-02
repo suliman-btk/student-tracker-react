@@ -425,8 +425,21 @@ export function useStudyMutations() {
       onSuccess: (_, vars) => invalidateWorkspace(vars?.space_id),
       onError: toastError,
     }),
+    bulkCreateDomainTasks: useMutation({
+      mutationFn: ({ domainId, tasks }) => studyApi.domains.bulkTasks(domainId, tasks),
+      onSuccess: (_, vars) => {
+        qc.invalidateQueries({ queryKey: qk.study.domainTasks(vars.domainId) });
+        invalidateWorkspace();
+      },
+      onError: toastError,
+    }),
     createEvent: useMutation({
       mutationFn: (body) => studyApi.calendar.create(body),
+      onSuccess: () => qc.invalidateQueries({ queryKey: ["study", "calendar"] }),
+      onError: toastError,
+    }),
+    bulkCreateEvents: useMutation({
+      mutationFn: (events) => studyApi.calendar.bulkCreate(events),
       onSuccess: () => qc.invalidateQueries({ queryKey: ["study", "calendar"] }),
       onError: toastError,
     }),
