@@ -73,7 +73,10 @@ export default function FocusPage() {
   const [seconds, setSeconds] = useState(focusMins * 60);
   const [running, setRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const finishedRef = useRef(false);
+  const sessionIdRef = useRef(null);
+  // Mirror the id in a ref so we can read/clear it synchronously — guarantees a
+  // session is never ended twice (a 2nd /end 404s as "Active session not found").
+  const setSession = useCallback((id) => { sessionIdRef.current = id; setSessionId(id); }, []);
 
   // keep seconds in sync when settings change (only if not running)
   useEffect(() => {
@@ -88,49 +91,51 @@ export default function FocusPage() {
   // ── Session mutations ─────────────────────────────────────────────────────
   const startMut = useMutation({
     mutationFn: () => focusApi.pomodoro.start({ focus_duration: focusMins, break_duration: breakMins }),
-    onSuccess: (data) => setSessionId(data?.id ?? data?.session_id ?? null),
+    onSuccess: (data) => setSession(data?.id ?? data?.session_id ?? null),
     onError: (e) => toast.error(e?.message || "Could not start session"),
   });
   const endMut = useMutation({
     mutationFn: ({ id, status }) => focusApi.pomodoro.end(id, { status }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.focus.pomodoro });
-      setSessionId(null);
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.focus.pomodoro }),
+    onError: (e) => {
+      // A 404 just means the session was already ended elsewhere — harmless.
+      if (/not found/i.test(e?.message || "") || e?.status === 404) return;
+      toast.error(e?.message || "Could not end session");
     },
-    onError: (e) => toast.error(e?.message || "Could not end session"),
   });
 
-  // ── Tick ──────────────────────────────────────────────────────────────────
+  // End the current session exactly once. Clearing the ref first ensures a
+  // second trigger (timer + stop, or a StrictMode re-run) can't re-end it.
+  const endSession = useCallback((status) => {
+    const id = sessionIdRef.current;
+    if (!id) return;
+    sessionIdRef.current = null;
+    setSessionId(null);
+    endMut.mutate({ id, status });
+  }, [endMut]);
+
+  // ── Tick: count down only (no side effects inside the state updater) ────────
   useEffect(() => {
     if (!running) return;
-    finishedRef.current = false;
-    const t = setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) {
-          if (!finishedRef.current) {
-            finishedRef.current = true;
-            playBeep();
-            // complete the session on finish
-            if (sessionId) endMut.mutate({ id: sessionId, status: "completed" });
-            setRunning(false);
-            if (mode === "focus") {
-              toast.success("Focus session complete! Take a break.");
-            } else {
-              toast.success("Break over! Ready to focus?");
-            }
-          }
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
+    const t = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
-  }, [running, sessionId, mode]); // eslint-disable-line
+  }, [running]);
+
+  // ── Completion: fires once when the countdown reaches zero ──────────────────
+  useEffect(() => {
+    if (!running || seconds > 0) return;
+    playBeep();
+    endSession("completed");
+    setRunning(false);
+    toast.success(mode === "focus"
+      ? "Focus session complete! Take a break."
+      : "Break over! Ready to focus?");
+  }, [running, seconds, mode]); // eslint-disable-line
 
   // ── Controls ──────────────────────────────────────────────────────────────
   const handleStart = () => {
     if (!running) {
-      if (!sessionId) startMut.mutate();
+      if (!sessionIdRef.current) startMut.mutate();
       setRunning(true);
     } else {
       setRunning(false);
@@ -140,7 +145,7 @@ export default function FocusPage() {
   const handleReset = () => {
     setRunning(false);
     setSeconds(total);
-    if (sessionId) { endMut.mutate({ id: sessionId, status: "abandoned" }); }
+    endSession("abandoned");
   };
 
   // ── Stop → task progress dialog ────────────────────────────────────────────
@@ -149,7 +154,7 @@ export default function FocusPage() {
 
   const handleStop = () => {
     setRunning(false);
-    if (sessionId) endMut.mutate({ id: sessionId, status: "abandoned" });
+    endSession("abandoned");
     if (sprintTasks.length > 0) setStopOpen(true);
   };
 
