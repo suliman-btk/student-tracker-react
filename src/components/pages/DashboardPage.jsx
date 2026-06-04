@@ -463,11 +463,12 @@ function YearHeatmap({ activity }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
 
-  const heatColor = (count) => {
-    if (!count) return "#E8E8EF";
-    if (count === 1) return "#B3B7DB";
-    if (count <= 3) return "#7880C0";
-    if (count <= 6) return "#4C56AF";
+  // activity[date] is focus MINUTES that day → map to a colour band.
+  const heatColor = (mins) => {
+    if (!mins) return "#E8E8EF";
+    if (mins < 30) return "#B3B7DB";
+    if (mins < 60) return "#7880C0";
+    if (mins < 120) return "#4C56AF";
     return "#000666";
   };
 
@@ -537,13 +538,13 @@ function YearHeatmap({ activity }) {
                 {week.map((d, di) => {
                   if (!d) return <div key={di} className="aspect-square min-h-[16px]" />;
                   const future = d > today;
-                  const count = activity[keyOf(d)] || 0;
+                  const mins = activity[keyOf(d)] || 0;
                   return (
                     <div
                       key={di}
                       className="aspect-square min-h-[16px] rounded-[3px]"
-                      style={{ background: future ? "#F3F3F3" : heatColor(count) }}
-                      title={future ? "" : `${monthShort(d.getMonth())} ${d.getDate()}: ${count} session(s)`}
+                      style={{ background: future ? "#F3F3F3" : heatColor(mins) }}
+                      title={future ? "" : `${monthShort(d.getMonth())} ${d.getDate()}: ${mins} min focused`}
                     />
                   );
                 })}

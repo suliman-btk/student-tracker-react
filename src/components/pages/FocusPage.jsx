@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Header } from "./SpacesPage";
 import { focusApi, studyApi } from "@/lib/api";
-import { useActiveSprint, usePomodoroSessions, qk } from "@/lib/query-hooks";
+import { usePomodoroSessions, qk } from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -18,18 +18,59 @@ const fmtDate = (v) => {
   return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 };
 
-function playBeep() {
+// Bell chime when a phase ends. Plays the same bell sound as the mobile app,
+// falling back to a synthesized two-tone chime if the audio file can't load.
+let _bell;
+function getBell() {
+  if (!_bell) {
+    _bell = new Audio("/sounds/bell.wav");
+    _bell.preload = "auto";
+  }
+  return _bell;
+}
+
+// Call from a user gesture (Start) to unlock audio, so the bell is allowed to
+// play later when the timer callback fires.
+function primeAudio() {
+  try {
+    const a = getBell();
+    a.muted = true;
+    const p = a.play();
+    if (p && p.then) {
+      p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; });
+    }
+  } catch (_) {}
+}
+
+function playChime() {
+  try {
+    const a = getBell();
+    a.muted = false;
+    a.currentTime = 0;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => synthChime());
+  } catch (_) {
+    synthChime();
+  }
+}
+
+function synthChime() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.15, 0.3].forEach((offset) => {
+    const now = ctx.currentTime;
+    [{ freq: 880, at: 0 }, { freq: 587.33, at: 0.2 }].forEach(({ freq, at }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.4, ctx.currentTime + offset);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.12);
-      osc.start(ctx.currentTime + offset);
-      osc.stop(ctx.currentTime + offset + 0.13);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const t = now + at;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+      osc.start(t);
+      osc.stop(t + 1.5);
     });
   } catch (_) {}
 }
@@ -38,7 +79,14 @@ function playBeep() {
 export default function FocusPage() {
   const qc = useQueryClient();
   const { activeSpaceId } = useUI();
-  const { data: sprint } = useActiveSprint(activeSpaceId);
+  // Active sprint for the post-session task list. Fetch even when no space is
+  // selected — the backend returns the user's active sprint across spaces — so
+  // stopping a session always surfaces its tasks.
+  const { data: sprint } = useQuery({
+    queryKey: qk.study.activeSprint(activeSpaceId),
+    queryFn: () => studyApi.sprints.active(activeSpaceId ? { space_id: activeSpaceId } : undefined),
+    retry: false,
+  });
   const { data: sessionsPayload } = usePomodoroSessions();
   const sessions = Array.isArray(sessionsPayload) ? sessionsPayload : sessionsPayload?.data || [];
 
@@ -124,7 +172,7 @@ export default function FocusPage() {
   // ── Completion: fires once when the countdown reaches zero ──────────────────
   useEffect(() => {
     if (!running || seconds > 0) return;
-    playBeep();
+    playChime();
     endSession("completed");
     setRunning(false);
     toast.success(mode === "focus"
@@ -135,6 +183,7 @@ export default function FocusPage() {
   // ── Controls ──────────────────────────────────────────────────────────────
   const handleStart = () => {
     if (!running) {
+      primeAudio(); // unlock audio during this click so the end-bell can play
       if (!sessionIdRef.current) startMut.mutate();
       setRunning(true);
     } else {
