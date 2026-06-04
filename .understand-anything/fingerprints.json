@@ -1,0 +1,8354 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "38d1b503d2c7a995f728a876699de79006c53c5f",
+  "generatedAt": "2026-06-02T07:47:52.660Z",
+  "files": {
+    ".prettierignore": {
+      "filePath": ".prettierignore",
+      "contentHash": "52c7c767ff0615eec4eb64cc71265877f7f423eb597d665b5e439f337c661a5a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 9,
+      "hasStructuralAnalysis": false
+    },
+    "eslint.config.js": {
+      "filePath": "eslint.config.js",
+      "contentHash": "3266245a1ff610a0b37dbb8b8c77b93a125e0d8758b9838cfd04b2e0a1397d56",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@eslint/js",
+          "specifiers": [
+            "js"
+          ]
+        },
+        {
+          "source": "eslint-plugin-prettier/recommended",
+          "specifiers": [
+            "eslintPluginPrettier"
+          ]
+        },
+        {
+          "source": "globals",
+          "specifiers": [
+            "globals"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-hooks",
+          "specifiers": [
+            "reactHooks"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-refresh",
+          "specifiers": [
+            "reactRefresh"
+          ]
+        },
+        {
+          "source": "typescript-eslint",
+          "specifiers": [
+            "tseslint"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 41,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ai/AIBubble.jsx": {
+      "filePath": "src/components/ai/AIBubble.jsx",
+      "contentHash": "e870efadfe43416cef0e859c98946416c93f50158c148dcbe8b61ca1ed702ed2",
+      "functions": [
+        {
+          "name": "AIBadge",
+          "params": [],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "AIInsightCard",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Sparkles"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "AIBadge",
+        "AIInsightCard"
+      ],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/layout/AIDrawer.jsx": {
+      "filePath": "src/components/layout/AIDrawer.jsx",
+      "contentHash": "68ef7d92161fe9b8567d8a23117d76c99f6cedf0e92468d07ae5dcd74576647c",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "p"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "AIDrawer",
+          "params": [],
+          "exported": true,
+          "lineCount": 123
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "Gauge",
+            "Loader2",
+            "Sparkles",
+            "X"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useAiSuggestions",
+            "useCapacity",
+            "useStandupToday",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/components/study/StandupModal",
+          "specifiers": [
+            "StandupModal"
+          ]
+        }
+      ],
+      "exports": [
+        "AIDrawer"
+      ],
+      "totalLines": 134,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/layout/AppShell.jsx": {
+      "filePath": "src/components/layout/AppShell.jsx",
+      "contentHash": "9ec3a30bcd072df9756e42211577ed0330e11fbf25e8127ad20bb937bfa7570a",
+      "functions": [
+        {
+          "name": "AppShell",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "./Sidebar",
+          "specifiers": [
+            "Sidebar"
+          ]
+        },
+        {
+          "source": "./Topbar",
+          "specifiers": [
+            "Topbar"
+          ]
+        },
+        {
+          "source": "./AIDrawer",
+          "specifiers": [
+            "AIDrawer"
+          ]
+        }
+      ],
+      "exports": [
+        "AppShell"
+      ],
+      "totalLines": 19,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/layout/Sidebar.jsx": {
+      "filePath": "src/components/layout/Sidebar.jsx",
+      "contentHash": "ae04aa0a6cba720511d89d4b4f8faf2e31a26f497a546b96a59ab3c119f5578b",
+      "functions": [
+        {
+          "name": "Sidebar",
+          "params": [],
+          "exported": true,
+          "lineCount": 112
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link",
+            "useRouterState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "AlertCircle",
+            "Bell",
+            "Boxes",
+            "CalendarDays",
+            "FolderTree",
+            "Globe",
+            "LayoutDashboard",
+            "Loader2",
+            "Settings",
+            "Timer",
+            "Users"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useSpaces"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Sidebar"
+      ],
+      "totalLines": 162,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/layout/Topbar.jsx": {
+      "filePath": "src/components/layout/Topbar.jsx",
+      "contentHash": "ed92c206fd87a7cfc67d31d6ed520b5882016671397bf87a1a9916bfa94a26b5",
+      "functions": [
+        {
+          "name": "Topbar",
+          "params": [],
+          "exported": true,
+          "lineCount": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/store/auth-store",
+          "specifiers": [
+            "useAuthStore"
+          ]
+        },
+        {
+          "source": "@/components/ui/avatar",
+          "specifiers": [
+            "Avatar",
+            "AvatarFallback",
+            "AvatarImage"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dropdown-menu",
+          "specifiers": [
+            "DropdownMenu",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuTrigger",
+            "DropdownMenuLabel",
+            "DropdownMenuSeparator"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        }
+      ],
+      "exports": [
+        "Topbar"
+      ],
+      "totalLines": 44,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/AuthPage.jsx": {
+      "filePath": "src/components/pages/AuthPage.jsx",
+      "contentHash": "d78096d8968631af7c11a8445dec2f48c6225f1bfed9d5d78b502d4a2d894a4e",
+      "functions": [
+        {
+          "name": "GoogleIcon",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "Field",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "AuthPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 100
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "CalendarDays",
+            "CheckCircle2",
+            "Lock",
+            "Mail",
+            "Sparkles",
+            "Timer",
+            "User",
+            "Zap"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/store/auth-store",
+          "specifiers": [
+            "useAuthStore"
+          ]
+        }
+      ],
+      "exports": [
+        "AuthPage"
+      ],
+      "totalLines": 137,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/BacklogPage.jsx": {
+      "filePath": "src/components/pages/BacklogPage.jsx",
+      "contentHash": "c58de9dfc0581ae84d96e488bc3722061971d9776691af93f1ab1e35cf3a1dc3",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "isCompleted",
+          "params": [
+            "s"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "BacklogPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 81
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Plus"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useBacklog",
+            "useSprints",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateTaskModal",
+          "specifiers": [
+            "CreateTaskModal"
+          ]
+        },
+        {
+          "source": "@/components/ui/dropdown-menu",
+          "specifiers": [
+            "DropdownMenu",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuLabel",
+            "DropdownMenuTrigger"
+          ]
+        }
+      ],
+      "exports": [
+        "BacklogPage"
+      ],
+      "totalLines": 101,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/CalendarPage.jsx": {
+      "filePath": "src/components/pages/CalendarPage.jsx",
+      "contentHash": "90f1822b8b412541a21b7145af6943e532aa2561573774a7d68e0d090379e123",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "p"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "startOfMonth",
+          "params": [
+            "d"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "addDays",
+          "params": [
+            "d",
+            "n"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "sameDay",
+          "params": [
+            "a",
+            "b"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "dayMs",
+          "params": [
+            "d"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "parseLocal",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "startOfDay",
+          "params": [
+            "d"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "diffDays",
+          "params": [
+            "a",
+            "b"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "occursOn",
+          "params": [
+            "ev",
+            "day",
+            "base"
+          ],
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "expandEvents",
+          "params": [
+            "events",
+            "rangeStart",
+            "rangeEnd"
+          ],
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "CalendarPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 159
+        },
+        {
+          "name": "SprintBar",
+          "params": [],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "MiniMonth",
+          "params": [],
+          "exported": false,
+          "lineCount": 45
+        },
+        {
+          "name": "MonthView",
+          "params": [],
+          "exported": false,
+          "lineCount": 69
+        },
+        {
+          "name": "TimeGrid",
+          "params": [],
+          "exported": false,
+          "lineCount": 65
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useMemo",
+            "useState"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronLeft",
+            "ChevronRight",
+            "Loader2",
+            "Plus",
+            "Zap"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn",
+            "parseWall",
+            "wallDateStr"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useCalendarEvents",
+            "useSprints",
+            "useTasks"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        },
+        {
+          "source": "@/components/ui/dropdown-menu",
+          "specifiers": [
+            "DropdownMenu",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuTrigger"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateSprintModal",
+          "specifiers": [
+            "CreateSprintModal"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateEventModal",
+          "specifiers": [
+            "CreateEventModal"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateTaskModal",
+          "specifiers": [
+            "CreateTaskModal"
+          ]
+        },
+        {
+          "source": "@/components/study/EventDetailDialog",
+          "specifiers": [
+            "EventDetailDialog"
+          ]
+        },
+        {
+          "source": "@/components/study/ImportScheduleDialog",
+          "specifiers": [
+            "ImportScheduleDialog"
+          ]
+        }
+      ],
+      "exports": [
+        "CalendarPage"
+      ],
+      "totalLines": 457,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/DashboardPage.jsx": {
+      "filePath": "src/components/pages/DashboardPage.jsx",
+      "contentHash": "dad52aab21212bc96b0648cc4bcc54fd3c9fe92adc096ec60a4978b0e38a89f1",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "p"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "taskStatus",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "isDone",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "isProg",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "parseDate",
+          "params": [
+            "v"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "monthShort",
+          "params": [
+            "m"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "fmtDate",
+          "params": [
+            "v"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "DashboardPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 337
+        },
+        {
+          "name": "SectionHead",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "Legend",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "FocusStat",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "WeeklyPlanCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 37
+        },
+        {
+          "name": "YearHeatmap",
+          "params": [],
+          "exported": false,
+          "lineCount": 103
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useState"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "recharts",
+          "specifiers": [
+            "Bar",
+            "BarChart",
+            "Cell",
+            "ResponsiveContainer",
+            "Tooltip",
+            "XAxis"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "AlertTriangle",
+            "BrainCircuit",
+            "CalendarDays",
+            "CheckCircle2",
+            "ChevronLeft",
+            "ChevronRight",
+            "Loader2",
+            "Sparkles",
+            "Timer",
+            "XCircle",
+            "Zap"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useActiveSprint",
+            "useCapacityCheck",
+            "useKanbanInsight",
+            "usePomodoroSessions",
+            "useProfile",
+            "useSpaces",
+            "useStandupToday",
+            "useStudyMutations",
+            "useTasks",
+            "useUserStats"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/study/StandupModal",
+          "specifiers": [
+            "StandupModal"
+          ]
+        }
+      ],
+      "exports": [
+        "DashboardPage"
+      ],
+      "totalLines": 565,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/DomainsPage.jsx": {
+      "filePath": "src/components/pages/DomainsPage.jsx",
+      "contentHash": "4eb4ea3c317aa8eebd658c45ceb5f97ed36e4e6d8b4796efb2d52799ada8555e",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "DomainsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 116
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "MoreHorizontal",
+            "Pencil",
+            "Plus",
+            "Power",
+            "Trash2"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useDomains",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateDomainModal",
+          "specifiers": [
+            "CreateDomainModal"
+          ]
+        },
+        {
+          "source": "@/components/ui/dropdown-menu",
+          "specifiers": [
+            "DropdownMenu",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuTrigger"
+          ]
+        },
+        {
+          "source": "@/components/ui/alert-dialog",
+          "specifiers": [
+            "AlertDialog",
+            "AlertDialogAction",
+            "AlertDialogCancel",
+            "AlertDialogContent",
+            "AlertDialogDescription",
+            "AlertDialogFooter",
+            "AlertDialogHeader",
+            "AlertDialogTitle"
+          ]
+        }
+      ],
+      "exports": [
+        "DomainsPage"
+      ],
+      "totalLines": 151,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/DomainTasksPage.jsx": {
+      "filePath": "src/components/pages/DomainTasksPage.jsx",
+      "contentHash": "e34f7374485ab7e7c19b9b882a36cb67614ee52134d5207b370b0f4b0758a31e",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "fmtDate",
+          "params": [
+            "raw"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "isOverdue",
+          "params": [
+            "raw"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "normaliseStatus",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "DomainTasksPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 229
+        },
+        {
+          "name": "StatCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ArrowLeft",
+            "CalendarDays",
+            "CheckCircle2",
+            "Circle",
+            "Clock3",
+            "Loader2",
+            "Plus",
+            "Sparkles",
+            "TrendingUp",
+            "AlertCircle",
+            "BarChart2"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useDomain",
+            "useDomainTasks",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateTaskModal",
+          "specifiers": [
+            "CreateTaskModal"
+          ]
+        },
+        {
+          "source": "@/components/study/ImportTasksDialog",
+          "specifiers": [
+            "ImportTasksDialog"
+          ]
+        }
+      ],
+      "exports": [
+        "DomainTasksPage"
+      ],
+      "totalLines": 290,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/FocusPage.jsx": {
+      "filePath": "src/components/pages/FocusPage.jsx",
+      "contentHash": "b24d091d404c64b0ebf22e41e80a91872e342474e001b67bd120567821df9dfa",
+      "functions": [
+        {
+          "name": "pad",
+          "params": [
+            "n"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "fmtDate",
+          "params": [
+            "v"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "playBeep",
+          "params": [],
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "FocusPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 266
+        },
+        {
+          "name": "TaskProgressDialog",
+          "params": [],
+          "exported": false,
+          "lineCount": 83
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef",
+            "useState",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "useMutation",
+            "useQuery",
+            "useQueryClient"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "RotateCcw",
+            "Settings",
+            "Square",
+            "Loader2"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/slider",
+          "specifiers": [
+            "Slider"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "focusApi",
+            "studyApi"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useActiveSprint",
+            "usePomodoroSessions",
+            "qk"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        }
+      ],
+      "exports": [
+        "FocusPage"
+      ],
+      "totalLines": 389,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/KanbanPage.jsx": {
+      "filePath": "src/components/pages/KanbanPage.jsx",
+      "contentHash": "b86cc6982acf34800264588fad9d9d759fc1958e8c4fc6f9cac5773cd5b4daa6",
+      "functions": [
+        {
+          "name": "KanbanPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 47
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/mock",
+          "specifiers": [
+            "tasks"
+          ]
+        },
+        {
+          "source": "@/components/ai/AIBubble",
+          "specifiers": [
+            "AIInsightCard"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Plus"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        }
+      ],
+      "exports": [
+        "KanbanPage"
+      ],
+      "totalLines": 57,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/LandingPage.jsx": {
+      "filePath": "src/components/pages/LandingPage.jsx",
+      "contentHash": "a682102aacdfaa3679d8f72603072bc6dcc878b96a18e3a59fa8228f216f9723",
+      "functions": [
+        {
+          "name": "LandingPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 140
+        },
+        {
+          "name": "AppPreview",
+          "params": [],
+          "exported": false,
+          "lineCount": 51
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ArrowRight",
+            "CalendarDays",
+            "CheckCircle2",
+            "Sparkles",
+            "Timer",
+            "Zap"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        }
+      ],
+      "exports": [
+        "LandingPage"
+      ],
+      "totalLines": 231,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/MiscPages.jsx": {
+      "filePath": "src/components/pages/MiscPages.jsx",
+      "contentHash": "b1c57e0bc41336421ba927a82a9717d00de017fd5e1d84cbf4b4be5ea59a0d54",
+      "functions": [
+        {
+          "name": "generateRoomCode",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "RoomsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 168
+        },
+        {
+          "name": "useCountdown",
+          "params": [
+            "room"
+          ],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "TaskSkeleton",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "LeaveTaskSheet",
+          "params": [],
+          "exported": false,
+          "lineCount": 59
+        },
+        {
+          "name": "RoomDetailPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 432
+        },
+        {
+          "name": "initialsOf",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "statusBadge",
+          "params": [
+            "status"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "ActivityHeatmap",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "ProfilePage",
+          "params": [],
+          "exported": true,
+          "lineCount": 185
+        },
+        {
+          "name": "AnalyticsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 31
+        },
+        {
+          "name": "Heatmap",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "NotificationsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 144
+        },
+        {
+          "name": "SettingsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "Section",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "Field",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "Toggle",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "DomainDetailPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 24
+        },
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "fmtDeadline",
+          "params": [
+            "raw"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "normStatus",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "TaskDetailPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 362
+        },
+        {
+          "name": "Stat",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/mock",
+          "specifiers": [
+            "friends",
+            "notifications",
+            "weeklyXP",
+            "heatmap",
+            "me",
+            "tasks",
+            "domains",
+            "spaces",
+            "calendarEvents"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "@/components/ui/avatar",
+          "specifiers": [
+            "Avatar",
+            "AvatarFallback",
+            "AvatarImage"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Plus",
+            "Users",
+            "MessageCircle",
+            "BellRing",
+            "Check",
+            "Mic",
+            "MicOff",
+            "LogOut",
+            "Send",
+            "Lock",
+            "Globe",
+            "Hash",
+            "Copy",
+            "Play",
+            "Pause",
+            "SkipForward",
+            "Square",
+            "ChevronRight"
+          ]
+        },
+        {
+          "source": "recharts",
+          "specifiers": [
+            "BarChart",
+            "Bar",
+            "ResponsiveContainer",
+            "XAxis",
+            "Tooltip"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link",
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef",
+            "useCallback",
+            "Suspense"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ArrowLeft",
+            "Loader2",
+            "Pencil",
+            "Trash2",
+            "X"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useTask",
+            "useTaskComments",
+            "useStudyMutations",
+            "useActiveSprint",
+            "useProfile"
+          ]
+        },
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "useMutation",
+            "useQuery",
+            "useQueryClient"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "socialApi",
+            "userApi"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "PencilIcon",
+            "Flame",
+            "Trophy",
+            "UserPlusIcon",
+            "UserCheck",
+            "UserX"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/components/ui/slider",
+          "specifiers": [
+            "Slider"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/switch",
+          "specifiers": [
+            "Switch"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@/components/ui/alert-dialog",
+          "specifiers": [
+            "AlertDialog",
+            "AlertDialogAction",
+            "AlertDialogCancel",
+            "AlertDialogContent",
+            "AlertDialogDescription",
+            "AlertDialogFooter",
+            "AlertDialogHeader",
+            "AlertDialogTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "focusApi",
+            "studyApi"
+          ]
+        },
+        {
+          "source": "@/lib/realtime",
+          "specifiers": [
+            "createFirestoreRoom",
+            "joinRoomByCode",
+            "watchPublicRooms",
+            "watchRoom",
+            "watchRoomMembers",
+            "watchRoomMessages",
+            "joinRoom",
+            "leaveRoom",
+            "sendRoomMessage",
+            "uploadRoomFile",
+            "updateAgoraUid",
+            "updateRoomPhase",
+            "updateMutedState",
+            "endRoom",
+            "incrementRound"
+          ]
+        },
+        {
+          "source": "@/lib/agora",
+          "specifiers": [
+            "createAgoraRoomClient"
+          ]
+        },
+        {
+          "source": "@/lib/firebase",
+          "specifiers": [
+            "auth"
+          ]
+        }
+      ],
+      "exports": [
+        "RoomsPage",
+        "RoomDetailPage",
+        "ProfilePage",
+        "AnalyticsPage",
+        "NotificationsPage",
+        "SettingsPage",
+        "DomainDetailPage",
+        "TaskDetailPage"
+      ],
+      "totalLines": 1609,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/SettingsPage.jsx": {
+      "filePath": "src/components/pages/SettingsPage.jsx",
+      "contentHash": "26be2a87db8e1ffe183b6e3c913cc08ecb18b2d6389fd31f97a86f66ea68db36",
+      "functions": [
+        {
+          "name": "SettingsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 270
+        },
+        {
+          "name": "SectionLabel",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "Card",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "ProfileField",
+          "params": [],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "SettingRow",
+          "params": [],
+          "exported": false,
+          "lineCount": 20
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useMemo",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Globe",
+            "Lock",
+            "Hourglass",
+            "RefreshCcw",
+            "ChevronRight",
+            "Loader2",
+            "Check",
+            "User",
+            "FileText",
+            "Building2",
+            "GraduationCap",
+            "ArrowLeft"
+          ]
+        },
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "useMutation",
+            "useQuery",
+            "useQueryClient"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/switch",
+          "specifiers": [
+            "Switch"
+          ]
+        },
+        {
+          "source": "@/components/ui/slider",
+          "specifiers": [
+            "Slider"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/avatar",
+          "specifiers": [
+            "Avatar",
+            "AvatarFallback",
+            "AvatarImage"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useProfile"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "userApi",
+            "socialApi"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "qk"
+          ]
+        }
+      ],
+      "exports": [
+        "SettingsPage"
+      ],
+      "totalLines": 351,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/SocialPage.jsx": {
+      "filePath": "src/components/pages/SocialPage.jsx",
+      "contentHash": "c630787d984c471fd46bc6de05c85f97672b558933d26f384500244d7a3b77dc",
+      "functions": [
+        {
+          "name": "initials",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "timeAgo",
+          "params": [
+            "dateStr"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "statusColor",
+          "params": [
+            "s"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "ProfileCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 56
+        },
+        {
+          "name": "TodayFocusWidget",
+          "params": [],
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "StudyingNowBar",
+          "params": [],
+          "exported": false,
+          "lineCount": 44
+        },
+        {
+          "name": "TagFilterChips",
+          "params": [],
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "CreatePostBox",
+          "params": [],
+          "exported": false,
+          "lineCount": 260
+        },
+        {
+          "name": "CommentsSection",
+          "params": [],
+          "exported": false,
+          "lineCount": 71
+        },
+        {
+          "name": "PostCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 156
+        },
+        {
+          "name": "FeedList",
+          "params": [],
+          "exported": false,
+          "lineCount": 58
+        },
+        {
+          "name": "FriendRequestsCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 72
+        },
+        {
+          "name": "DiscoverCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 81
+        },
+        {
+          "name": "getTodayKey",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "loadUsedSeconds",
+          "params": [],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "saveUsedSeconds",
+          "params": [
+            "seconds"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "fmtTime",
+          "params": [
+            "secs"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "SocialUsageGuard",
+          "params": [],
+          "exported": false,
+          "lineCount": 101
+        },
+        {
+          "name": "SocialPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 28
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useEffect",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "useMutation",
+            "useQuery",
+            "useQueryClient"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link",
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/avatar",
+          "specifiers": [
+            "Avatar",
+            "AvatarFallback",
+            "AvatarImage"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Heart",
+            "MessageCircle",
+            "Search",
+            "UserPlus",
+            "Check",
+            "X",
+            "Timer",
+            "Globe",
+            "Lock",
+            "Send",
+            "ImageIcon",
+            "FileText",
+            "LinkIcon",
+            "MoreHorizontal",
+            "Trash2",
+            "Loader2",
+            "Paperclip",
+            "ShieldOff",
+            "Settings",
+            "Clock"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "socialApi",
+            "focusApi",
+            "userApi"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useProfile",
+            "usePomodoroSessions",
+            "qk"
+          ]
+        },
+        {
+          "source": "@/lib/realtime",
+          "specifiers": [
+            "uploadPostAttachment"
+          ]
+        }
+      ],
+      "exports": [
+        "SocialPage"
+      ],
+      "totalLines": 1109,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/SpacesPage.jsx": {
+      "filePath": "src/components/pages/SpacesPage.jsx",
+      "contentHash": "5c3bffddfcd60ff6f97e7ec8b9bc807197ca14a93c90ca4706e18d24c8c11e93",
+      "functions": [
+        {
+          "name": "SpacesPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 112
+        },
+        {
+          "name": "Header",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Plus",
+            "Users",
+            "MoreHorizontal",
+            "Loader2",
+            "ArrowRight",
+            "Pencil",
+            "Trash2"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link",
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useSpaces",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateSpaceModal",
+          "specifiers": [
+            "CreateSpaceModal"
+          ]
+        },
+        {
+          "source": "@/components/ui/dropdown-menu",
+          "specifiers": [
+            "DropdownMenu",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuTrigger"
+          ]
+        },
+        {
+          "source": "@/components/ui/alert-dialog",
+          "specifiers": [
+            "AlertDialog",
+            "AlertDialogAction",
+            "AlertDialogCancel",
+            "AlertDialogContent",
+            "AlertDialogDescription",
+            "AlertDialogFooter",
+            "AlertDialogHeader",
+            "AlertDialogTitle"
+          ]
+        }
+      ],
+      "exports": [
+        "SpacesPage",
+        "Header"
+      ],
+      "totalLines": 150,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/SprintBoardPage.jsx": {
+      "filePath": "src/components/pages/SprintBoardPage.jsx",
+      "contentHash": "df2c01754f258a5ceb9a16512cf0e11a2a8920d3bcd21d2f2012861c44c56017",
+      "functions": [
+        {
+          "name": "statusKey",
+          "params": [
+            "status"
+          ],
+          "exported": false,
+          "lineCount": 2
+        },
+        {
+          "name": "taskStatus",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "SprintBoardPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 108
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "AlertCircle",
+            "Flame",
+            "GripVertical",
+            "Loader2"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useSprint",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/components/ui/alert-dialog",
+          "specifiers": [
+            "AlertDialog",
+            "AlertDialogAction",
+            "AlertDialogCancel",
+            "AlertDialogContent",
+            "AlertDialogDescription",
+            "AlertDialogFooter",
+            "AlertDialogHeader",
+            "AlertDialogTitle",
+            "AlertDialogTrigger"
+          ]
+        }
+      ],
+      "exports": [
+        "SprintBoardPage"
+      ],
+      "totalLines": 137,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/SprintsPage.jsx": {
+      "filePath": "src/components/pages/SprintsPage.jsx",
+      "contentHash": "d8eea8f4f15ca54658dc89a01d055abb729838c8ae2beab90e9dd05d6f6b4fc5",
+      "functions": [
+        {
+          "name": "SprintsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 48
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/mock",
+          "specifiers": [
+            "sprints",
+            "tasks"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Plus",
+            "Sparkles",
+            "Calendar"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "./SpacesPage",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "@/components/ai/AIBubble",
+          "specifiers": [
+            "AIBadge"
+          ]
+        }
+      ],
+      "exports": [
+        "SprintsPage"
+      ],
+      "totalLines": 56,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/WorkspacePage.jsx": {
+      "filePath": "src/components/pages/WorkspacePage.jsx",
+      "contentHash": "50041bc3eb97be7017b1d73f2bee3aef929d01aafb9652afb607148068c72d82",
+      "functions": [
+        {
+          "name": "getTasks",
+          "params": [
+            "sprint"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "statusKey",
+          "params": [
+            "status"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "statusApi",
+          "params": [
+            "status"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "taskTitle",
+          "params": [
+            "task"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "taskCode",
+          "params": [
+            "task"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "taskDomain",
+          "params": [
+            "task"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "taskPoints",
+          "params": [
+            "task"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "taskHours",
+          "params": [
+            "task"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "parseDate",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "dateLabel",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "dateRange",
+          "params": [
+            "sprint"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "daysLeft",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "daysLeftLabel",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "sprintVelocity",
+          "params": [
+            "sprint",
+            "tasks"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "sprintPoints",
+          "params": [
+            "tasks"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "countByStatus",
+          "params": [
+            "tasks"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "priorityData",
+          "params": [
+            "tasks"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "openDeadlineTasks",
+          "params": [
+            "tasks"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "WorkspacePage",
+          "params": [],
+          "exported": true,
+          "lineCount": 129
+        },
+        {
+          "name": "MenuButton",
+          "params": [],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "WorkspaceSummary",
+          "params": [],
+          "exported": false,
+          "lineCount": 60
+        },
+        {
+          "name": "WorkspaceBoard",
+          "params": [],
+          "exported": false,
+          "lineCount": 126
+        },
+        {
+          "name": "todayISO",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "WorkspaceBacklog",
+          "params": [],
+          "exported": false,
+          "lineCount": 230
+        },
+        {
+          "name": "BacklogSection",
+          "params": [],
+          "exported": false,
+          "lineCount": 46
+        },
+        {
+          "name": "SprintBacklogSection",
+          "params": [],
+          "exported": false,
+          "lineCount": 95
+        },
+        {
+          "name": "TaskCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 45
+        },
+        {
+          "name": "TaskRow",
+          "params": [],
+          "exported": false,
+          "lineCount": 72
+        },
+        {
+          "name": "ProgressRing",
+          "params": [],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "Metric",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "StatusDistribution",
+          "params": [],
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "PriorityBreakdown",
+          "params": [],
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "SprintTaskPreview",
+          "params": [],
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "DeadlineAwareness",
+          "params": [],
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "isSprintCompleted",
+          "params": [
+            "sprint"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "Chip",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "ChevronLeftMini",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "EmptySprint",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "WorkspaceMembersPlaceholder",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "WorkspaceLoading",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "WorkspaceError",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Link",
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "AlertTriangle",
+            "ArrowLeft",
+            "ArrowRight",
+            "Bot",
+            "Calendar",
+            "CheckCircle2",
+            "ChevronDown",
+            "ChevronRight",
+            "Circle",
+            "Columns3",
+            "LayoutDashboard",
+            "Link2",
+            "ListTodo",
+            "Loader2",
+            "MoreVertical",
+            "Pencil",
+            "Play",
+            "Plus",
+            "Sparkles",
+            "Trash2",
+            "TrendingUp",
+            "UserCircle",
+            "Zap"
+          ]
+        },
+        {
+          "source": "recharts",
+          "specifiers": [
+            "Bar",
+            "BarChart",
+            "CartesianGrid",
+            "Cell",
+            "Pie",
+            "PieChart",
+            "ResponsiveContainer",
+            "Tooltip",
+            "XAxis",
+            "YAxis"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useActiveSprint",
+            "useBacklog",
+            "useCapacity",
+            "useSpace",
+            "useSprints",
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateTaskModal",
+          "specifiers": [
+            "CreateTaskModal"
+          ]
+        },
+        {
+          "source": "@/components/study/CreateSprintModal",
+          "specifiers": [
+            "CreateSprintModal"
+          ]
+        },
+        {
+          "source": "@/components/study/AISprintReviewModal",
+          "specifiers": [
+            "AISprintReviewModal"
+          ]
+        },
+        {
+          "source": "@/components/study/AISprintPlannerModal",
+          "specifiers": [
+            "AISprintPlannerModal"
+          ]
+        },
+        {
+          "source": "@/components/ui/alert-dialog",
+          "specifiers": [
+            "AlertDialog",
+            "AlertDialogAction",
+            "AlertDialogCancel",
+            "AlertDialogContent",
+            "AlertDialogDescription",
+            "AlertDialogFooter",
+            "AlertDialogHeader",
+            "AlertDialogTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/dropdown-menu",
+          "specifiers": [
+            "DropdownMenu",
+            "DropdownMenuContent",
+            "DropdownMenuItem",
+            "DropdownMenuLabel",
+            "DropdownMenuSeparator",
+            "DropdownMenuSub",
+            "DropdownMenuSubContent",
+            "DropdownMenuSubTrigger",
+            "DropdownMenuTrigger"
+          ]
+        }
+      ],
+      "exports": [
+        "WorkspacePage"
+      ],
+      "totalLines": 1195,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/pages/WorkspaceRedirect.jsx": {
+      "filePath": "src/components/pages/WorkspaceRedirect.jsx",
+      "contentHash": "abf6a800b5cc389f71809b50b10aad1c009ee40b03924e78f0f9a606ecb5bb13",
+      "functions": [
+        {
+          "name": "CompatibilityWorkspaceRedirect",
+          "params": [],
+          "exported": true,
+          "lineCount": 18
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "useNavigate"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useSpaces"
+          ]
+        },
+        {
+          "source": "@/store/ui",
+          "specifiers": [
+            "useUI"
+          ]
+        }
+      ],
+      "exports": [
+        "CompatibilityWorkspaceRedirect"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/AISprintPlannerModal.jsx": {
+      "filePath": "src/components/study/AISprintPlannerModal.jsx",
+      "contentHash": "8cfc52a88c44ba019dee5e4a9b4d081568cff31ae2e7aa4d841e505ab74674c0",
+      "functions": [
+        {
+          "name": "taskTitle",
+          "params": [
+            "plan",
+            "id"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "AISprintPlannerModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 84
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Sparkles"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogDescription",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "AISprintPlannerModal"
+      ],
+      "totalLines": 97,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/AISprintReviewModal.jsx": {
+      "filePath": "src/components/study/AISprintReviewModal.jsx",
+      "contentHash": "d412174ccf950e54e02a8bc9a01cbf33e78dadc47b50358d1e270b7d2998dbd0",
+      "functions": [
+        {
+          "name": "AISprintReviewModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 74
+        },
+        {
+          "name": "Metric",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "useQuery"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Sparkles"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogDescription"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "aiApi"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "qk",
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "AISprintReviewModal"
+      ],
+      "totalLines": 91,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/CreateDomainModal.jsx": {
+      "filePath": "src/components/study/CreateDomainModal.jsx",
+      "contentHash": "000158e3dc431a2e426093a9ae26589231c85a08778b8f8a46338984c1dee050",
+      "functions": [
+        {
+          "name": "emptyForm",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "CreateDomainModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 98
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/components/ui/slider",
+          "specifiers": [
+            "Slider"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "CreateDomainModal"
+      ],
+      "totalLines": 117,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/CreateEventModal.jsx": {
+      "filePath": "src/components/study/CreateEventModal.jsx",
+      "contentHash": "6374e565ea26684b350533a3d5fa87e2e22e1e452ed8e3295eb7199b59290218",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "p"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "toLocalInput",
+          "params": [
+            "value",
+            "fallbackDate"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "CreateEventModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 208
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "Loader2"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/switch",
+          "specifiers": [
+            "Switch"
+          ]
+        },
+        {
+          "source": "@/components/ui/checkbox",
+          "specifiers": [
+            "Checkbox"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations",
+            "useDomains"
+          ]
+        },
+        {
+          "source": "@/components/study/DateTimePicker",
+          "specifiers": [
+            "DateTimePicker"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn",
+            "parseWall"
+          ]
+        }
+      ],
+      "exports": [
+        "CreateEventModal"
+      ],
+      "totalLines": 236,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/CreateSpaceModal.jsx": {
+      "filePath": "src/components/study/CreateSpaceModal.jsx",
+      "contentHash": "18edc99a453de38524ff0f303cf4425981eec8ba163c9600019d8fc820530815",
+      "functions": [
+        {
+          "name": "CreateSpaceModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 109
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "Loader2"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "CreateSpaceModal"
+      ],
+      "totalLines": 122,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/CreateSprintModal.jsx": {
+      "filePath": "src/components/study/CreateSprintModal.jsx",
+      "contentHash": "271f926f78534d5f7a9bae5e925b10f174e5c51e69b350731d43222d7543b654",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "isCompleted",
+          "params": [
+            "s"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "parseLocal",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "toISO",
+          "params": [
+            "date"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "dayMs",
+          "params": [
+            "date"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "CreateSprintModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 161
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/checkbox",
+          "specifiers": [
+            "Checkbox"
+          ]
+        },
+        {
+          "source": "@/components/ui/calendar",
+          "specifiers": [
+            "Calendar"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useBacklog",
+            "useSprints",
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "CreateSprintModal"
+      ],
+      "totalLines": 196,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/CreateTaskModal.jsx": {
+      "filePath": "src/components/study/CreateTaskModal.jsx",
+      "contentHash": "562fca23fb122067a81115ad729a38955ed822817e8aaf022dbc795fbe3ff1f1",
+      "functions": [
+        {
+          "name": "asArray",
+          "params": [
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "defaultDeadline",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "emptyForm",
+          "params": [
+            "domainId"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "CreateTaskModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 181
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Plus",
+            "X"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useDomains",
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "CreateTaskModal"
+      ],
+      "totalLines": 216,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/DateTimePicker.jsx": {
+      "filePath": "src/components/study/DateTimePicker.jsx",
+      "contentHash": "bb996c2736c5bc33563c15d8afe3d83704711b33ff039fc8dc83204e6b5a51a5",
+      "functions": [
+        {
+          "name": "pad",
+          "params": [
+            "n"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "parseValue",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "toValue",
+          "params": [
+            "date"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "DateTimePicker",
+          "params": [],
+          "exported": true,
+          "lineCount": 73
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "date-fns",
+          "specifiers": [
+            "format"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "CalendarIcon",
+            "Clock"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/calendar",
+          "specifiers": [
+            "Calendar"
+          ]
+        },
+        {
+          "source": "@/components/ui/popover",
+          "specifiers": [
+            "Popover",
+            "PopoverContent",
+            "PopoverTrigger"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "DateTimePicker"
+      ],
+      "totalLines": 106,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/EventDetailDialog.jsx": {
+      "filePath": "src/components/study/EventDetailDialog.jsx",
+      "contentHash": "f2956f0f1788b0efb24f213176e80c68c818996ab08e6125099e9df8f5be7a56",
+      "functions": [
+        {
+          "name": "fmt",
+          "params": [
+            "value",
+            "allDay"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "localDate",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "EventDetailDialog",
+          "params": [],
+          "exported": true,
+          "lineCount": 90
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "CalendarClock",
+            "Loader2",
+            "Pencil",
+            "Repeat",
+            "Trash2"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/alert-dialog",
+          "specifiers": [
+            "AlertDialog",
+            "AlertDialogAction",
+            "AlertDialogCancel",
+            "AlertDialogContent",
+            "AlertDialogDescription",
+            "AlertDialogFooter",
+            "AlertDialogHeader",
+            "AlertDialogTitle",
+            "AlertDialogTrigger"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn",
+            "parseWall",
+            "wallDateStr"
+          ]
+        }
+      ],
+      "exports": [
+        "EventDetailDialog"
+      ],
+      "totalLines": 127,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/ImportScheduleDialog.jsx": {
+      "filePath": "src/components/study/ImportScheduleDialog.jsx",
+      "contentHash": "a4f872215f42f90545b9a98dc68bcf2e4a4dd8460796671bae460470f53f47ce",
+      "functions": [
+        {
+          "name": "normaliseEvent",
+          "params": [
+            "e",
+            "i"
+          ],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "ImportScheduleDialog",
+          "params": [],
+          "exported": true,
+          "lineCount": 204
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Sparkles",
+            "Trash2",
+            "Upload"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/switch",
+          "specifiers": [
+            "Switch"
+          ]
+        },
+        {
+          "source": "@/components/ui/checkbox",
+          "specifiers": [
+            "Checkbox"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "aiApi"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "ImportScheduleDialog"
+      ],
+      "totalLines": 236,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/ImportTasksDialog.jsx": {
+      "filePath": "src/components/study/ImportTasksDialog.jsx",
+      "contentHash": "a5906fd9d9d0bbfc802d9cfde2310c9faaaf72256e8d5874fd7a5fad5b6b504d",
+      "functions": [
+        {
+          "name": "normaliseTask",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "ImportTasksDialog",
+          "params": [],
+          "exported": true,
+          "lineCount": 225
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Plus",
+            "Sparkles",
+            "Trash2",
+            "Upload",
+            "X"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        },
+        {
+          "source": "@/components/ui/textarea",
+          "specifiers": [
+            "Textarea"
+          ]
+        },
+        {
+          "source": "@/components/ui/select",
+          "specifiers": [
+            "Select",
+            "SelectContent",
+            "SelectItem",
+            "SelectTrigger",
+            "SelectValue"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "aiApi"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        }
+      ],
+      "exports": [
+        "ImportTasksDialog"
+      ],
+      "totalLines": 254,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/study/StandupModal.jsx": {
+      "filePath": "src/components/study/StandupModal.jsx",
+      "contentHash": "324cbf685a17c7a7190e1b8e34f99301f4013b276321ee72d2d7ce1b6ca1df83",
+      "functions": [
+        {
+          "name": "StandupModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 74
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Sparkles"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent",
+            "DialogHeader",
+            "DialogTitle",
+            "DialogDescription",
+            "DialogFooter"
+          ]
+        },
+        {
+          "source": "@/lib/query-hooks",
+          "specifiers": [
+            "useStudyMutations"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "StandupModal"
+      ],
+      "totalLines": 98,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/accordion.jsx": {
+      "filePath": "src/components/ui/accordion.jsx",
+      "contentHash": "c6e583e15cbd037c6e50766530a4ec50e9efdec12bfa010a4e1b5b4e93f20c76",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-accordion",
+          "specifiers": [
+            "* as AccordionPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronDown"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Accordion",
+        "AccordionItem",
+        "AccordionTrigger",
+        "AccordionContent"
+      ],
+      "totalLines": 20,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/alert-dialog.jsx": {
+      "filePath": "src/components/ui/alert-dialog.jsx",
+      "contentHash": "d7e17bda37fad70ba394156ccdf16ac63c3be36d062308058ea8db1ea276c090",
+      "functions": [
+        {
+          "name": "AlertDialogHeader",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "AlertDialogFooter",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-alert-dialog",
+          "specifiers": [
+            "* as AlertDialogPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "buttonVariants"
+          ]
+        }
+      ],
+      "exports": [
+        "AlertDialog",
+        "AlertDialogPortal",
+        "AlertDialogOverlay",
+        "AlertDialogTrigger",
+        "AlertDialogContent",
+        "AlertDialogHeader",
+        "AlertDialogFooter",
+        "AlertDialogTitle",
+        "AlertDialogDescription",
+        "AlertDialogAction",
+        "AlertDialogCancel"
+      ],
+      "totalLines": 28,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/alert.jsx": {
+      "filePath": "src/components/ui/alert.jsx",
+      "contentHash": "b02a59490b33b60bf33c6eb905a23e729824d952ff808acbbd992200f7dc870e",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Alert",
+        "AlertTitle",
+        "AlertDescription"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/aspect-ratio.jsx": {
+      "filePath": "src/components/ui/aspect-ratio.jsx",
+      "contentHash": "7af0a663944f4afd0b05a270d2da9d5d5d3830a80de1266d3338b52d42eb453d",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@radix-ui/react-aspect-ratio",
+          "specifiers": [
+            "* as AspectRatioPrimitive"
+          ]
+        }
+      ],
+      "exports": [
+        "AspectRatio"
+      ],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/avatar.jsx": {
+      "filePath": "src/components/ui/avatar.jsx",
+      "contentHash": "9ef9eabc2ea574ac5e1dbff1fe48148eff01b7fb1c6b1d53f39d58afa52c0e93",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-avatar",
+          "specifiers": [
+            "* as AvatarPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Avatar",
+        "AvatarImage",
+        "AvatarFallback"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/badge.jsx": {
+      "filePath": "src/components/ui/badge.jsx",
+      "contentHash": "be5746d979337d6bd0ebb33c4c2e02a3fa804d14bddd120c2b51b8531dc7d4a2",
+      "functions": [
+        {
+          "name": "Badge",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Badge",
+        "badgeVariants"
+      ],
+      "totalLines": 21,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/breadcrumb.jsx": {
+      "filePath": "src/components/ui/breadcrumb.jsx",
+      "contentHash": "68700e136d4b0cf61057f69d6bd9752fabb492af8c599bfb2ecad6d043b1b810",
+      "functions": [
+        {
+          "name": "BreadcrumbSeparator",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "BreadcrumbEllipsis",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-slot",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronRight",
+            "MoreHorizontal"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Breadcrumb",
+        "BreadcrumbList",
+        "BreadcrumbItem",
+        "BreadcrumbLink",
+        "BreadcrumbPage",
+        "BreadcrumbSeparator",
+        "BreadcrumbEllipsis"
+      ],
+      "totalLines": 28,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/button.jsx": {
+      "filePath": "src/components/ui/button.jsx",
+      "contentHash": "4e57cd001ba323290394674b1fa2fafd21439b908acae857eba545465a428430",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-slot",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Button",
+        "buttonVariants"
+      ],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/calendar.jsx": {
+      "filePath": "src/components/ui/calendar.jsx",
+      "contentHash": "945cc8bdf0289d4d4326304fc570a4ac171a7269f5ce2207a96e2690cdf839df",
+      "functions": [
+        {
+          "name": "Calendar",
+          "params": [],
+          "exported": true,
+          "lineCount": 58
+        },
+        {
+          "name": "CalendarDayButton",
+          "params": [],
+          "exported": true,
+          "lineCount": 12
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronDownIcon",
+            "ChevronLeftIcon",
+            "ChevronRightIcon"
+          ]
+        },
+        {
+          "source": "react-day-picker",
+          "specifiers": [
+            "DayPicker",
+            "getDefaultClassNames"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button",
+            "buttonVariants"
+          ]
+        }
+      ],
+      "exports": [
+        "Calendar",
+        "CalendarDayButton"
+      ],
+      "totalLines": 78,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/card.jsx": {
+      "filePath": "src/components/ui/card.jsx",
+      "contentHash": "db4f3a1116f05f6f8a1d7bf747a960205c7f18ee5733ebfedceb498e9bf7bbe0",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Card",
+        "CardHeader",
+        "CardFooter",
+        "CardTitle",
+        "CardDescription",
+        "CardContent"
+      ],
+      "totalLines": 16,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/carousel.jsx": {
+      "filePath": "src/components/ui/carousel.jsx",
+      "contentHash": "adb16ac2be79de30b3ff67e1eee50e88ecb23c4590cc6074befc1a4065e646df",
+      "functions": [
+        {
+          "name": "useCarousel",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "embla-carousel-react",
+          "specifiers": [
+            "useEmblaCarousel"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ArrowLeft",
+            "ArrowRight"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        }
+      ],
+      "exports": [
+        "Carousel",
+        "CarouselContent",
+        "CarouselItem",
+        "CarouselPrevious",
+        "CarouselNext"
+      ],
+      "totalLines": 110,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/chart.jsx": {
+      "filePath": "src/components/ui/chart.jsx",
+      "contentHash": "04ab72c5aca6f681b08304b3b8bd37876e9af280c975984aeb2ee22a3d497c2c",
+      "functions": [
+        {
+          "name": "useChart",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "ChartStyle",
+          "params": [],
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "getPayloadConfigFromPayload",
+          "params": [
+            "config",
+            "payload",
+            "key"
+          ],
+          "exported": false,
+          "lineCount": 18
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "recharts",
+          "specifiers": [
+            "* as RechartsPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "ChartContainer",
+        "ChartTooltip",
+        "ChartTooltipContent",
+        "ChartLegend",
+        "ChartLegendContent",
+        "ChartStyle"
+      ],
+      "totalLines": 150,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/checkbox.jsx": {
+      "filePath": "src/components/ui/checkbox.jsx",
+      "contentHash": "4aa1fc9915e8b6b34e8df3b5e2d71e6c71665f97443fa3030e95c4581e236daa",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-checkbox",
+          "specifiers": [
+            "* as CheckboxPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Checkbox"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/collapsible.jsx": {
+      "filePath": "src/components/ui/collapsible.jsx",
+      "contentHash": "aeaf0f8e010c3f4e7408091a10cef1c9178c521d79e161c0d2acdd10b7ffea63",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@radix-ui/react-collapsible",
+          "specifiers": [
+            "* as CollapsiblePrimitive"
+          ]
+        }
+      ],
+      "exports": [
+        "Collapsible",
+        "CollapsibleTrigger",
+        "CollapsibleContent"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/command.jsx": {
+      "filePath": "src/components/ui/command.jsx",
+      "contentHash": "575241e782ac6debc50d09a2bba006c25b9893b88cb246f189b71d850ddd0422",
+      "functions": [
+        {
+          "name": "CommandDialog",
+          "params": [],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "CommandShortcut",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "cmdk",
+          "specifiers": [
+            "CommandPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Search"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/dialog",
+          "specifiers": [
+            "Dialog",
+            "DialogContent"
+          ]
+        }
+      ],
+      "exports": [
+        "Command",
+        "CommandDialog",
+        "CommandInput",
+        "CommandList",
+        "CommandEmpty",
+        "CommandGroup",
+        "CommandItem",
+        "CommandShortcut",
+        "CommandSeparator"
+      ],
+      "totalLines": 38,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/context-menu.jsx": {
+      "filePath": "src/components/ui/context-menu.jsx",
+      "contentHash": "710fa8359f05399dadc35ed48db70745a24a6ef8eac8d23ca9595045733e787f",
+      "functions": [
+        {
+          "name": "ContextMenuShortcut",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-context-menu",
+          "specifiers": [
+            "* as ContextMenuPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "ChevronRight",
+            "Circle"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "ContextMenu",
+        "ContextMenuTrigger",
+        "ContextMenuContent",
+        "ContextMenuItem",
+        "ContextMenuCheckboxItem",
+        "ContextMenuRadioItem",
+        "ContextMenuLabel",
+        "ContextMenuSeparator",
+        "ContextMenuShortcut",
+        "ContextMenuGroup",
+        "ContextMenuPortal",
+        "ContextMenuSub",
+        "ContextMenuSubContent",
+        "ContextMenuSubTrigger",
+        "ContextMenuRadioGroup"
+      ],
+      "totalLines": 51,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/dialog.jsx": {
+      "filePath": "src/components/ui/dialog.jsx",
+      "contentHash": "e90d7ed3f53c921a03e3b1bb80509150c8473094b534fa57f406f3f94d614a2b",
+      "functions": [
+        {
+          "name": "DialogHeader",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "DialogFooter",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-dialog",
+          "specifiers": [
+            "* as DialogPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "X"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Dialog",
+        "DialogPortal",
+        "DialogOverlay",
+        "DialogTrigger",
+        "DialogClose",
+        "DialogContent",
+        "DialogHeader",
+        "DialogFooter",
+        "DialogTitle",
+        "DialogDescription"
+      ],
+      "totalLines": 32,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/drawer.jsx": {
+      "filePath": "src/components/ui/drawer.jsx",
+      "contentHash": "7445bdcd8e489277710c6e05d24c02b8872c29e7d8dc7e080364f6fdff024fbb",
+      "functions": [
+        {
+          "name": "Drawer",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "DrawerHeader",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "DrawerFooter",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "vaul",
+          "specifiers": [
+            "DrawerPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Drawer",
+        "DrawerPortal",
+        "DrawerOverlay",
+        "DrawerTrigger",
+        "DrawerClose",
+        "DrawerContent",
+        "DrawerHeader",
+        "DrawerFooter",
+        "DrawerTitle",
+        "DrawerDescription"
+      ],
+      "totalLines": 28,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/dropdown-menu.jsx": {
+      "filePath": "src/components/ui/dropdown-menu.jsx",
+      "contentHash": "9226fc3fbcb696bf413d204b9ea9d9facce902ffe76ae1a7e50307fe260208a9",
+      "functions": [
+        {
+          "name": "DropdownMenuShortcut",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-dropdown-menu",
+          "specifiers": [
+            "* as DropdownMenuPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "ChevronRight",
+            "Circle"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "DropdownMenu",
+        "DropdownMenuTrigger",
+        "DropdownMenuContent",
+        "DropdownMenuItem",
+        "DropdownMenuCheckboxItem",
+        "DropdownMenuRadioItem",
+        "DropdownMenuLabel",
+        "DropdownMenuSeparator",
+        "DropdownMenuShortcut",
+        "DropdownMenuGroup",
+        "DropdownMenuPortal",
+        "DropdownMenuSub",
+        "DropdownMenuSubContent",
+        "DropdownMenuSubTrigger",
+        "DropdownMenuRadioGroup"
+      ],
+      "totalLines": 52,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/form.jsx": {
+      "filePath": "src/components/ui/form.jsx",
+      "contentHash": "79ce245827751c679f58006fa7c10028aa4ae87d934137a318bfb24388149ef3",
+      "functions": [
+        {
+          "name": "FormField",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "useFormField",
+          "params": [],
+          "exported": true,
+          "lineCount": 21
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-slot",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "react-hook-form",
+          "specifiers": [
+            "Controller",
+            "FormProvider",
+            "useFormContext"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/label",
+          "specifiers": [
+            "Label"
+          ]
+        }
+      ],
+      "exports": [
+        "useFormField",
+        "Form",
+        "FormItem",
+        "FormLabel",
+        "FormControl",
+        "FormDescription",
+        "FormMessage",
+        "FormField"
+      ],
+      "totalLines": 69,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/hover-card.jsx": {
+      "filePath": "src/components/ui/hover-card.jsx",
+      "contentHash": "5a8135e4a287d3db4d70e23a797e659c5cedc3ebffcab5e2f1232d6dd2be07f1",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-hover-card",
+          "specifiers": [
+            "* as HoverCardPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "HoverCard",
+        "HoverCardTrigger",
+        "HoverCardContent"
+      ],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/input-otp.jsx": {
+      "filePath": "src/components/ui/input-otp.jsx",
+      "contentHash": "a0346d29f00e8c05429af655ea83ba8f3d6d5ac7c812be3486630df101f0e896",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "input-otp",
+          "specifiers": [
+            "OTPInput",
+            "OTPInputContext"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Minus"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "InputOTP",
+        "InputOTPGroup",
+        "InputOTPSlot",
+        "InputOTPSeparator"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/input.jsx": {
+      "filePath": "src/components/ui/input.jsx",
+      "contentHash": "44e952bfe80d124fbc6f9e2db897bbb5e84266aaf76822743065b3667a1e0a6d",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Input"
+      ],
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/label.jsx": {
+      "filePath": "src/components/ui/label.jsx",
+      "contentHash": "360f40f47a04a8d62c5908c39fb6db3a6c760130c758d3b50ab40a20de03d749",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-label",
+          "specifiers": [
+            "* as LabelPrimitive"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Label"
+      ],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/menubar.jsx": {
+      "filePath": "src/components/ui/menubar.jsx",
+      "contentHash": "67a877b0fa0acb922fb6048caaa9f47d02491adb1118f7e5d32afd749914a2bc",
+      "functions": [
+        {
+          "name": "MenubarMenu",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "MenubarGroup",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "MenubarPortal",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "MenubarRadioGroup",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "MenubarSub",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "MenubarShortcut",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-menubar",
+          "specifiers": [
+            "* as MenubarPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "ChevronRight",
+            "Circle"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Menubar",
+        "MenubarMenu",
+        "MenubarTrigger",
+        "MenubarContent",
+        "MenubarItem",
+        "MenubarSeparator",
+        "MenubarLabel",
+        "MenubarCheckboxItem",
+        "MenubarRadioGroup",
+        "MenubarRadioItem",
+        "MenubarPortal",
+        "MenubarSubContent",
+        "MenubarSubTrigger",
+        "MenubarGroup",
+        "MenubarSub",
+        "MenubarShortcut"
+      ],
+      "totalLines": 64,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/navigation-menu.jsx": {
+      "filePath": "src/components/ui/navigation-menu.jsx",
+      "contentHash": "12353c0af59a0d3de222dbcff8da41d9952ae330b3ab52b77096332e50ff67c2",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-navigation-menu",
+          "specifiers": [
+            "* as NavigationMenuPrimitive"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronDown"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "navigationMenuTriggerStyle",
+        "NavigationMenu",
+        "NavigationMenuList",
+        "NavigationMenuItem",
+        "NavigationMenuContent",
+        "NavigationMenuTrigger",
+        "NavigationMenuLink",
+        "NavigationMenuIndicator",
+        "NavigationMenuViewport"
+      ],
+      "totalLines": 32,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/pagination.jsx": {
+      "filePath": "src/components/ui/pagination.jsx",
+      "contentHash": "b0ed0918e8cec770ca5115f656e06c4baefad74e88453436502eb399a67a7f0c",
+      "functions": [
+        {
+          "name": "Pagination",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "PaginationLink",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "PaginationPrevious",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "PaginationNext",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "PaginationEllipsis",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronLeft",
+            "ChevronRight",
+            "MoreHorizontal"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "buttonVariants"
+          ]
+        }
+      ],
+      "exports": [
+        "Pagination",
+        "PaginationContent",
+        "PaginationLink",
+        "PaginationItem",
+        "PaginationPrevious",
+        "PaginationNext",
+        "PaginationEllipsis"
+      ],
+      "totalLines": 32,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/popover.jsx": {
+      "filePath": "src/components/ui/popover.jsx",
+      "contentHash": "a0f5142b0cff3aeec693f1e2018796ad3ca29e9ae064795957653514bca6a3eb",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-popover",
+          "specifiers": [
+            "* as PopoverPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Popover",
+        "PopoverTrigger",
+        "PopoverContent",
+        "PopoverAnchor"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/progress.jsx": {
+      "filePath": "src/components/ui/progress.jsx",
+      "contentHash": "4c9e252e1d35d5f1927fa40468b5f7fba791bc6f126ea2abdd8aed5a918c0c47",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-progress",
+          "specifiers": [
+            "* as ProgressPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Progress"
+      ],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/radio-group.jsx": {
+      "filePath": "src/components/ui/radio-group.jsx",
+      "contentHash": "a4ea0f48f86667958d2933f6450b15b2160fce82a7e4c6e474b7f5c258e8bf43",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-radio-group",
+          "specifiers": [
+            "* as RadioGroupPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Circle"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "RadioGroup",
+        "RadioGroupItem"
+      ],
+      "totalLines": 18,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/resizable.jsx": {
+      "filePath": "src/components/ui/resizable.jsx",
+      "contentHash": "411d0d90aee4d745c7026310a3b11708444bcf270fb13ee6bf5879c62ab5fd73",
+      "functions": [
+        {
+          "name": "ResizablePanelGroup",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "ResizableHandle",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "GripVertical"
+          ]
+        },
+        {
+          "source": "react-resizable-panels",
+          "specifiers": [
+            "Group",
+            "Panel",
+            "Separator"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "ResizablePanelGroup",
+        "ResizablePanel",
+        "ResizableHandle"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/scroll-area.jsx": {
+      "filePath": "src/components/ui/scroll-area.jsx",
+      "contentHash": "8fc825025e6f04ae55f75cad3f1098284f135eaf1ad9154d92b7e6dfd012a3f6",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-scroll-area",
+          "specifiers": [
+            "* as ScrollAreaPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "ScrollArea",
+        "ScrollBar"
+      ],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/select.jsx": {
+      "filePath": "src/components/ui/select.jsx",
+      "contentHash": "7d49e7501607d8a44457d4326bc8e0a91734efdeca73d5cd0671bc3cd1664e3d",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-select",
+          "specifiers": [
+            "* as SelectPrimitive"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "ChevronDown",
+            "ChevronUp"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Select",
+        "SelectGroup",
+        "SelectValue",
+        "SelectTrigger",
+        "SelectContent",
+        "SelectLabel",
+        "SelectItem",
+        "SelectSeparator",
+        "SelectScrollUpButton",
+        "SelectScrollDownButton"
+      ],
+      "totalLines": 50,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/separator.jsx": {
+      "filePath": "src/components/ui/separator.jsx",
+      "contentHash": "1c21535f4448df2bdb8871ce5d6b8601af3bdaa191a2d8f95b5ffcc25cf531bb",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-separator",
+          "specifiers": [
+            "* as SeparatorPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Separator"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/sheet.jsx": {
+      "filePath": "src/components/ui/sheet.jsx",
+      "contentHash": "f3e98008a03d3fc6de9a7733b130b7d179a08abd60a2ffde236969f2d062f63c",
+      "functions": [
+        {
+          "name": "SheetHeader",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "SheetFooter",
+          "params": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-dialog",
+          "specifiers": [
+            "* as SheetPrimitive"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "X"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Sheet",
+        "SheetPortal",
+        "SheetOverlay",
+        "SheetTrigger",
+        "SheetClose",
+        "SheetContent",
+        "SheetHeader",
+        "SheetFooter",
+        "SheetTitle",
+        "SheetDescription"
+      ],
+      "totalLines": 46,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/sidebar.jsx": {
+      "filePath": "src/components/ui/sidebar.jsx",
+      "contentHash": "c36fba0021c54fba3867e15bcb2605471ebd016ddd4d5cdb69c22f088a006206",
+      "functions": [
+        {
+          "name": "useSidebar",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-slot",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "PanelLeft"
+          ]
+        },
+        {
+          "source": "@/hooks/use-mobile",
+          "specifiers": [
+            "useIsMobile"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/button",
+          "specifiers": [
+            "Button"
+          ]
+        },
+        {
+          "source": "@/components/ui/input",
+          "specifiers": [
+            "Input"
+          ]
+        },
+        {
+          "source": "@/components/ui/separator",
+          "specifiers": [
+            "Separator"
+          ]
+        },
+        {
+          "source": "@/components/ui/sheet",
+          "specifiers": [
+            "Sheet",
+            "SheetContent",
+            "SheetDescription",
+            "SheetHeader",
+            "SheetTitle"
+          ]
+        },
+        {
+          "source": "@/components/ui/skeleton",
+          "specifiers": [
+            "Skeleton"
+          ]
+        },
+        {
+          "source": "@/components/ui/tooltip",
+          "specifiers": [
+            "Tooltip",
+            "TooltipContent",
+            "TooltipProvider",
+            "TooltipTrigger"
+          ]
+        }
+      ],
+      "exports": [
+        "Sidebar",
+        "SidebarContent",
+        "SidebarFooter",
+        "SidebarGroup",
+        "SidebarGroupAction",
+        "SidebarGroupContent",
+        "SidebarGroupLabel",
+        "SidebarHeader",
+        "SidebarInput",
+        "SidebarInset",
+        "SidebarMenu",
+        "SidebarMenuAction",
+        "SidebarMenuBadge",
+        "SidebarMenuButton",
+        "SidebarMenuItem",
+        "SidebarMenuSkeleton",
+        "SidebarMenuSub",
+        "SidebarMenuSubButton",
+        "SidebarMenuSubItem",
+        "SidebarProvider",
+        "SidebarRail",
+        "SidebarSeparator",
+        "SidebarTrigger",
+        "useSidebar"
+      ],
+      "totalLines": 254,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/skeleton.jsx": {
+      "filePath": "src/components/ui/skeleton.jsx",
+      "contentHash": "0c850078c89ad9b21572b8a6de878c8f626204053a96b0a6c4ff57e364e158d5",
+      "functions": [
+        {
+          "name": "Skeleton",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Skeleton"
+      ],
+      "totalLines": 6,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/slider.jsx": {
+      "filePath": "src/components/ui/slider.jsx",
+      "contentHash": "cca00431c0581d85b519e72abf6c9c24722090647befc13b0ebc6fe39741ba6d",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-slider",
+          "specifiers": [
+            "* as SliderPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Slider"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/sonner.jsx": {
+      "filePath": "src/components/ui/sonner.jsx",
+      "contentHash": "b0ea853fab967fbeb14000da06cef4c80fa2dc6bd92f3e19435664f5cce7714a",
+      "functions": [
+        {
+          "name": "Toaster",
+          "params": [],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "sonner",
+          "specifiers": [
+            "Sonner"
+          ]
+        }
+      ],
+      "exports": [
+        "Toaster"
+      ],
+      "totalLines": 13,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/switch.jsx": {
+      "filePath": "src/components/ui/switch.jsx",
+      "contentHash": "7f31e6b3f59e403a95f9307578868ce682a519422e72bf84127111354ed35267",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-switch",
+          "specifiers": [
+            "* as SwitchPrimitives"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Switch"
+      ],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/table.jsx": {
+      "filePath": "src/components/ui/table.jsx",
+      "contentHash": "b84fe4964535d3835cbe00f0cda0f1cfdfe7615c5e9a9b17707b34523b31e8e5",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Table",
+        "TableHeader",
+        "TableBody",
+        "TableFooter",
+        "TableHead",
+        "TableRow",
+        "TableCell",
+        "TableCaption"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/tabs.jsx": {
+      "filePath": "src/components/ui/tabs.jsx",
+      "contentHash": "1158b6191776d1aa863ce58161b466dfb95b17b51076ef6884db9bdc814bf54f",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-tabs",
+          "specifiers": [
+            "* as TabsPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Tabs",
+        "TabsList",
+        "TabsTrigger",
+        "TabsContent"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/textarea.jsx": {
+      "filePath": "src/components/ui/textarea.jsx",
+      "contentHash": "1310c97fbea8fb33718044d13eedf16c6c2fd8b22ea3f31f4a4c06ed62b0ec73",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Textarea"
+      ],
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/toggle-group.jsx": {
+      "filePath": "src/components/ui/toggle-group.jsx",
+      "contentHash": "6cd9c2cd81a783303214a527b2454ad3fb3493b5d418d6a78732ef0415d76f51",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-toggle-group",
+          "specifiers": [
+            "* as ToggleGroupPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        },
+        {
+          "source": "@/components/ui/toggle",
+          "specifiers": [
+            "toggleVariants"
+          ]
+        }
+      ],
+      "exports": [
+        "ToggleGroup",
+        "ToggleGroupItem"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/toggle.jsx": {
+      "filePath": "src/components/ui/toggle.jsx",
+      "contentHash": "7081291b345c4cfca4a31000f569867b27931175181cdf6c75cdb7194b10b61c",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-toggle",
+          "specifiers": [
+            "* as TogglePrimitive"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Toggle",
+        "toggleVariants"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/tooltip.jsx": {
+      "filePath": "src/components/ui/tooltip.jsx",
+      "contentHash": "bb6c3eb2658d43c3a2f073ba06cca37f87f2ef996fb3fa366b57ab8c46a6eec7",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-tooltip",
+          "specifiers": [
+            "* as TooltipPrimitive"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Tooltip",
+        "TooltipTrigger",
+        "TooltipContent",
+        "TooltipProvider"
+      ],
+      "totalLines": 13,
+      "hasStructuralAnalysis": true
+    },
+    "src/hooks/use-mobile.jsx": {
+      "filePath": "src/hooks/use-mobile.jsx",
+      "contentHash": "816eb0a451b62c509ceeb64784f311c6bf5d80fd442cb72d07cfa5818db9a0a0",
+      "functions": [
+        {
+          "name": "useIsMobile",
+          "params": [],
+          "exported": true,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        }
+      ],
+      "exports": [
+        "useIsMobile"
+      ],
+      "totalLines": 16,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/agora.js": {
+      "filePath": "src/lib/agora.js",
+      "contentHash": "a67775ab50153ac839688b2a004515935eaf87c8e0acd2aee016889daf735327",
+      "functions": [
+        {
+          "name": "createAgoraRoomClient",
+          "params": [],
+          "exported": true,
+          "lineCount": 39
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "agora-rtc-sdk-ng",
+          "specifiers": [
+            "AgoraRTC"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "focusApi"
+          ]
+        }
+      ],
+      "exports": [
+        "AGORA_APP_ID",
+        "createAgoraRoomClient"
+      ],
+      "totalLines": 45,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/api-client.js": {
+      "filePath": "src/lib/api-client.js",
+      "contentHash": "a3d670b1cad6730cec2f90ce4438d7910b9e37adca0cde14b6520a428adad436",
+      "functions": [
+        {
+          "name": "toQuery",
+          "params": [
+            "params"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "parseResponse",
+          "params": [
+            "response"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "apiRequest",
+          "params": [
+            "path"
+          ],
+          "exported": true,
+          "lineCount": 24
+        },
+        {
+          "name": "apiUpload",
+          "params": [
+            "path",
+            "formData"
+          ],
+          "exported": true,
+          "lineCount": 23
+        },
+        {
+          "name": "unwrapData",
+          "params": [
+            "payload"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "crud",
+          "params": [
+            "basePath"
+          ],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "classes": [
+        {
+          "name": "ApiError",
+          "methods": [
+            "constructor"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "imports": [
+        {
+          "source": "@/store/auth-store",
+          "specifiers": [
+            "getFreshIdToken"
+          ]
+        }
+      ],
+      "exports": [
+        "API_BASE",
+        "ApiError",
+        "apiRequest",
+        "apiUpload",
+        "unwrapData",
+        "crud"
+      ],
+      "totalLines": 104,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/api.js": {
+      "filePath": "src/lib/api.js",
+      "contentHash": "70fe4935171437a6531ac3e2a46609f5af86f298c77644ac1ac06af3dbd42ddd",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "./api-client",
+          "specifiers": [
+            "apiRequest",
+            "apiUpload",
+            "crud",
+            "unwrapData"
+          ]
+        }
+      ],
+      "exports": [
+        "userApi",
+        "studyApi",
+        "focusApi",
+        "socialApi",
+        "aiApi",
+        "api"
+      ],
+      "totalLines": 172,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/error-capture.js": {
+      "filePath": "src/lib/error-capture.js",
+      "contentHash": "c84e8d112bd592872e719e4bde932152deba93649425d8b767cb57e3bafd54ca",
+      "functions": [
+        {
+          "name": "record",
+          "params": [
+            "error"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "consumeLastCapturedError",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "consumeLastCapturedError"
+      ],
+      "totalLines": 23,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/error-page.js": {
+      "filePath": "src/lib/error-page.js",
+      "contentHash": "aa0f6f10a028c95af4f8af095d89f3ccce5d09ceb4532feb40afcfbf913dd0db",
+      "functions": [
+        {
+          "name": "renderErrorPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 30
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "renderErrorPage"
+      ],
+      "totalLines": 31,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/firebase.js": {
+      "filePath": "src/lib/firebase.js",
+      "contentHash": "4ac3d320ee77ce8be88e8e74fb16e43aa2d3af356dd54e7e6fb6e5513ebb84ac",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "firebase/app",
+          "specifiers": [
+            "initializeApp",
+            "getApps"
+          ]
+        },
+        {
+          "source": "firebase/auth",
+          "specifiers": [
+            "getAuth",
+            "GoogleAuthProvider"
+          ]
+        },
+        {
+          "source": "firebase/firestore",
+          "specifiers": [
+            "getFirestore"
+          ]
+        },
+        {
+          "source": "firebase/storage",
+          "specifiers": [
+            "getStorage"
+          ]
+        }
+      ],
+      "exports": [
+        "firebaseApp",
+        "auth",
+        "db",
+        "storage",
+        "googleProvider"
+      ],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/mock.js": {
+      "filePath": "src/lib/mock.js",
+      "contentHash": "f5ad1c38e2eaea69aa965f8b725c62046a59ec718ec520f5e88e68e5dc34b318",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "me",
+        "spaces",
+        "domains",
+        "tasks",
+        "sprints",
+        "calendarEvents",
+        "pomodoroHistory",
+        "rooms",
+        "feedPosts",
+        "friends",
+        "notifications",
+        "aiSuggestions",
+        "platforms",
+        "weeklyXP",
+        "burndown",
+        "heatmap"
+      ],
+      "totalLines": 103,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/query-hooks.js": {
+      "filePath": "src/lib/query-hooks.js",
+      "contentHash": "b58933e8e250fd8016e22fe5689a098636449907903dd394b1b9b770539c6922",
+      "functions": [
+        {
+          "name": "enabledAuth",
+          "params": [],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "useProfile",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useSpaces",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useSpace",
+          "params": [
+            "spaceId"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "useDomains",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useDomain",
+          "params": [
+            "domainId"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useDomainTasks",
+          "params": [
+            "domainId"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useTasks",
+          "params": [
+            "params"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "useTask",
+          "params": [
+            "taskId"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useTaskComments",
+          "params": [
+            "taskId"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useBacklog",
+          "params": [
+            "spaceId"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "useActiveSprint",
+          "params": [
+            "spaceId"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useSprints",
+          "params": [
+            "spaceId"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "useSprint",
+          "params": [
+            "sprintId"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "useCalendarEvents",
+          "params": [
+            "params"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "useNotifications",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useAiSuggestions",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useCapacity",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useStandupToday",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useKanbanInsight",
+          "params": [
+            "doingCount"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useCapacityCheck",
+          "params": [
+            "taskIds"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "useUserStats",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "usePomodoroSessions",
+          "params": [
+            "params"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "useSocialFeed",
+          "params": [
+            "params"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "usePlatformUsage",
+          "params": [
+            "params"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useFocusRooms",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "useStudyMutations",
+          "params": [],
+          "exported": true,
+          "lineCount": 252
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "useMutation",
+            "useQuery",
+            "useQueryClient"
+          ]
+        },
+        {
+          "source": "sonner",
+          "specifiers": [
+            "toast"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "aiApi",
+            "focusApi",
+            "socialApi",
+            "studyApi",
+            "userApi"
+          ]
+        }
+      ],
+      "exports": [
+        "qk",
+        "useProfile",
+        "useSpaces",
+        "useSpace",
+        "useDomains",
+        "useDomain",
+        "useDomainTasks",
+        "useTasks",
+        "useTask",
+        "useTaskComments",
+        "useBacklog",
+        "useActiveSprint",
+        "useSprints",
+        "useSprint",
+        "useCalendarEvents",
+        "useNotifications",
+        "useAiSuggestions",
+        "useCapacity",
+        "useStandupToday",
+        "useKanbanInsight",
+        "useCapacityCheck",
+        "useUserStats",
+        "usePomodoroSessions",
+        "useSocialFeed",
+        "usePlatformUsage",
+        "useFocusRooms",
+        "useStudyMutations"
+      ],
+      "totalLines": 459,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/realtime.js": {
+      "filePath": "src/lib/realtime.js",
+      "contentHash": "cf1a7d8683c7edd6b75ffcfbfb69da428c9262ad8c619b6ea010bfc7ecaeebe9",
+      "functions": [
+        {
+          "name": "currentUserOrThrow",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "watchPresence",
+          "params": [
+            "uid",
+            "callback",
+            "onError"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "setPresence",
+          "params": [
+            "status"
+          ],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "createFirestoreRoom",
+          "params": [],
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "joinRoomByCode",
+          "params": [
+            "code"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "updateRoomPhase",
+          "params": [
+            "roomId",
+            "phase",
+            "durationMinutes"
+          ],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "incrementRound",
+          "params": [
+            "roomId"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "endRoom",
+          "params": [
+            "roomId"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "updateMutedState",
+          "params": [
+            "roomId",
+            "isMuted"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "watchPublicRooms",
+          "params": [
+            "callback",
+            "onError"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "watchRoom",
+          "params": [
+            "roomId",
+            "callback",
+            "onError"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "watchRoomMembers",
+          "params": [
+            "roomId",
+            "callback",
+            "onError"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "watchRoomMessages",
+          "params": [
+            "roomId",
+            "callback",
+            "onError"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "watchSharedFiles",
+          "params": [
+            "roomId",
+            "callback",
+            "onError"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "joinRoom",
+          "params": [
+            "roomId"
+          ],
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "leaveRoom",
+          "params": [
+            "roomId"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "sendRoomMessage",
+          "params": [
+            "roomId",
+            "text"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "uploadPostAttachment",
+          "params": [
+            "file"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "uploadUserAvatar",
+          "params": [
+            "file"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "uploadRoomFile",
+          "params": [
+            "roomId",
+            "file"
+          ],
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "updateAgoraUid",
+          "params": [
+            "roomId",
+            "agoraUid"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "deleteRoomFile",
+          "params": [
+            "roomId",
+            "fileId",
+            "fileUrl"
+          ],
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "firebase/firestore",
+          "specifiers": [
+            "addDoc",
+            "collection",
+            "deleteDoc",
+            "doc",
+            "getDocs",
+            "increment",
+            "limit",
+            "onSnapshot",
+            "orderBy",
+            "query",
+            "runTransaction",
+            "serverTimestamp",
+            "setDoc",
+            "updateDoc",
+            "where"
+          ]
+        },
+        {
+          "source": "firebase/storage",
+          "specifiers": [
+            "getDownloadURL",
+            "ref",
+            "uploadBytes",
+            "deleteObject"
+          ]
+        },
+        {
+          "source": "@/lib/firebase",
+          "specifiers": [
+            "auth",
+            "db",
+            "storage"
+          ]
+        }
+      ],
+      "exports": [
+        "watchPresence",
+        "setPresence",
+        "createFirestoreRoom",
+        "joinRoomByCode",
+        "updateRoomPhase",
+        "incrementRound",
+        "endRoom",
+        "updateMutedState",
+        "watchPublicRooms",
+        "watchRoom",
+        "watchRoomMembers",
+        "watchRoomMessages",
+        "watchSharedFiles",
+        "joinRoom",
+        "leaveRoom",
+        "sendRoomMessage",
+        "uploadPostAttachment",
+        "uploadUserAvatar",
+        "uploadRoomFile",
+        "updateAgoraUid",
+        "deleteRoomFile"
+      ],
+      "totalLines": 210,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/utils.js": {
+      "filePath": "src/lib/utils.js",
+      "contentHash": "795718b560083a469b8fab1752e9591e8de29f8568654e588af87dc0c8de7519",
+      "functions": [
+        {
+          "name": "cn",
+          "params": [
+            "...inputs"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "parseWall",
+          "params": [
+            "value"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "wallDateStr",
+          "params": [
+            "value"
+          ],
+          "exported": true,
+          "lineCount": 6
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "clsx",
+          "specifiers": [
+            "clsx"
+          ]
+        },
+        {
+          "source": "tailwind-merge",
+          "specifiers": [
+            "twMerge"
+          ]
+        }
+      ],
+      "exports": [
+        "cn",
+        "parseWall",
+        "wallDateStr"
+      ],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    },
+    "src/router.jsx": {
+      "filePath": "src/router.jsx",
+      "contentHash": "203c639cabf358e8e7845f5352bd9fdba318e976fda416daea8be43d75a61595",
+      "functions": [
+        {
+          "name": "getRouter",
+          "params": [],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "QueryClient"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createRouter"
+          ]
+        },
+        {
+          "source": "./routeTree.gen.js",
+          "specifiers": [
+            "routeTree"
+          ]
+        }
+      ],
+      "exports": [
+        "getRouter"
+      ],
+      "totalLines": 14,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/__root.jsx": {
+      "filePath": "src/routes/__root.jsx",
+      "contentHash": "cc89a3de220b8f485199a096f94979d0de9112cd1aa9a33932de469b0f8b9b29",
+      "functions": [
+        {
+          "name": "PageLoader",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "NotFoundComponent",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "ErrorComponent",
+          "params": [],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "RootShell",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "RootComponent",
+          "params": [],
+          "exported": false,
+          "lineCount": 29
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-query",
+          "specifiers": [
+            "QueryClientProvider"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "Outlet",
+            "createRootRouteWithContext",
+            "useNavigate",
+            "useRouter",
+            "HeadContent",
+            "Scripts",
+            "useRouterState"
+          ]
+        },
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "Suspense"
+          ]
+        },
+        {
+          "source": "@/components/layout/AppShell",
+          "specifiers": [
+            "AppShell"
+          ]
+        },
+        {
+          "source": "@/components/ui/sonner",
+          "specifiers": [
+            "Toaster"
+          ]
+        },
+        {
+          "source": "@/store/auth-store",
+          "specifiers": [
+            "startAuthListener",
+            "useAuthStore"
+          ]
+        },
+        {
+          "source": "../styles.css?url",
+          "specifiers": [
+            "appCss"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 85,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/analytics.jsx": {
+      "filePath": "src/routes/analytics.jsx",
+      "contentHash": "804deed5d0e5ef8f1432ff76ff07b232a5826bbf40f0d5f098e9d4af91e5153b",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/backlog.jsx": {
+      "filePath": "src/routes/backlog.jsx",
+      "contentHash": "f578a68a660e67244dc3177928c4ff30476a8b4ae1bd12f6d24b013ffdce62ea",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/board.jsx": {
+      "filePath": "src/routes/board.jsx",
+      "contentHash": "e1ad8e22580d7d36cd1b42cf7ff5b81edc514250ce03db486f1062df2935b80d",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        },
+        {
+          "source": "@/components/pages/WorkspaceRedirect",
+          "specifiers": [
+            "CompatibilityWorkspaceRedirect"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/calendar.jsx": {
+      "filePath": "src/routes/calendar.jsx",
+      "contentHash": "1c97704544aa646931166c9338f5e083c55fa502eaf16d9c58009b67fd481152",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/domains.$id.jsx": {
+      "filePath": "src/routes/domains.$id.jsx",
+      "contentHash": "71d4894f32f0c55489f8fccf9ff509f78249665e719f3e0319c229010705872d",
+      "functions": [
+        {
+          "name": "DomainRoute",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/domains.jsx": {
+      "filePath": "src/routes/domains.jsx",
+      "contentHash": "33548298a6b24690e79f10f94d47311d561f37cebce5435dac3c2aea586e3099",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/focus.jsx": {
+      "filePath": "src/routes/focus.jsx",
+      "contentHash": "331de952ab97478696da9f0df760b9b1173c6bc3af178b72897918d8ed39d723",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/index.jsx": {
+      "filePath": "src/routes/index.jsx",
+      "contentHash": "2689e5ffdec88880377b79927d16778a4c8576bbae31c8c441c66711b38cc9b7",
+      "functions": [
+        {
+          "name": "IndexRoute",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        },
+        {
+          "source": "@/store/auth-store",
+          "specifiers": [
+            "useAuthStore"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 13,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/login.jsx": {
+      "filePath": "src/routes/login.jsx",
+      "contentHash": "4e8cd295ad8d223de1ed24cc507eda9d11933aba4cca01e0e902c65e5d9675cd",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        },
+        {
+          "source": "@/components/pages/AuthPage",
+          "specifiers": [
+            "AuthPage"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/notifications.jsx": {
+      "filePath": "src/routes/notifications.jsx",
+      "contentHash": "38fb6b682613b42651c72d60d1bf5bb585ea08a5c4c4b0491117de1c6139c9e8",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/profile.$uid.jsx": {
+      "filePath": "src/routes/profile.$uid.jsx",
+      "contentHash": "6dbf4f50899b06fadda0791208b9f84d3f69ea7a6525f81fd17bab34e32ab357",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/register.jsx": {
+      "filePath": "src/routes/register.jsx",
+      "contentHash": "5562aeb3379d0af7921cd2aa31d12e65f4aa1c38c2a92660c310436e73a84026",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        },
+        {
+          "source": "@/components/pages/AuthPage",
+          "specifiers": [
+            "AuthPage"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/rooms.$id.jsx": {
+      "filePath": "src/routes/rooms.$id.jsx",
+      "contentHash": "12f756af1d73ca7d57883c082c95a78eb29cda7f73d1c5b976ae21e03146d4d7",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/rooms.jsx": {
+      "filePath": "src/routes/rooms.jsx",
+      "contentHash": "38c141bf9eff786b8a6bfaeb6dc7f578cd76e5c3bd570f48b88e5be85eb5dba9",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/settings.jsx": {
+      "filePath": "src/routes/settings.jsx",
+      "contentHash": "99ca559f6c7e62696bd0c12151c79d96261968579e1eddbea9521a9d782ee510",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/social.jsx": {
+      "filePath": "src/routes/social.jsx",
+      "contentHash": "e1ce727f01587ae7f25a958f7b6441b743ff82d6bba07f34ceced5ad7330e6f5",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.$spaceId.backlog.jsx": {
+      "filePath": "src/routes/spaces.$spaceId.backlog.jsx",
+      "contentHash": "04e86b6e9a55f5f84453faf7a31939e7246d5ba054f2c2cf091819a1b19953c3",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.$spaceId.board.jsx": {
+      "filePath": "src/routes/spaces.$spaceId.board.jsx",
+      "contentHash": "50649ee42674042ded701bbf3b77fc864d7c09825dc1e30303b95aafd9b85d9b",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.$spaceId.jsx": {
+      "filePath": "src/routes/spaces.$spaceId.jsx",
+      "contentHash": "3e76d80803b5905d62cfd5d5f0148e0dc07c233f0c3279787e3f65180f821a89",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute",
+            "redirect"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.$spaceId.members.jsx": {
+      "filePath": "src/routes/spaces.$spaceId.members.jsx",
+      "contentHash": "f152fde16ac15614996646bd978db5970fde0dc9c8e688b0c7f2d5b7bcf508d7",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.$spaceId.sprints.jsx": {
+      "filePath": "src/routes/spaces.$spaceId.sprints.jsx",
+      "contentHash": "ffd1e1c96af44635f3853c8413da1027cda4602fd716e74ee5cfcabff7bdd222",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.$spaceId.summary.jsx": {
+      "filePath": "src/routes/spaces.$spaceId.summary.jsx",
+      "contentHash": "6f2ddf208c9c7cc2f01d117c1842fcfdec01380ef567de54d8ac06aedb79212f",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/spaces.jsx": {
+      "filePath": "src/routes/spaces.jsx",
+      "contentHash": "799e83d11dfb757ce3525547e19a431758586cf445b0fae03ef4aede77426070",
+      "functions": [
+        {
+          "name": "SpacesRoute",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute",
+            "Outlet",
+            "useRouterState"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/sprints.$id.jsx": {
+      "filePath": "src/routes/sprints.$id.jsx",
+      "contentHash": "50dac376ec1dfcc3f96ff58c4aa2730d3db228101903e814615c442db9f279be",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/sprints.jsx": {
+      "filePath": "src/routes/sprints.jsx",
+      "contentHash": "12aab63d27b5a920cabdc1128449a27eb7009d515a1bf994b8145fa15ff40b65",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        },
+        {
+          "source": "@/components/pages/WorkspaceRedirect",
+          "specifiers": [
+            "CompatibilityWorkspaceRedirect"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "src/routes/tasks.$id.jsx": {
+      "filePath": "src/routes/tasks.$id.jsx",
+      "contentHash": "2e8e44a52a0e4b2edd4f503ef66feae5c36e8d7cbfd7af103fff96bd2a254c3a",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy"
+          ]
+        },
+        {
+          "source": "@tanstack/react-router",
+          "specifiers": [
+            "createFileRoute"
+          ]
+        }
+      ],
+      "exports": [
+        "Route"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/routeTree.gen.js": {
+      "filePath": "src/routeTree.gen.js",
+      "contentHash": "b1315decc8ab226a976438f59af85767951fc7832a1762fca9b8dac3e140f5ae",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "./routes/__root",
+          "specifiers": [
+            "rootRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/sprints",
+          "specifiers": [
+            "SprintsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces",
+          "specifiers": [
+            "SpacesRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/social",
+          "specifiers": [
+            "SocialRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/settings",
+          "specifiers": [
+            "SettingsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/rooms",
+          "specifiers": [
+            "RoomsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/register",
+          "specifiers": [
+            "RegisterRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/notifications",
+          "specifiers": [
+            "NotificationsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/login",
+          "specifiers": [
+            "LoginRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/focus",
+          "specifiers": [
+            "FocusRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/domains",
+          "specifiers": [
+            "DomainsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/calendar",
+          "specifiers": [
+            "CalendarRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/board",
+          "specifiers": [
+            "BoardRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/backlog",
+          "specifiers": [
+            "BacklogRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/analytics",
+          "specifiers": [
+            "AnalyticsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/index",
+          "specifiers": [
+            "IndexRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/tasks.$id",
+          "specifiers": [
+            "TasksIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/sprints.$id",
+          "specifiers": [
+            "SprintsIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/rooms.$id",
+          "specifiers": [
+            "RoomsIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/profile.$uid",
+          "specifiers": [
+            "ProfileUidRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/domains.$id",
+          "specifiers": [
+            "DomainsIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId",
+          "specifiers": [
+            "SpacesSpaceIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.summary",
+          "specifiers": [
+            "SpacesSpaceIdSummaryRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.board",
+          "specifiers": [
+            "SpacesSpaceIdBoardRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.backlog",
+          "specifiers": [
+            "SpacesSpaceIdBacklogRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.members",
+          "specifiers": [
+            "SpacesSpaceIdMembersRouteImport"
+          ]
+        }
+      ],
+      "exports": [
+        "routeTree"
+      ],
+      "totalLines": 188,
+      "hasStructuralAnalysis": true
+    },
+    "src/routeTree.gen.ts": {
+      "filePath": "src/routeTree.gen.ts",
+      "contentHash": "c65b744fb321ca9be4e1698231df90b4c7b2d1dee9f76eb3a9812eead444ef31",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "./routes/__root",
+          "specifiers": [
+            "rootRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/sprints",
+          "specifiers": [
+            "SprintsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces",
+          "specifiers": [
+            "SpacesRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/social",
+          "specifiers": [
+            "SocialRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/settings",
+          "specifiers": [
+            "SettingsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/rooms",
+          "specifiers": [
+            "RoomsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/register",
+          "specifiers": [
+            "RegisterRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/notifications",
+          "specifiers": [
+            "NotificationsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/login",
+          "specifiers": [
+            "LoginRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/focus",
+          "specifiers": [
+            "FocusRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/domains",
+          "specifiers": [
+            "DomainsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/calendar",
+          "specifiers": [
+            "CalendarRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/board",
+          "specifiers": [
+            "BoardRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/backlog",
+          "specifiers": [
+            "BacklogRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/analytics",
+          "specifiers": [
+            "AnalyticsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/index",
+          "specifiers": [
+            "IndexRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/tasks.$id",
+          "specifiers": [
+            "TasksIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/sprints.$id",
+          "specifiers": [
+            "SprintsIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId",
+          "specifiers": [
+            "SpacesSpaceIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/rooms.$id",
+          "specifiers": [
+            "RoomsIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/profile.$uid",
+          "specifiers": [
+            "ProfileUidRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/domains.$id",
+          "specifiers": [
+            "DomainsIdRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.summary",
+          "specifiers": [
+            "SpacesSpaceIdSummaryRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.sprints",
+          "specifiers": [
+            "SpacesSpaceIdSprintsRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.members",
+          "specifiers": [
+            "SpacesSpaceIdMembersRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.board",
+          "specifiers": [
+            "SpacesSpaceIdBoardRouteImport"
+          ]
+        },
+        {
+          "source": "./routes/spaces.$spaceId.backlog",
+          "specifiers": [
+            "SpacesSpaceIdBacklogRouteImport"
+          ]
+        },
+        {
+          "source": "./router.jsx",
+          "specifiers": [
+            "getRouter"
+          ]
+        },
+        {
+          "source": "./start.js",
+          "specifiers": [
+            "startInstance"
+          ]
+        }
+      ],
+      "exports": [
+        "routeTree"
+      ],
+      "totalLines": 644,
+      "hasStructuralAnalysis": true
+    },
+    "src/server.js": {
+      "filePath": "src/server.js",
+      "contentHash": "9079e95fbba93e14d075915917e553917a028e0562cd76c73a40bef2833aaf9a",
+      "functions": [
+        {
+          "name": "getServerEntry",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "brandedErrorResponse",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "isCatastrophicSsrErrorBody",
+          "params": [
+            "body",
+            "responseStatus"
+          ],
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "normalizeCatastrophicSsrResponse",
+          "params": [
+            "response"
+          ],
+          "exported": false,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "./lib/error-capture",
+          "specifiers": []
+        },
+        {
+          "source": "./lib/error-capture",
+          "specifiers": [
+            "consumeLastCapturedError"
+          ]
+        },
+        {
+          "source": "./lib/error-page",
+          "specifiers": [
+            "renderErrorPage"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 65,
+      "hasStructuralAnalysis": true
+    },
+    "src/start.js": {
+      "filePath": "src/start.js",
+      "contentHash": "01c98d943909084b6a6b62c3343c0ceb8d754ac176c1d9e87016357cf8140904",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@tanstack/react-start",
+          "specifiers": [
+            "createStart",
+            "createMiddleware"
+          ]
+        },
+        {
+          "source": "./lib/error-page",
+          "specifiers": [
+            "renderErrorPage"
+          ]
+        }
+      ],
+      "exports": [
+        "startInstance"
+      ],
+      "totalLines": 21,
+      "hasStructuralAnalysis": true
+    },
+    "src/store/auth-store.js": {
+      "filePath": "src/store/auth-store.js",
+      "contentHash": "1b384c0ea9e0f7c12f0036f5bfc1c54a21a5d41e500567da573145e7f77e1d8f",
+      "functions": [
+        {
+          "name": "startAuthListener",
+          "params": [],
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "getFreshIdToken",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "zustand",
+          "specifiers": [
+            "create"
+          ]
+        },
+        {
+          "source": "firebase/auth",
+          "specifiers": [
+            "createUserWithEmailAndPassword",
+            "onAuthStateChanged",
+            "signInWithEmailAndPassword",
+            "signInWithPopup",
+            "signOut",
+            "updateProfile"
+          ]
+        },
+        {
+          "source": "@/lib/firebase",
+          "specifiers": [
+            "auth",
+            "googleProvider"
+          ]
+        },
+        {
+          "source": "@/lib/api",
+          "specifiers": [
+            "userApi"
+          ]
+        }
+      ],
+      "exports": [
+        "useAuthStore",
+        "startAuthListener",
+        "getFreshIdToken"
+      ],
+      "totalLines": 116,
+      "hasStructuralAnalysis": true
+    },
+    "src/store/ui.js": {
+      "filePath": "src/store/ui.js",
+      "contentHash": "92ab6d2a719300ba26a13c09e418ad2fed2e5b51d3d3fe4b212dcabe24dc65a7",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "zustand",
+          "specifiers": [
+            "create"
+          ]
+        }
+      ],
+      "exports": [
+        "useUI"
+      ],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "vite.config.js": {
+      "filePath": "vite.config.js",
+      "contentHash": "9bc9c80ab04e75c1c290127db160389177fe0dce723d0d7cae795f4767f27389",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@lovable.dev/vite-tanstack-config",
+          "specifiers": [
+            "defineConfig"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    }
+  }
+}

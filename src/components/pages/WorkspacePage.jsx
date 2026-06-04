@@ -214,8 +214,11 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   const spaceColor = space?.color_hex || space?.color || "var(--primary)";
 
   return (
-    <div className="space-y-0">
-      <div className="-mx-4 -mt-6 border-b bg-background px-4 pt-4 lg:-mx-8 lg:px-8">
+    // Scope a subtle compaction to this page only so its density matches the
+    // sidebar. `zoom` is layout-affecting in Chromium, so percentage widths
+    // still fill the column correctly — no width override needed.
+    <div className="space-y-0" style={{ zoom: 0.9 }}>
+      <div className="-mx-4 -mt-6 border-b bg-background px-4 pb-4 pt-4 lg:-mx-8 lg:px-8">
         <div className="flex h-9 items-center gap-2 text-xs text-muted-foreground">
           <Link to="/spaces" className="inline-flex items-center gap-1 hover:text-foreground">
             <ArrowLeft className="h-3.5 w-3.5" /> Spaces

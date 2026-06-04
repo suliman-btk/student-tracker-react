@@ -5,15 +5,30 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@tanstack/react-router";
+import { Menu } from "lucide-react";
 
-export default function Topbar() {
+export default function Topbar({ onMobileMenu }) {
   const { user, profile, logout } = useAuthStore();
   const displayName = profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
   const email = profile?.email || user?.email || "";
   const avatar = profile?.avatar_url || user?.photoURL;
 
   return (
-    <header className="sticky top-0 z-30 h-14 border-b bg-background/80 backdrop-blur flex items-center px-4 lg:px-6">
+    <header className="sticky top-0 z-30 h-14 border-b bg-background/80 backdrop-blur flex items-center px-4 lg:px-6 gap-2">
+      {/* Hamburger — mobile only */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden shrink-0"
+        onClick={onMobileMenu}
+        aria-label="Open navigation"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      {/* RAQIP wordmark — mobile only (desktop has it in sidebar) */}
+      <span className="lg:hidden font-semibold tracking-tight text-sm">RAQIP</span>
+
       <div className="ml-auto flex items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

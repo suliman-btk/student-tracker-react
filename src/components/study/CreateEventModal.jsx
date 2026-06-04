@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStudyMutations, useDomains } from "@/lib/query-hooks";
 import DateTimePicker from "@/components/study/DateTimePicker";
-import { cn } from "@/lib/utils";
+import { cn, parseWall } from "@/lib/utils";
 
 const COLORS = ["#4f46e5", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#0891b2"];
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -19,7 +19,7 @@ const NONE = "none";
 const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
 
 function toLocalInput(value, fallbackDate) {
-  const d = value ? new Date(value) : fallbackDate;
+  const d = value ? parseWall(value) : fallbackDate;
   if (!d || Number.isNaN(d.getTime())) return "";
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;

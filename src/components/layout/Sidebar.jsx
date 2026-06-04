@@ -11,10 +11,12 @@ import {
   Settings,
   Timer,
   Users,
+  X,
 } from "lucide-react";
 import { useSpaces } from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const groups = [
   {
@@ -47,7 +49,7 @@ const groups = [
   },
 ];
 
-export default function Sidebar() {
+function SidebarContent({ onNavigate }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { activeSpaceId, setActiveSpace } = useUI();
   const { data: spacesPayload = [], isLoading: loadingSpaces, error: spacesError } = useSpaces();
@@ -63,6 +65,7 @@ export default function Sidebar() {
             <li key={to}>
               <Link
                 to={to}
+                onClick={onNavigate}
                 className={cn(
                   "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                   active
@@ -84,8 +87,8 @@ export default function Sidebar() {
   const otherGroups = groups.filter((g) => g.label !== "Overview");
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <div className="px-5 py-5 flex items-center gap-2">
+    <>
+      <div className="px-5 py-5 flex items-center gap-2 shrink-0">
         <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-bold">R</div>
         <div>
           <div className="font-semibold tracking-tight">RAQIP</div>
@@ -99,6 +102,7 @@ export default function Sidebar() {
           <div className="space-y-0.5">
             <Link
               to="/spaces"
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                 path === "/spaces"
@@ -134,7 +138,7 @@ export default function Sidebar() {
                       <Link
                         to="/spaces/$spaceId/summary"
                         params={{ spaceId: String(space.id) }}
-                        onClick={() => setActiveSpace(space.id)}
+                        onClick={() => { setActiveSpace(space.id); onNavigate?.(); }}
                         className={cn(
                           "flex min-w-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                           active
@@ -156,6 +160,30 @@ export default function Sidebar() {
         </div>
         {otherGroups.map(renderGroup)}
       </nav>
-    </aside>
+    </>
+  );
+}
+
+export default function Sidebar({ mobileOpen, onMobileClose }) {
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile sidebar (Sheet) */}
+      <Sheet open={mobileOpen} onOpenChange={(open) => !open && onMobileClose?.()}>
+        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground flex flex-col [&>button]:hidden">
+          <button
+            onClick={onMobileClose}
+            className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <SidebarContent onNavigate={onMobileClose} />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

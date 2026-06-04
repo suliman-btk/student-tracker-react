@@ -15,23 +15,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useStudyMutations } from "@/lib/query-hooks";
-import { cn } from "@/lib/utils";
+import { cn, parseWall, wallDateStr } from "@/lib/utils";
 
 function fmt(value, allDay) {
   if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
+  const d = parseWall(value);
+  if (!d || Number.isNaN(d.getTime())) return value;
   return allDay
     ? d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })
     : d.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-function localDate(value) {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
+const localDate = (value) => wallDateStr(value);
 
 const SCOPES = [
   { value: "single", label: "Only this event" },

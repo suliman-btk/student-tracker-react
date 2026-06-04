@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2, Plus, Zap } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, parseWall, wallDateStr } from "@/lib/utils";
 import { useCalendarEvents, useSprints, useTasks } from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
 import {
@@ -36,6 +36,69 @@ function parseLocal(value) {
   return new Date(y, m - 1, d);
 }
 
+const WEEKDAY = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const diffDays = (a, b) => Math.round((startOfDay(a) - startOfDay(b)) / 86400000);
+
+// Does a recurring event occur on `day`? `base` is the series' first occurrence.
+function occursOn(ev, day, base) {
+  const d0 = startOfDay(base);
+  const dd = startOfDay(day);
+  if (dd < d0) return false;
+  if (ev.recurrence_end_date) {
+    const end = parseWall(ev.recurrence_end_date);
+    if (end && dd > startOfDay(end)) return false;
+  }
+  if (Array.isArray(ev.excluded_dates) && ev.excluded_dates.some((x) => String(x).slice(0, 10) === wallDateStr(dd))) return false;
+  const interval = ev.recurrence_interval || 1;
+  const delta = diffDays(dd, d0);
+  switch (ev.recurrence_type) {
+    case "daily":
+      return delta % interval === 0;
+    case "weekly": {
+      const days = (ev.recurrence_days || []).map((x) => WEEKDAY[String(x).toLowerCase()]).filter((n) => n != null);
+      if (days.length) {
+        const baseWeek = addDays(d0, -d0.getDay());
+        const curWeek = addDays(dd, -dd.getDay());
+        const weekDelta = Math.round(diffDays(curWeek, baseWeek) / 7);
+        return days.includes(dd.getDay()) && weekDelta % interval === 0;
+      }
+      return dd.getDay() === d0.getDay() && Math.floor(delta / 7) % interval === 0;
+    }
+    case "monthly":
+      return dd.getDate() === d0.getDate()
+        && (((dd.getFullYear() - d0.getFullYear()) * 12 + dd.getMonth() - d0.getMonth()) % interval === 0);
+    default:
+      return false;
+  }
+}
+
+// Expand recurring events into individual occurrences within [rangeStart, rangeEnd].
+// Non-recurring events pass through unchanged. Occurrences carry Date objects for
+// start_time/end_time (parseWall accepts Dates) plus an _occurrence_date marker.
+function expandEvents(events, rangeStart, rangeEnd) {
+  const out = [];
+  for (const ev of events) {
+    if (!ev.recurrence_type) { out.push(ev); continue; }
+    const base = parseWall(ev.start_time);
+    if (!base) { out.push(ev); continue; }
+    const baseEnd = parseWall(ev.end_time);
+    const durationMs = baseEnd ? baseEnd - base : 0;
+    const from = startOfDay(rangeStart) > startOfDay(base) ? startOfDay(rangeStart) : startOfDay(base);
+    for (let day = new Date(from); day <= rangeEnd; day = addDays(day, 1)) {
+      if (!occursOn(ev, day, base)) continue;
+      const s = new Date(day.getFullYear(), day.getMonth(), day.getDate(), base.getHours(), base.getMinutes());
+      out.push({
+        ...ev,
+        start_time: s,
+        end_time: durationMs ? new Date(s.getTime() + durationMs) : null,
+        _occurrence_date: wallDateStr(s),
+      });
+    }
+  }
+  return out;
+}
+
 export default function CalendarPage() {
   const navigate = useNavigate();
   const [view, setView] = useState("Month");
@@ -48,6 +111,12 @@ export default function CalendarPage() {
   const events = asArray(eventsPayload);
   const sprints = asArray(sprintsPayload);
   const tasks = asArray(tasksPayload);
+
+  // Expand recurring events into occurrences across the visible window.
+  const visibleEvents = useMemo(
+    () => expandEvents(events, addDays(cursor, -42), addDays(cursor, 42)),
+    [events, cursor],
+  );
 
   const [sprintModalOpen, setSprintModalOpen] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -157,7 +226,7 @@ export default function CalendarPage() {
           {view === "Month" && (
             <MonthView
               cursor={cursor}
-              events={events}
+              events={visibleEvents}
               tasks={tasks}
               sprintOnDay={sprintOnDay}
               onEventClick={setDetailEvent}
@@ -165,8 +234,8 @@ export default function CalendarPage() {
               onDayClick={openNewEvent}
             />
           )}
-          {view === "Week" && <TimeGrid days={7} cursor={cursor} events={events} onEventClick={setDetailEvent} />}
-          {view === "Day" && <TimeGrid days={1} cursor={cursor} events={events} onEventClick={setDetailEvent} />}
+          {view === "Week" && <TimeGrid days={7} cursor={cursor} events={visibleEvents} onEventClick={setDetailEvent} />}
+          {view === "Day" && <TimeGrid days={1} cursor={cursor} events={visibleEvents} onEventClick={setDetailEvent} />}
         </div>
       </div>
 
@@ -264,7 +333,7 @@ function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskCli
       </div>
       <div className="grid grid-cols-7 grid-rows-6 flex-1">
         {cells.map((d, i) => {
-          const dayEvents = events.filter((e) => sameDay(new Date(e.start_time), d));
+          const dayEvents = events.filter((e) => sameDay(parseWall(e.start_time), d));
           const dayTasks = tasks.filter((t) => {
             const dl = t.deadline || t.due_date;
             return dl && sameDay(new Date(dl), d);
@@ -305,7 +374,7 @@ function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskCli
                     className="block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] text-white"
                     style={{ background: e.color_hex || "#4f46e5" }}
                   >
-                    {e.all_day ? e.title : `${new Date(e.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ${e.title}`}
+                    {e.all_day ? e.title : `${parseWall(e.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ${e.title}`}
                   </button>
                 ))}
                 {dayEvents.length + dayTasks.length > 5 && (
@@ -350,7 +419,7 @@ function TimeGrid({ days, cursor, events, onEventClick }) {
           ))}
         </div>
         {dayList.map((d, i) => {
-          const dayEvents = events.filter((e) => !e.all_day && sameDay(new Date(e.start_time), d));
+          const dayEvents = events.filter((e) => !e.all_day && sameDay(parseWall(e.start_time), d));
           const isToday = sameDay(d, now);
           return (
             <div key={i} className="relative border-l">
@@ -362,8 +431,8 @@ function TimeGrid({ days, cursor, events, onEventClick }) {
                 </div>
               )}
               {dayEvents.map((e) => {
-                const s = new Date(e.start_time);
-                const en = new Date(e.end_time || e.start_time);
+                const s = parseWall(e.start_time);
+                const en = parseWall(e.end_time || e.start_time);
                 const top = (s.getHours() + s.getMinutes() / 60) * 56;
                 const h = Math.max(28, ((en - s) / 3600000) * 56);
                 return (
@@ -374,7 +443,7 @@ function TimeGrid({ days, cursor, events, onEventClick }) {
                     style={{ top, height: h, background: e.color_hex || "#4f46e5" }}
                   >
                     <div className="font-semibold truncate">{e.title}</div>
-                    <div className="opacity-90">{s.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div>
+                    <div className="opacity-90">{s.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div>{/* wall-clock */}
                   </button>
                 );
               })}

@@ -5,7 +5,7 @@ import {
   Loader2, Plus, Sparkles, TrendingUp, AlertCircle, BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useDomain, useDomainTasks } from "@/lib/query-hooks";
+import { useDomain, useDomainTasks, useStudyMutations } from "@/lib/query-hooks";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
 import ImportTasksDialog from "@/components/study/ImportTasksDialog";
 
@@ -50,6 +50,14 @@ export default function DomainTasksPage({ id }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [filter, setFilter] = useState("All");
+  const { updateTask } = useStudyMutations();
+
+  const toggleDone = (e, task) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = normaliseStatus(task.status) === "Done" ? "To Do" : "Done";
+    updateTask.mutate({ id: task.id, body: { status: next } });
+  };
 
   const title = domain?.domain_name || domain?.name || `Domain ${id}`;
 
@@ -215,10 +223,18 @@ export default function DomainTasksPage({ id }) {
                   params={{ id: String(task.id) }}
                   className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors"
                 >
-                  {status === "Done"
-                    ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                    : <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-                  }
+                  <button
+                    type="button"
+                    onClick={(e) => toggleDone(e, task)}
+                    disabled={updateTask.isPending}
+                    aria-label={status === "Done" ? "Mark as not done" : "Mark as done"}
+                    className="shrink-0 rounded-full transition-transform hover:scale-110"
+                  >
+                    {status === "Done"
+                      ? <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      : <Circle className="h-4 w-4 text-muted-foreground/50 hover:text-emerald-600" />
+                    }
+                  </button>
                   <div className="min-w-0 flex-1">
                     <h3 className={`truncate text-sm font-medium ${status === "Done" ? "line-through text-muted-foreground" : ""}`}>
                       {task.title || task.name || `Task ${task.id}`}
