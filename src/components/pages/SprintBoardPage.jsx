@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Flame, GripVertical, Loader2 } from "lucide-react";
 import { Header } from "./SpacesPage";
+import { parseWall } from "@/lib/utils";
 import { useSprint, useStudyMutations } from "@/lib/query-hooks";
 import {
   AlertDialog,
@@ -94,7 +95,7 @@ export default function SprintBoardPage({ sprintId }) {
               </div>
               <div className="space-y-2">
                 {colTasks.map((t) => {
-                  const overdue = t.deadline && new Date(t.deadline) < new Date() && col.key !== "Done";
+                  const overdue = t.deadline && parseWall(t.deadline) < new Date() && col.key !== "Done";
                   return (
                     <div
                       key={t.id}

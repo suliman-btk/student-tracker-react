@@ -28,7 +28,7 @@ import {
   useUserStats,
 } from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
-import { cn } from "@/lib/utils";
+import { cn, parseWall } from "@/lib/utils";
 import StandupModal from "@/components/study/StandupModal";
 
 const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
@@ -280,7 +280,7 @@ export default function DashboardPage() {
               {urgentTasks.map((t) => {
                 const isEmergency = t.task_type === "Emergency";
                 const rawDate = t.deadline || t.due_date;
-                const dueDate = rawDate ? new Date(rawDate) : null;
+                const dueDate = rawDate ? parseWall(rawDate) : null;
                 const formattedDue = dueDate && !Number.isNaN(dueDate.getTime())
                   ? dueDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
                   : null;

@@ -49,82 +49,86 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Academic Sanctuary palette — matched to the Flutter mobile app
+   (lib/theme/app_theme.dart). Brand primary is deep navy #000666,
+   accent indigo #4C56AF, flat neutral grays, error #BA1A1A. */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.99 0.004 277);
-  --foreground: oklch(0.20 0.03 277);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.03 277);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.03 277);
-  /* Indigo #4f46e5 */
-  --primary: oklch(0.51 0.21 277);
-  --primary-foreground: oklch(0.99 0.004 277);
-  --secondary: oklch(0.96 0.014 277);
-  --secondary-foreground: oklch(0.30 0.06 277);
-  --muted: oklch(0.96 0.008 277);
-  --muted-foreground: oklch(0.5 0.025 277);
-  --accent: oklch(0.94 0.045 277);
-  --accent-foreground: oklch(0.32 0.12 277);
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.012 277);
-  --input: oklch(0.92 0.012 277);
-  --ring: oklch(0.51 0.21 277);
-  /* AI accent — violet, distinct from indigo brand */
-  --ai: oklch(0.56 0.21 305);
-  --ai-foreground: oklch(0.99 0 0);
-  --ai-soft: oklch(0.96 0.04 305);
-  --success: oklch(0.62 0.15 150);
-  --warning: oklch(0.75 0.17 70);
-  --chart-1: oklch(0.51 0.21 277);
-  --chart-2: oklch(0.56 0.21 305);
-  --chart-3: oklch(0.75 0.17 70);
-  --chart-4: oklch(0.62 0.15 200);
-  --chart-5: oklch(0.58 0.22 27);
-  --sidebar: oklch(0.98 0.008 277);
-  --sidebar-foreground: oklch(0.30 0.04 277);
-  --sidebar-primary: oklch(0.51 0.21 277);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.04 277);
-  --sidebar-accent-foreground: oklch(0.32 0.12 277);
-  --sidebar-border: oklch(0.9 0.012 277);
-  --sidebar-ring: oklch(0.51 0.21 277);
+  --background: #f9f9f9;            /* surface / background */
+  --foreground: #1a1c1c;           /* textHeading */
+  --card: #ffffff;                 /* surfaceContainerLowest */
+  --card-foreground: #1a1c1c;
+  --popover: #ffffff;
+  --popover-foreground: #1a1c1c;
+  /* Deep navy brand primary #000666 */
+  --primary: #000666;
+  --primary-foreground: #f9f9f9;
+  --secondary: #eef0f6;
+  --secondary-foreground: #2c2f4a;
+  --muted: #f3f3f3;                /* surfaceContainerLow */
+  --muted-foreground: #585c80;     /* secondary slate */
+  --accent: #e7e9f5;
+  --accent-foreground: #1a237e;    /* primaryContainer */
+  --destructive: #ba1a1a;          /* error */
+  --destructive-foreground: #ffffff;
+  --border: #e4e5ea;
+  --input: #e4e5ea;
+  --ring: #000666;
+  /* AI accent — indigo #4C56AF (matches mobile accent) */
+  --ai: #4c56af;
+  --ai-foreground: #ffffff;
+  --ai-soft: #e8eaf7;
+  --success: #2e7d32;
+  --warning: #e0a020;
+  --chart-1: #000666;
+  --chart-2: #4c56af;
+  --chart-3: #e0a020;
+  --chart-4: #4c8fb0;
+  --chart-5: #ba1a1a;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1c1c;
+  --sidebar-primary: #000666;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7e9f5;
+  --sidebar-accent-foreground: #000666;
+  --sidebar-border: #ececec;
+  --sidebar-ring: #000666;
 }
 
 .dark {
-  --background: oklch(0.15 0.02 277);
-  --foreground: oklch(0.96 0.005 277);
-  --card: oklch(0.20 0.025 277);
-  --card-foreground: oklch(0.96 0.005 277);
-  --popover: oklch(0.20 0.025 277);
-  --popover-foreground: oklch(0.96 0.005 277);
-  --primary: oklch(0.66 0.18 277);
-  --primary-foreground: oklch(0.15 0.02 277);
-  --secondary: oklch(0.25 0.03 277);
-  --secondary-foreground: oklch(0.96 0.005 277);
-  --muted: oklch(0.25 0.03 277);
-  --muted-foreground: oklch(0.72 0.025 277);
-  --accent: oklch(0.30 0.05 277);
-  --accent-foreground: oklch(0.96 0.005 277);
-  --destructive: oklch(0.7 0.19 22);
-  --destructive-foreground: oklch(0.99 0 0);
+  --background: #15161b;
+  --foreground: #f3f3f5;
+  --card: #1d1e26;
+  --card-foreground: #f3f3f5;
+  --popover: #1d1e26;
+  --popover-foreground: #f3f3f5;
+  /* Lifted navy/indigo so the brand stays readable on dark */
+  --primary: #7782e6;
+  --primary-foreground: #0c0d14;
+  --secondary: #262833;
+  --secondary-foreground: #f3f3f5;
+  --muted: #262833;
+  --muted-foreground: #a3a6b8;
+  --accent: #2e3142;
+  --accent-foreground: #f3f3f5;
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.66 0.18 277);
-  --ai: oklch(0.72 0.18 305);
-  --ai-foreground: oklch(0.15 0.02 277);
-  --ai-soft: oklch(0.30 0.07 305);
-  --success: oklch(0.7 0.15 150);
-  --warning: oklch(0.78 0.17 70);
-  --sidebar: oklch(0.18 0.022 277);
-  --sidebar-foreground: oklch(0.92 0.005 277);
-  --sidebar-primary: oklch(0.66 0.18 277);
-  --sidebar-primary-foreground: oklch(0.15 0.02 277);
-  --sidebar-accent: oklch(0.26 0.04 277);
-  --sidebar-accent-foreground: oklch(0.96 0.005 277);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.66 0.18 277);
+  --ring: #7782e6;
+  --ai: #8b93ea;
+  --ai-foreground: #0c0d14;
+  --ai-soft: #2f3350;
+  --success: #4caf50;
+  --warning: #e0a020;
+  --sidebar: #181922;
+  --sidebar-foreground: #e8e8ee;
+  --sidebar-primary: #7782e6;
+  --sidebar-primary-foreground: #0c0d14;
+  --sidebar-accent: #282b3a;
+  --sidebar-accent-foreground: #f3f3f5;
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: #7782e6;
 }
 
 @layer base {

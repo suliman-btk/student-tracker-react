@@ -1,51 +1,68 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarDays, CheckCircle2, Sparkles, Timer, Zap } from "lucide-react";
+import {
+  ArrowRight, CalendarDays, CheckCircle2, ListChecks, Sparkles, Timer, Trophy, Wand2, Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const FEATURES = [
   {
     icon: Sparkles,
-    title: "AI Scrum Coach",
-    desc: "A built-in coach that plans your sprints, nudges you, and keeps your FYP on track.",
+    title: "An AI coach in your corner",
+    desc: "Stuck on what to do next? Your coach plans your week, nudges you before deadlines, and keeps your FYP moving.",
     tint: "text-[color:var(--ai)] bg-[color:var(--ai)]/10",
   },
   {
     icon: Zap,
-    title: "Sprints & backlog",
-    desc: "Break the semester into sprints. Groom a backlog and ship work week by week.",
+    title: "Beat big projects in small sprints",
+    desc: "That huge assignment feels lighter when it's broken into a week of bite-sized tasks you can actually finish.",
     tint: "text-amber-600 bg-amber-500/10",
   },
   {
     icon: Timer,
-    title: "Focus & Pomodoro",
-    desc: "Deep-work timers and focus sessions that log straight into your progress.",
+    title: "Focus that actually counts",
+    desc: "Hit start, silence the noise, and watch every Pomodoro log straight into your study streak.",
     tint: "text-rose-600 bg-rose-500/10",
   },
   {
     icon: CalendarDays,
-    title: "Google-style calendar",
-    desc: "Events, deadlines and sprint ranges in one clean, familiar calendar.",
+    title: "Never miss a deadline again",
+    desc: "Classes, due dates and sprints land on one calendar you already know how to read.",
     tint: "text-primary bg-primary/10",
   },
 ];
 
+// New-user onboarding flow — shown as a friendly "how it works" strip.
+const STEPS = [
+  {
+    icon: ListChecks,
+    title: "Dump everything in",
+    desc: "Brain-dump every task, class and deadline. No more sticky notes or panic at 2am.",
+  },
+  {
+    icon: Wand2,
+    title: "Let the AI plan it",
+    desc: "Your coach turns the chaos into a realistic week-by-week sprint plan in seconds.",
+  },
+  {
+    icon: Trophy,
+    title: "Focus, finish, repeat",
+    desc: "Knock out tasks, build your streak, and actually enjoy watching the bar fill up.",
+  },
+];
+
 const STATS = [
-  { value: "6", label: "study spaces" },
-  { value: "100%", label: "in one place" },
-  { value: "AI", label: "scrum coach" },
+  { value: "5-in-1", label: "tasks, sprints, focus, calendar & coach" },
+  { value: "24/7", label: "AI coach on call" },
+  { value: "2 min", label: "to set up your first sprint" },
 ];
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Nav */}
-      <header className="sticky top-0 z-20 flex items-center justify-between px-6 lg:px-10 h-16 border-b bg-background/70 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-bold">R</div>
-          <div>
-            <div className="font-semibold tracking-tight leading-none">RAQIP</div>
-            <div className="text-[11px] text-muted-foreground">Smart Study Companion</div>
-          </div>
+      <header className="sticky top-0 z-20 flex items-center justify-between px-6 lg:px-10 h-20 border-b bg-background/70 backdrop-blur">
+        <div className="flex items-center">
+          <img src="/logo.png" alt="RAQIP — Smart Study Companion" className="h-14 w-auto object-contain" />
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" className="h-9">
@@ -66,19 +83,20 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 lg:px-10 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs bg-card border px-3 py-1 rounded-full text-muted-foreground shadow-sm">
-              <Sparkles className="h-3 w-3 text-[color:var(--ai)]" /> AI Scrum Coach included
+              <Sparkles className="h-3 w-3 text-[color:var(--ai)]" /> Made for final-year students
             </div>
             <h1 className="mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.05]">
-              Plan your semester like a{" "}
-              <span className="bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">sprint.</span>
+              Your messy semester,{" "}
+              <span className="bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">finally sorted.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Tasks, sprints, Pomodoro, and a Google-style calendar — with a coach that actually
-              helps you ship your final-year project. All in one calm workspace.
+              Juggling classes, your FYP, and a dozen deadlines? RAQIP turns the overwhelm into clear
+              weekly sprints, focused study sessions, and an AI coach that tells you exactly what to
+              tackle next.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="gap-1.5">
-                <Link to="/register">Start for free <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/register">Start your first sprint <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/login">I already have an account</Link>
@@ -86,7 +104,8 @@ export default function LandingPage() {
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Free for students</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> No credit card</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Works offline</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Set up in 2 minutes</span>
             </div>
           </div>
 
@@ -110,12 +129,36 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How it works — new-user onboarding flow */}
+      <section className="max-w-6xl mx-auto w-full px-6 lg:px-10 pt-20 pb-4">
+        <div className="text-center max-w-2xl mx-auto">
+          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">How it works</span>
+          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Up and running in three steps</h2>
+          <p className="mt-3 text-muted-foreground">No setup headaches. Go from "where do I even start?" to a plan you can act on today.</p>
+        </div>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+          {STEPS.map(({ icon: Icon, title, desc }, i) => (
+            <div key={title} className="group relative rounded-3xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-0.5">
+              <span className="absolute right-5 top-5 text-5xl font-bold leading-none text-muted-foreground/10 transition-colors group-hover:text-primary/15">
+                {i + 1}
+              </span>
+              <div className="h-12 w-12 rounded-2xl grid place-items-center bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-semibold text-lg">{title}</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Features — bento layout */}
       <section className="max-w-6xl mx-auto w-full px-6 lg:px-10 py-20">
         <div className="text-center max-w-2xl mx-auto">
-          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">Features</span>
-          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Everything to run your semester</h2>
-          <p className="mt-3 text-muted-foreground">From the first task to the final demo — one focused workspace.</p>
+          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">Why students stick with it</span>
+          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Built for how you actually study</h2>
+          <p className="mt-3 text-muted-foreground">From the first scary task to the final demo day — one calm place that has your back.</p>
         </div>
 
         <div className="mt-12 grid gap-4 lg:grid-cols-3 lg:auto-rows-fr">
@@ -125,13 +168,13 @@ export default function LandingPage() {
             <div className="relative h-12 w-12 rounded-2xl bg-primary-foreground/15 grid place-items-center">
               <Sparkles className="h-6 w-6" />
             </div>
-            <h3 className="relative mt-5 text-xl font-bold">AI Scrum Coach</h3>
+            <h3 className="relative mt-5 text-xl font-bold">Meet your AI Scrum Coach</h3>
             <p className="relative mt-2 text-sm text-primary-foreground/85 leading-relaxed">
-              A built-in coach that plans your sprints, grooms your backlog, nudges you at the
-              right time, and keeps your FYP on track — like a personal scrum master.
+              Think of it as the friend who's great at planning. It maps out your sprints, grooms
+              your backlog, reminds you before things blow up, and checks in to keep your FYP on track.
             </p>
             <ul className="relative mt-6 space-y-2.5 text-sm">
-              {["Auto sprint planning", "Smart deadline nudges", "Progress check-ins"].map((t) => (
+              {["Plans your week for you", "Reminds you before deadlines", "Cheers on your progress"].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 shrink-0" /> {t}
                 </li>
@@ -140,7 +183,7 @@ export default function LandingPage() {
           </div>
 
           {/* Other feature cards */}
-          {FEATURES.filter((f) => f.title !== "AI Scrum Coach").map(({ icon: Icon, title, desc, tint }) => (
+          {FEATURES.filter((f) => f.title !== "An AI coach in your corner").map(({ icon: Icon, title, desc, tint }) => (
             <div key={title} className="group rounded-3xl border bg-card p-6 text-left transition-all hover:shadow-lg hover:-translate-y-0.5">
               <div className={`h-12 w-12 rounded-2xl grid place-items-center ${tint}`}>
                 <Icon className="h-5 w-5" />
@@ -152,18 +195,71 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* See it in action — Sprint + Pomodoro spotlights */}
+      <section className="border-y bg-muted/30">
+        <div className="max-w-6xl mx-auto w-full px-6 lg:px-10 py-20">
+          <div className="text-center max-w-2xl mx-auto">
+            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">See it in action</span>
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Plan the sprint. Focus the hour.</h2>
+            <p className="mt-3 text-muted-foreground">Two tools that do the heavy lifting — turn a big week into a clear board, then lock in with a focus timer that counts.</p>
+          </div>
+
+          {/* Sprint spotlight */}
+          <div className="mt-14 grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-500/10 px-3 py-1 rounded-full">
+                <Zap className="h-3.5 w-3.5" /> Sprints &amp; backlog
+              </div>
+              <h3 className="mt-4 text-2xl font-bold tracking-tight">Watch a heavy week shrink into a board.</h3>
+              <p className="mt-3 text-muted-foreground leading-relaxed">
+                Drag tasks across To&nbsp;Do → Doing → Done, track velocity, and actually see the
+                finish line. Each sprint is a small, winnable game instead of a scary deadline.
+              </p>
+              <ul className="mt-5 space-y-2.5 text-sm">
+                {["Kanban + backlog in one view", "Live sprint progress & burndown", "Auto-rolls unfinished tasks forward"].map((t) => (
+                  <li key={t} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {t}</li>
+                ))}
+              </ul>
+            </div>
+            <SprintBoardMock />
+          </div>
+
+          {/* Pomodoro spotlight */}
+          <div className="mt-16 grid lg:grid-cols-2 gap-10 items-center">
+            <div className="lg:order-2">
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 bg-rose-500/10 px-3 py-1 rounded-full">
+                <Timer className="h-3.5 w-3.5" /> Focus &amp; Pomodoro
+              </div>
+              <h3 className="mt-4 text-2xl font-bold tracking-tight">Hit start. Silence the noise. Get it done.</h3>
+              <p className="mt-3 text-muted-foreground leading-relaxed">
+                A simple 25-minute focus timer that logs every session into your streak and stats —
+                so deep work finally shows up on your progress, not just in your memory.
+              </p>
+              <ul className="mt-5 space-y-2.5 text-sm">
+                {["25 / 5 Pomodoro cycles", "Every session feeds your streak", "Solo or together in Group Rooms"].map((t) => (
+                  <li key={t} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {t}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="lg:order-1">
+              <PomodoroMock />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA band */}
-      <section className="px-6 lg:px-10 pb-20">
+      <section className="px-6 lg:px-10 pb-20 pt-20">
         <div className="max-w-6xl mx-auto relative overflow-hidden rounded-3xl bg-primary text-primary-foreground px-8 py-12 lg:py-16 text-center">
           <div className="absolute -top-16 -right-10 h-64 w-64 rounded-full bg-primary-foreground/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-[color:var(--ai)]/30 blur-3xl" />
-          <h2 className="relative text-2xl sm:text-3xl font-bold tracking-tight">Ready to ship your FYP?</h2>
+          <h2 className="relative text-2xl sm:text-3xl font-bold tracking-tight">Your future self will thank you.</h2>
           <p className="relative mt-3 text-primary-foreground/80 max-w-lg mx-auto">
-            Join RAQIP and turn a chaotic semester into a series of calm, finishable sprints.
+            Start today and turn this chaotic semester into a series of calm, finishable sprints. It's free, and your first plan is minutes away.
           </p>
           <div className="relative mt-7">
             <Button asChild size="lg" variant="secondary" className="gap-1.5">
-              <Link to="/register">Create your account <ArrowRight className="h-4 w-4" /></Link>
+              <Link to="/register">Create my free account <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -222,6 +318,118 @@ function AppPreview() {
                 ))}
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Sprint board mock — a mini Kanban with a live-looking progress bar. */
+function SprintBoardMock() {
+  const columns = [
+    { label: "To Do", accent: "bg-slate-400", cards: 3 },
+    { label: "Doing", accent: "bg-amber-400", cards: 2 },
+    { label: "Done", accent: "bg-emerald-500", cards: 2, done: true },
+  ];
+  return (
+    <div className="relative">
+      <div className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-tr from-primary/15 to-amber-400/15 blur-2xl" />
+      <div className="rounded-2xl border bg-card shadow-xl overflow-hidden">
+        {/* header */}
+        <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+          <div>
+            <div className="text-sm font-semibold">SCRUM Sprint 25</div>
+            <div className="text-[11px] text-muted-foreground">1 Jun – 7 Jun · 4 days left</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-bold text-primary leading-none">68%</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">complete</div>
+          </div>
+        </div>
+        {/* progress bar */}
+        <div className="px-4 pt-3">
+          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-primary to-[color:var(--ai)]" style={{ width: "68%" }} />
+          </div>
+          <div className="mt-2 flex items-center gap-4 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Done 5</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" /> Doing 2</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-400" /> To Do 3</span>
+          </div>
+        </div>
+        {/* board */}
+        <div className="grid grid-cols-3 gap-2 p-4">
+          {columns.map((col) => (
+            <div key={col.label} className="rounded-lg bg-muted/40 p-2 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full ${col.accent}`} />
+                <span className="text-[11px] font-medium text-muted-foreground">{col.label}</span>
+              </div>
+              {Array.from({ length: col.cards }).map((_, i) => (
+                <div key={i} className="rounded-md border bg-card p-2 space-y-1.5 shadow-sm">
+                  <div className={`h-2 w-full rounded ${col.done ? "bg-emerald-500/30" : "bg-muted-foreground/25"}`} />
+                  <div className="h-2 w-2/3 rounded bg-muted-foreground/15" />
+                  <div className="flex items-center gap-1">
+                    <span className={`h-3 w-3 rounded-full ${col.done ? "bg-emerald-500/40" : "bg-primary/25"}`} />
+                    <div className="h-2 w-6 rounded bg-muted-foreground/15" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Pomodoro mock — an SVG focus-timer ring at ~64% through a 25-min session. */
+function PomodoroMock() {
+  const r = 86;
+  const c = 2 * Math.PI * r;
+  const progress = 0.64; // 64% through the session
+  return (
+    <div className="relative">
+      <div className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-tr from-rose-400/15 to-primary/15 blur-2xl" />
+      <div className="rounded-2xl border bg-card shadow-xl px-6 py-8 flex flex-col items-center">
+        <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-rose-700 bg-rose-500/10 px-2.5 py-1 rounded-full">
+          <Timer className="h-3 w-3" /> Focus session
+        </div>
+
+        <div className="relative mt-6 h-52 w-52">
+          <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
+            <circle cx="100" cy="100" r={r} fill="none" stroke="var(--color-muted)" strokeWidth="12" />
+            <circle
+              cx="100" cy="100" r={r} fill="none"
+              stroke="var(--color-primary)" strokeWidth="12" strokeLinecap="round"
+              strokeDasharray={c} strokeDashoffset={c * (1 - progress)}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="text-4xl font-bold tracking-tight tabular-nums">16:08</div>
+            <div className="text-xs text-muted-foreground mt-1">remaining</div>
+          </div>
+        </div>
+
+        {/* session dots */}
+        <div className="mt-6 flex items-center gap-2">
+          {[true, true, false, false].map((filled, i) => (
+            <span key={i} className={`h-2.5 w-2.5 rounded-full ${filled ? "bg-primary" : "bg-muted-foreground/25"}`} />
+          ))}
+          <span className="ml-2 text-xs text-muted-foreground">session 3 of 4</span>
+        </div>
+
+        {/* controls */}
+        <div className="mt-6 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full border grid place-items-center text-muted-foreground">
+            <Timer className="h-4 w-4" />
+          </div>
+          <div className="h-12 px-6 rounded-full bg-primary text-primary-foreground grid place-items-center text-sm font-semibold shadow-sm">
+            Pause
+          </div>
+          <div className="h-10 w-10 rounded-full border grid place-items-center text-muted-foreground">
+            <Zap className="h-4 w-4" />
           </div>
         </div>
       </div>

@@ -126,19 +126,24 @@ export default function CalendarPage() {
   const [createDate, setCreateDate] = useState(null);
   const [detailEvent, setDetailEvent] = useState(null);
 
-  const ranges = useMemo(
-    () =>
-      sprints
-        .map((s) => ({
+  const ranges = useMemo(() => {
+    const today = startOfDay(new Date());
+    return sprints
+      .map((s) => {
+        const from = parseLocal(s.start_date || s.startDate);
+        const to = parseLocal(s.end_date || s.endDate);
+        return {
           id: s.id,
           name: s.name || `Sprint ${s.id}`,
-          from: parseLocal(s.start_date || s.startDate),
-          to: parseLocal(s.end_date || s.endDate),
-          active: Boolean(s.is_active),
-        }))
-        .filter((r) => r.from && r.to),
-    [sprints],
-  );
+          from,
+          to,
+          // Only "active" if flagged AND today is within the sprint window — the
+          // backend doesn't auto-close, so an expired sprint can keep is_active=true.
+          active: Boolean(s.is_active) && from && to && today >= startOfDay(from) && today <= startOfDay(to),
+        };
+      })
+      .filter((r) => r.from && r.to);
+  }, [sprints]);
   const activeSprint = ranges.find((r) => r.active);
   const sprintOnDay = (d) => {
     const t = dayMs(d);
@@ -336,7 +341,7 @@ function MonthView({ cursor, events, tasks, sprintOnDay, onEventClick, onTaskCli
           const dayEvents = events.filter((e) => sameDay(parseWall(e.start_time), d));
           const dayTasks = tasks.filter((t) => {
             const dl = t.deadline || t.due_date;
-            return dl && sameDay(new Date(dl), d);
+            return dl && sameDay(parseWall(dl), d);
           });
           const isToday = sameDay(d, today);
           const otherMonth = d.getMonth() !== cursor.getMonth();

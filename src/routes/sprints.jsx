@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import CompatibilityWorkspaceRedirect from "@/components/pages/WorkspaceRedirect";
-export const Route = createFileRoute("/sprints")({ component: CompatibilityWorkspaceRedirect });
+const WorkspaceRedirect = lazy(() => import("@/components/pages/WorkspaceRedirect"));
+export const Route = createFileRoute("/sprints")({ component: WorkspaceRedirect });

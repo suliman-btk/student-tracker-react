@@ -53,9 +53,10 @@ export default function AuthPage({ mode = "login" }) {
         <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl" />
         <div className="absolute -bottom-32 -left-10 h-[28rem] w-[28rem] rounded-full bg-[color:var(--ai)]/30 blur-3xl" />
 
-        <div className="relative flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-primary-foreground/15 grid place-items-center font-bold">R</div>
-          <div className="font-semibold">RAQIP</div>
+        <div className="relative">
+          <div className="inline-flex bg-white rounded-xl px-3.5 py-2.5 shadow-sm">
+            <img src="/logo.png" alt="RAQIP — Smart Study Companion" className="h-7 w-auto object-contain" />
+          </div>
         </div>
 
         <div className="relative space-y-6 max-w-md">
@@ -88,9 +89,8 @@ export default function AuthPage({ mode = "login" }) {
       <div className="flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-sm">
           {/* mobile brand */}
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-bold">R</div>
-            <span className="font-semibold">RAQIP</span>
+          <div className="lg:hidden mb-8">
+            <img src="/logo.png" alt="RAQIP — Smart Study Companion" className="h-9 w-auto object-contain" />
           </div>
 
           <h2 className="text-2xl font-semibold tracking-tight">

@@ -88,12 +88,8 @@ function SidebarContent({ onNavigate }) {
 
   return (
     <>
-      <div className="px-5 py-5 flex items-center gap-2 shrink-0">
-        <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-bold">R</div>
-        <div>
-          <div className="font-semibold tracking-tight">RAQIP</div>
-          <div className="text-[11px] text-muted-foreground -mt-0.5">Smart Study Companion</div>
-        </div>
+      <div className="px-5 py-5 shrink-0">
+        <img src="/logo.png" alt="RAQIP — Smart Study Companion" className="h-12 w-auto object-contain" />
       </div>
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-6">
         {overviewGroup && renderGroup(overviewGroup)}

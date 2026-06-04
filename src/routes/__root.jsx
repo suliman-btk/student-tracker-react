@@ -40,7 +40,11 @@ export const Route = createRootRouteWithContext()({
             { title: "RAQIP — Smart Study Companion" },
             { name: "description", content: "Academic productivity for university students: tasks, sprints, focus, and an embedded AI Scrum Coach." },
         ],
-        links: [{ rel: "stylesheet", href: appCss }],
+        links: [
+            { rel: "stylesheet", href: appCss },
+            { rel: "icon", type: "image/png", href: "/logo-icon.png" },
+            { rel: "apple-touch-icon", href: "/logo-icon.png" },
+        ],
     }),
     shellComponent: RootShell,
     component: RootComponent,

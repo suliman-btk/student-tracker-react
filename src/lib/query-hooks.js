@@ -217,6 +217,9 @@ export function useStudyMutations() {
 
   const invalidateTask = (taskId) => {
     qc.invalidateQueries({ queryKey: ["study", "tasks"] });
+    // Sprint/Kanban boards read tasks via the sprints endpoint, so a task-level
+    // change (progress, subtasks, status) must refresh sprints too.
+    qc.invalidateQueries({ queryKey: ["study", "sprints"] });
     if (taskId) qc.invalidateQueries({ queryKey: qk.study.task(taskId) });
   };
 
