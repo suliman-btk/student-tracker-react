@@ -29,6 +29,7 @@ import {
 } from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
 import { cn, parseWall } from "@/lib/utils";
+import { normalizeFeedback } from "@/lib/standup";
 import StandupModal from "@/components/study/StandupModal";
 
 const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
@@ -78,9 +79,9 @@ export default function DashboardPage() {
   const [autoChecked, setAutoChecked] = useState(false);
 
   const submitted = standup?.submitted;
-  const feedback = standup?.data?.ai_feedback || "";
-  const coaching = (feedback.match(/COACHING:\s*([\s\S]+?)(?=SUGGESTED TASK:|$)/) || [])[1]?.trim();
-  const suggestedTask = (feedback.match(/SUGGESTED TASK:\s*([\s\S]+)/) || [])[1]?.trim();
+  const feedback = normalizeFeedback(standup?.data?.ai_feedback);
+  const coaching = feedback?.coaching;
+  const suggestedTask = feedback?.suggested_task?.title;
 
   useEffect(() => {
     if (standup && !submitted && !autoChecked) {
@@ -217,8 +218,6 @@ export default function DashboardPage() {
         </div>
         {coaching ? (
           <p className="text-sm leading-relaxed">{coaching}</p>
-        ) : feedback ? (
-          <p className="whitespace-pre-line text-sm leading-relaxed">{feedback}</p>
         ) : (
           <p className="text-sm text-muted-foreground">Do your 3-tap check-in to get today's coaching.</p>
         )}

@@ -3,6 +3,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useStudyMutations } from "@/lib/query-hooks";
+import { normalizeFeedback } from "@/lib/standup";
 import { cn } from "@/lib/utils";
 
 const ENERGY = [
@@ -34,7 +35,8 @@ export default function StandupModal({ open, onOpenChange }) {
 
   const submit = () => {
     submitStandup.mutate(answers, {
-      onSuccess: (data) => setFeedback(data?.ai_feedback || "Check-in saved."),
+      onSuccess: (data) =>
+        setFeedback(normalizeFeedback(data?.ai_feedback) || { coaching: "Check-in saved." }),
     });
   };
 
@@ -50,8 +52,23 @@ export default function StandupModal({ open, onOpenChange }) {
 
         {feedback ? (
           <div className="space-y-3">
-            <div className="rounded-lg border border-[color:var(--ai)]/30 bg-[color:var(--ai-soft)]/40 p-4 text-sm leading-relaxed whitespace-pre-line">
-              {feedback}
+            <div className="space-y-3 rounded-lg border border-[color:var(--ai)]/30 bg-[color:var(--ai-soft)]/40 p-4">
+              {feedback.coaching && (
+                <p className="text-sm leading-relaxed whitespace-pre-line">{feedback.coaching}</p>
+              )}
+              {feedback.suggested_task?.title && (
+                <div className="rounded-lg border bg-background p-3">
+                  <div className="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-[color:var(--ai)]">
+                    Suggested task
+                  </div>
+                  <div className="text-sm font-medium">{feedback.suggested_task.title}</div>
+                  {feedback.suggested_task.reason && (
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      {feedback.suggested_task.reason}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button onClick={() => onOpenChange(false)}>Done</Button>

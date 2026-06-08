@@ -4,6 +4,7 @@ import { useUI } from "@/store/ui";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAiSuggestions, useCapacity, useStandupToday, useStudyMutations } from "@/lib/query-hooks";
+import { normalizeFeedback } from "@/lib/standup";
 import StandupModal from "@/components/study/StandupModal";
 
 const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
@@ -18,7 +19,7 @@ export default function AIDrawer() {
   const [standupOpen, setStandupOpen] = useState(false);
 
   const submitted = standup?.submitted;
-  const feedback = standup?.data?.ai_feedback;
+  const feedback = normalizeFeedback(standup?.data?.ai_feedback);
 
   return (
     <>
@@ -51,7 +52,26 @@ export default function AIDrawer() {
           <section className="rounded-xl border p-4">
             <h3 className="mb-2 text-sm font-semibold">Today's check-in</h3>
             {submitted && feedback ? (
-              <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">{feedback}</p>
+              <div className="space-y-3">
+                {feedback.coaching && (
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+                    {feedback.coaching}
+                  </p>
+                )}
+                {feedback.suggested_task?.title && (
+                  <div className="rounded-lg border bg-background p-3">
+                    <div className="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-[color:var(--ai)]">
+                      Suggested task
+                    </div>
+                    <div className="text-sm font-medium">{feedback.suggested_task.title}</div>
+                    {feedback.suggested_task.reason && (
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                        {feedback.suggested_task.reason}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             ) : submitted ? (
               <p className="text-sm text-muted-foreground">Check-in done. No coaching feedback returned.</p>
             ) : (
