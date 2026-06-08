@@ -321,7 +321,12 @@ function SprintCard({
               >
                 {d.priority || "—"}
               </Badge>
-              <span className="min-w-0 flex-1 truncate text-sm">{d.title || `Task ${id}`}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm">{d.title || `Task ${id}`}</div>
+                {d.domain && (
+                  <div className="truncate text-[11px] text-muted-foreground">{d.domain}</div>
+                )}
+              </div>
               {d.expected_hours ? (
                 <span className="shrink-0 text-xs text-muted-foreground">~{d.expected_hours}h</span>
               ) : null}
@@ -348,6 +353,7 @@ function SprintCard({
                   return (
                     <SelectItem key={id} value={String(id)} className="text-xs">
                       {d.title || `Task ${id}`}
+                      {d.domain ? ` · ${d.domain}` : ""}
                     </SelectItem>
                   );
                 })}
