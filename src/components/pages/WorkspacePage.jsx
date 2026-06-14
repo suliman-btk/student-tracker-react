@@ -955,7 +955,10 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
       onDragStart={() => onDragStart?.({ task, fromSprintId: fromSprintId ?? null })}
       className="flex items-center gap-4 px-5 py-4 cursor-grab active:cursor-grabbing"
     >
-      <Circle className="h-5 w-5 text-muted-foreground/50" />
+      {status === "Done"
+        ? <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+        : <Circle className="h-5 w-5 text-muted-foreground/50" />
+      }
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link
