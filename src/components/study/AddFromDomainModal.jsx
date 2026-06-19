@@ -136,9 +136,11 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
                     className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
                     onClick={() => !done && toggleTask(t.id)}
                   >
-                    {checked
-                      ? <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      : <Square className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                    {done
+                      ? <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                      : checked
+                        ? <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        : <Square className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
                     <div className="min-w-0 text-left">
                       <div className="font-medium truncate">{t.title || t.name}</div>
                       {(t.priority || t.status) && (
