@@ -30,11 +30,17 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
       return next;
     });
 
+  const isDone = (t) => {
+    const s = String(t?.status || t?.pivot_status || "").toLowerCase();
+    return s === "done" || s === "completed" || s === "complete";
+  };
+
   const toggleAll = () => {
-    if (selectedIds.size === domainTasks.length) {
+    const selectable = domainTasks.filter((t) => !isDone(t)).map((t) => t.id);
+    if (selectedIds.size === selectable.length && selectable.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(domainTasks.map((t) => t.id)));
+      setSelectedIds(new Set(selectable));
     }
   };
 
@@ -106,24 +112,29 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
               {!loadingTasks && domainTasks.length === 0 && (
                 <p className="p-4 text-sm text-muted-foreground">No tasks in this domain.</p>
               )}
-              {!loadingTasks && domainTasks.length > 0 && (
-                <button
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
-                  onClick={toggleAll}
-                >
-                  {selectedIds.size === domainTasks.length
-                    ? <CheckSquare className="h-4 w-4" />
-                    : <Square className="h-4 w-4" />}
-                  Select all ({domainTasks.length})
-                </button>
-              )}
+              {!loadingTasks && domainTasks.length > 0 && (() => {
+                const selectable = domainTasks.filter((t) => !isDone(t));
+                return (
+                  <button
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
+                    onClick={toggleAll}
+                  >
+                    {selectedIds.size === selectable.length && selectable.length > 0
+                      ? <CheckSquare className="h-4 w-4" />
+                      : <Square className="h-4 w-4" />}
+                    Select all ({selectable.length})
+                  </button>
+                );
+              })()}
               {domainTasks.map((t) => {
+                const done = isDone(t);
                 const checked = selectedIds.has(t.id);
                 return (
                   <button
                     key={t.id}
-                    className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm hover:bg-muted"
-                    onClick={() => toggleTask(t.id)}
+                    disabled={done}
+                    className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => !done && toggleTask(t.id)}
                   >
                     {checked
                       ? <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
