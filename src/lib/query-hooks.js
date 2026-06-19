@@ -242,6 +242,10 @@ export function useStudyMutations() {
       mutationFn: ({ spaceId, taskIds }) => studyApi.spacesTasks(spaceId, taskIds),
       onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
     }),
+    addTasksToSprint: useMutation({
+      mutationFn: ({ sprintId, taskIds }) => studyApi.sprints.addTasks(sprintId, taskIds),
+      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+    }),
     createSprint: useMutation({
       mutationFn: studyApi.sprints.create,
       onSuccess: (_, vars) => invalidateWorkspace(vars?.space_id),
