@@ -976,15 +976,6 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
         <option value="Done">Done</option>
       </select>
 
-      {inSprint ? (
-        <Button size="icon" variant="ghost" aria-label="Move to backlog" onClick={() => move?.toBacklog(task, fromSprintId)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-      ) : activeSprintId ? (
-        <Button size="icon" variant="ghost" aria-label="Move to active sprint" onClick={() => move?.toSprint(task, null, activeSprintId)}>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      ) : null}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

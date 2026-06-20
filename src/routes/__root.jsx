@@ -4,13 +4,10 @@ import { useEffect, Suspense } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { startAuthListener, useAuthStore } from "@/store/auth-store";
+import BrandLoader from "@/components/ui/brand-loader";
 import appCss from "../styles.css?url";
 function PageLoader() {
-    return (
-        <div className="flex h-full w-full items-center justify-center">
-            <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        </div>
-    );
+    return <BrandLoader />;
 }
 function NotFoundComponent() {
     return (<div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -76,7 +73,7 @@ function RootComponent() {
     }, [initialized, loading, user, isAuthPage, path, navigate]);
     if (!initialized || loading) {
         return (<QueryClientProvider client={queryClient}>
-        <div className="min-h-screen grid place-items-center bg-background text-sm text-muted-foreground">Loading RAQIP...</div>
+        <BrandLoader fullscreen label="Loading RAQIP…" />
       </QueryClientProvider>);
     }
     return (<QueryClientProvider client={queryClient}>

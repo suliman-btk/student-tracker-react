@@ -202,7 +202,7 @@ export function RoomsPage() {
                       <div className="flex items-center justify-between pt-1 border-t border-border/50">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Users className="h-3.5 w-3.5" />
-                          <span>{r.memberCount || 0} {(r.memberCount || 0) === 1 ? "person" : "people"}</span>
+                          <span>{Math.max(0, r.memberCount || 0)} {Math.max(0, r.memberCount || 0) === 1 ? "person" : "people"}</span>
                         </div>
                         <Link to="/rooms/$id" params={{ id: r.id }}>
                           <Button size="sm" className="h-8 px-4 text-xs font-semibold gap-1">
@@ -462,6 +462,15 @@ export function RoomDetailPage({ id }) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.hostUid, currentUser?.uid, isJoined]);
+
+  // Auto-navigate when host ends the session or room is deleted
+  useEffect(() => {
+    if (!room) return;
+    if (room.isEnded === true) {
+      if (agoraRef.current) { agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
+      navigate({ to: "/rooms" });
+    }
+  }, [room?.isEnded]); // eslint-disable-line
 
   useEffect(() => {
     if (voiceLocked && agoraRef.current) { agoraRef.current.mute(true); setIsMuted(true); }
@@ -785,13 +794,12 @@ export function RoomDetailPage({ id }) {
             <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
               {/* Track — neutral gray */}
               <circle cx="50" cy="50" r="44" fill="none" stroke="#e5e7eb" strokeWidth="4" />
-              {/* Progress — primary color, simple */}
+              {/* Progress — arc length = timerPct × circumference, starts full and depletes */}
               <circle cx="50" cy="50" r="44" fill="none"
                 stroke="hsl(var(--primary))" strokeWidth="4"
-                strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - timerPct)}
+                strokeDasharray={`${circumference * timerPct} ${circumference}`}
                 strokeLinecap="round"
-                style={{ transition: "stroke-dashoffset 1s linear" }}
+                style={{ transition: "stroke-dasharray 1s linear" }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
@@ -1437,7 +1445,7 @@ export function TaskDetailPage({ id }) {
   const serverProgress  = task.progress_percentage ?? 0;
   const progressValue   = progress ?? serverProgress;
   const isProgressDirty = progress !== null && progress !== lastSavedProgress.current;
-  const domainName      = task.domain?.domain_name || task.domain?.domainName || "—";
+  const domainName      = (typeof task.domain === "string" ? task.domain : task.domain?.domain_name || task.domain?.domainName) || "—";
   const displayStatus   = normStatus(localStatus ?? task.status);
   const estHours        = task.expected_hours != null ? `${parseFloat(task.expected_hours)}h` : null;
   const doneSubtasks    = subtasks.filter((s) => {

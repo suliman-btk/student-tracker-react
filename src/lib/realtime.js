@@ -102,8 +102,13 @@ export async function updateMutedState(roomId, isMuted) {
 }
 
 export function watchPublicRooms(callback, onError) {
-  const roomsQuery = query(collection(db, "pomodoro_rooms"), where("isPrivate", "==", false), orderBy("createdAt", "desc"));
-  return onSnapshot(roomsQuery, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError);
+  const roomsQuery = query(collection(db, "pomodoro_rooms"), where("isPrivate", "==", false));
+  return onSnapshot(roomsQuery, (snap) => {
+    const rooms = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+    callback(rooms);
+  }, onError);
 }
 
 export function watchRoom(roomId, callback, onError) {
@@ -144,8 +149,16 @@ export async function joinRoom(roomId) {
 
 export async function leaveRoom(roomId) {
   const user = currentUserOrThrow();
-  await deleteDoc(doc(db, "pomodoro_rooms", roomId, "members", user.uid));
-  await updateDoc(doc(db, "pomodoro_rooms", roomId), { memberCount: increment(-1) });
+  const memberRef = doc(db, "pomodoro_rooms", roomId, "members", user.uid);
+  const snap = await getDoc(memberRef).catch(() => null);
+  if (!snap?.exists()) return; // already left — don't double-decrement
+  await deleteDoc(memberRef);
+  const roomRef = doc(db, "pomodoro_rooms", roomId);
+  const roomSnap = await getDoc(roomRef).catch(() => null);
+  if (roomSnap?.exists()) {
+    const current = roomSnap.data().memberCount ?? 0;
+    await updateDoc(roomRef, { memberCount: Math.max(0, current - 1) });
+  }
 }
 
 export async function sendRoomMessage(roomId, text) {

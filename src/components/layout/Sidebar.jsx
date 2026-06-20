@@ -28,7 +28,7 @@ const groups = [
   {
     label: "Work",
     items: [
-      { to: "/domains", label: "Domains", icon: FolderTree },
+      { to: "/domains", label: "Domains & Tasks", icon: FolderTree },
       { to: "/calendar", label: "Calendar", icon: CalendarDays },
     ],
   },

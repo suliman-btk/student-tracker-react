@@ -31,9 +31,18 @@ export default function AIDrawer() {
   const coaching = feedback?.coaching;
   const submitted = standup?.submitted;
 
-  // Seed the thread once with existing AI data when the drawer first opens
+  // Reset the thread when the drawer closes so the next open re-seeds fresh.
   useEffect(() => {
-    if (!aiOpen || seededRef.current) return;
+    if (!aiOpen) {
+      seededRef.current = false;
+      setMessages([]);
+    }
+  }, [aiOpen]);
+
+  // Seed the thread once per open, but only after the standup query has resolved
+  // so we read the real check-in state rather than the loading-undefined default.
+  useEffect(() => {
+    if (!aiOpen || seededRef.current || standup === undefined) return;
     seededRef.current = true;
     const seed = [];
 
@@ -53,7 +62,7 @@ export default function AIDrawer() {
     }
 
     setMessages(seed);
-  }, [aiOpen]);
+  }, [aiOpen, standup, submitted, coaching, suggestions]);
 
   // Inject sprint review when it arrives via aiContext
   useEffect(() => {

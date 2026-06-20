@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, ListChecks, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, Layers, ListChecks, Sparkles, Timer, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -10,26 +10,48 @@ const STEPS = [
   {
     icon: Sparkles,
     title: "Welcome to RAQIP",
-    body: "Run the day, don't let it run you. RAQIP turns your semester chaos into clear weekly sprints with an AI coach at your side.",
+    body: "Your all-in-one study companion. Manage tasks, study with peers, and get coached by AI — all in one place.",
     action: null,
   },
   {
-    icon: CheckCircle2,
-    title: "Create a Space",
-    body: "A Space is your workspace for a subject or project — like \"FYP\" or \"Database Systems\". Everything lives inside a Space.",
-    action: { label: "Create my first space", to: "/spaces" },
+    icon: Layers,
+    title: "Spaces & Sprints",
+    body: "Create a Space for each subject or project (e.g. \"FYP\", \"Database Systems\"). Then plan a Sprint — a focused week of tasks you commit to finishing.",
+    action: { label: "Create my first Space", to: "/spaces" },
+    actionSkippable: true,
   },
   {
     icon: ListChecks,
-    title: "Add your tasks",
-    body: "Use the \"+ New task\" button in the top bar to brain-dump every task, deadline, and assignment. Don't filter — just dump.",
-    action: { label: "Got it, close", to: null },
+    title: "Domains & Tasks",
+    body: "Organize tasks inside your Space by Domain (topic area). Use the Backlog to brain-dump everything, then drag tasks into your active Sprint.",
+    action: null,
+  },
+  {
+    icon: Timer,
+    title: "Focus Mode",
+    body: "Use the built-in Pomodoro timer to stay on track. Pick a task, start a session, and RAQIP plays a tone and shows a banner at every phase transition.",
+    action: { label: "Try Focus mode", to: "/focus" },
+    actionSkippable: true,
+  },
+  {
+    icon: Users,
+    title: "Group Study Rooms",
+    body: "Create or join a live study room with a shared Pomodoro timer, voice chat, and file sharing. Perfect for study groups or accountability partners.",
+    action: { label: "Browse rooms", to: "/rooms" },
+    actionSkippable: true,
   },
   {
     icon: Zap,
-    title: "Start a Sprint",
-    body: "Pick tasks for this week, kick off a sprint, and let the AI coach guide you. One focused week at a time.",
-    action: { label: "Go to Spaces", to: "/spaces" },
+    title: "Social Feed",
+    body: "Post study updates and react to peers' progress with 👍 Like, 🔥 Motivated me, or 💪 Keep going. Build streaks and share live study sessions.",
+    action: { label: "See the feed", to: "/social" },
+    actionSkippable: true,
+  },
+  {
+    icon: Bot,
+    title: "AI Scrum Coach",
+    body: "Submit your daily standup, get sprint reviews, and chat with your AI coach anytime. It knows your sprint progress, backlog, and study habits.",
+    action: { label: "Let's go!", to: null },
   },
 ];
 
@@ -64,10 +86,21 @@ export default function WelcomeModal() {
         </div>
 
         <div className="px-8 py-6 space-y-3">
-          {current.action ? (
-            <Button className="w-full gap-1.5" onClick={() => handleAction(current.action.to)}>
-              {current.action.label} {current.action.to && <ArrowRight className="h-4 w-4" />}
+          {isLast ? (
+            <Button className="w-full gap-1.5" onClick={() => handleAction(current.action?.to ?? null)}>
+              {current.action?.label ?? "Get started"} <ArrowRight className="h-4 w-4" />
             </Button>
+          ) : current.action ? (
+            <>
+              <Button className="w-full gap-1.5" onClick={() => handleAction(current.action.to)}>
+                {current.action.label} {current.action.to && <ArrowRight className="h-4 w-4" />}
+              </Button>
+              {current.actionSkippable && (
+                <Button variant="outline" className="w-full" onClick={() => setStep((s) => s + 1)}>
+                  Next <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
+            </>
           ) : (
             <Button className="w-full gap-1.5" onClick={() => setStep((s) => s + 1)}>
               Next <ArrowRight className="h-4 w-4" />

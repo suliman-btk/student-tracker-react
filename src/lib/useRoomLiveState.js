@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { watchRoom, watchRoomMembers, watchRoomMessages } from "@/lib/realtime";
 
@@ -26,6 +27,13 @@ export function useRoomLiveState(roomId) {
   const [members, setMembers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentUid, setCurrentUid] = useState(auth.currentUser?.uid ?? null);
+
+  // Firebase Auth resolves asynchronously after a hard reload — keep uid reactive
+  // so isHost/isJoined recompute once the user is known.
+  useEffect(() => {
+    return onAuthStateChanged(auth, (user) => setCurrentUid(user?.uid ?? null));
+  }, []);
 
   useEffect(() => {
     if (!roomId) return;
@@ -38,7 +46,6 @@ export function useRoomLiveState(roomId) {
     return () => { u1(); u2(); u3(); };
   }, [roomId]);
 
-  const currentUid = auth.currentUser?.uid ?? null;
   const phase       = room?.phase ?? "idle";
   const isHost      = Boolean(room && currentUid && room.hostUid === currentUid);
   const isJoined    = members.some((m) => m.uid === currentUid);
