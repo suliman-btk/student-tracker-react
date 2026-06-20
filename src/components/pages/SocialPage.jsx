@@ -27,10 +27,11 @@ import {
   ShieldOff,
   Settings,
   Clock,
+  Users,
 } from "lucide-react";
 import { socialApi, focusApi, userApi } from "@/lib/api";
 import { useProfile, usePomodoroSessions, qk } from "@/lib/query-hooks";
-import { uploadPostAttachment } from "@/lib/realtime";
+import { uploadPostAttachment, watchRoom } from "@/lib/realtime";
 
 const SUBJECT_TAGS = ["Math", "CS", "Science", "Engineering", "Languages", "Other"];
 
@@ -557,6 +558,61 @@ function CommentsSection({ postId }) {
 
 // ─── Center: Post Card ────────────────────────────────────────────────────────
 
+// ─── LiveSessionCard ──────────────────────────────────────────────────────────
+
+function LiveSessionCard({ post }) {
+  const navigate = useNavigate();
+  const [room, setRoom] = useState(null);
+
+  useEffect(() => {
+    if (!post.room_id) return;
+    return watchRoom(post.room_id, setRoom);
+  }, [post.room_id]);
+
+  const isActive = room && room.phase !== "idle" && room.phase !== "completed" && room.phase !== undefined;
+  const isEnded = room === null || room?.phase === "completed";
+
+  const phaseLabel = room?.phase === "focus"
+    ? { label: "Focusing 🔴", cls: "text-red-600 bg-red-50" }
+    : room?.phase === "breakTime"
+    ? { label: "On Break 🟢", cls: "text-emerald-700 bg-emerald-50" }
+    : { label: "Waiting ⚪", cls: "text-muted-foreground bg-muted" };
+
+  return (
+    <div className={`rounded-xl border p-4 flex flex-col gap-3 ${isEnded ? "opacity-60" : "bg-card"}`}>
+      <div className="flex items-center gap-2">
+        <span className="text-base">📚</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold truncate">{post.author_name} started a study session</p>
+          {post.subject_tag && (
+            <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{post.subject_tag}</span>
+          )}
+        </div>
+      </div>
+
+      <p className="text-sm text-muted-foreground leading-relaxed">{post.content}</p>
+
+      {isEnded ? (
+        <div className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground text-center">Session ended</div>
+      ) : (
+        <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${phaseLabel.cls}`}>{phaseLabel.label}</span>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Users className="h-3.5 w-3.5" /> {room?.memberCount ?? 0}
+            </div>
+          </div>
+          <Button size="sm" className="h-7 text-xs px-3" onClick={() => navigate({ to: "/rooms/$id", params: { id: post.room_id } })}>
+            Join Session
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── PostCard ─────────────────────────────────────────────────────────────────
+
 function PostCard({ post, currentUserId }) {
   const qc = useQueryClient();
   const [myReaction, setMyReaction] = useState(post.my_reaction_type ?? (post.liked_by_me || post.is_liked_by_me ? "like" : null));
@@ -804,7 +860,9 @@ function FeedList({ tag }) {
   return (
     <div className="space-y-3">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} currentUserId={currentUserId} />
+        post.type === "live_session"
+          ? <LiveSessionCard key={post.id} post={post} />
+          : <PostCard key={post.id} post={post} currentUserId={currentUserId} />
       ))}
     </div>
   );

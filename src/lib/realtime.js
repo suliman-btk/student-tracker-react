@@ -43,9 +43,10 @@ export async function setPresence(status, visible = true) {
   );
 }
 
-export async function createFirestoreRoom({ name, focusDuration, breakDuration, hostUid, hostName, roomCode, isPrivate = false, allowVoiceDuringFocus = true, allowChatDuringFocus = true }) {
+export async function createFirestoreRoom({ name, subjectTag, focusDuration, breakDuration, hostUid, hostName, roomCode, isPrivate = false, allowVoiceDuringFocus = true, allowChatDuringFocus = true }) {
   const docRef = await addDoc(collection(db, "pomodoro_rooms"), {
     roomName: name,
+    subjectTag: subjectTag || null,
     focusDuration,
     breakDuration,
     hostUid,

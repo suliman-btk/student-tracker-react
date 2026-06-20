@@ -52,6 +52,7 @@ export function RoomsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: "", subject_tag: "", focus_duration: 25, break_duration: 5, is_private: false, allowVoiceDuringFocus: true, allowChatDuringFocus: true });
+  const [pendingShare, setPendingShare] = useState(null); // { firestoreId, name, subject_tag } after room created
 
   const SUBJECT_TAGS = ["Math", "CS", "Science", "Engineering", "Languages", "Other"];
   const DURATION_PRESETS = [
@@ -93,7 +94,11 @@ export function RoomsPage() {
       });
       try { await focusApi.rooms.create({ name: form.name, subject_tag: form.subject_tag || null, focus_duration: form.focus_duration, break_duration: form.break_duration, firestore_room_id: firestoreId, is_private: form.is_private, allow_voice_during_focus: form.allowVoiceDuringFocus, allow_chat_during_focus: form.allowChatDuringFocus }); } catch {}
       setShowCreate(false);
-      navigate({ to: "/rooms/$id", params: { id: firestoreId } });
+      if (!form.is_private) {
+        setPendingShare({ firestoreId, name: form.name, subject_tag: form.subject_tag });
+      } else {
+        navigate({ to: "/rooms/$id", params: { id: firestoreId } });
+      }
     } catch (e) { console.error(e); }
     finally { setCreating(false); }
   };
@@ -259,6 +264,36 @@ export function RoomsPage() {
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={creating || !form.name.trim()}>
               {creating && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />} Create & Enter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share to feed dialog — shown after creating a public room */}
+      <Dialog open={!!pendingShare} onOpenChange={(open) => { if (!open && pendingShare) { navigate({ to: "/rooms/$id", params: { id: pendingShare.firestoreId } }); setPendingShare(null); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Share to Social Feed?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Let your friends see your study session and join you in real time.</p>
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
+            <Button variant="outline" onClick={() => { navigate({ to: "/rooms/$id", params: { id: pendingShare?.firestoreId } }); setPendingShare(null); }}>
+              Skip
+            </Button>
+            <Button onClick={async () => {
+              if (!pendingShare) return;
+              try {
+                const tag = pendingShare.subject_tag;
+                await socialApi.posts.create({
+                  type: "live_session",
+                  room_id: pendingShare.firestoreId,
+                  content: `📚 I just started a study session${tag ? ` — ${tag}` : ""}! Join me in the "${pendingShare.name}" room.`,
+                  subject_tag: tag || null,
+                  visibility: "public",
+                });
+              } catch {}
+              navigate({ to: "/rooms/$id", params: { id: pendingShare.firestoreId } });
+              setPendingShare(null);
+            }}>
+              Share &amp; Enter Room
             </Button>
           </DialogFooter>
         </DialogContent>
