@@ -10,16 +10,29 @@ import { cn } from "@/lib/utils";
 
 const COLORS = ["#4f46e5", "#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#16a34a", "#0891b2"];
 
+const generateKey = (name) => {
+  const words = name.trim().toUpperCase().replace(/[^A-Z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+  if (!words.length) return "";
+  let key = "";
+  for (const w of words) {
+    key += /^\d+$/.test(w) ? w : w[0];
+    if (key.length >= 10) break;
+  }
+  return key.slice(0, 10);
+};
+
 export default function CreateSpaceModal({ open, onOpenChange, space }) {
   const isEdit = Boolean(space?.id);
   const { createSpace, updateSpace } = useStudyMutations();
   const mutation = isEdit ? updateSpace : createSpace;
   const [form, setForm] = useState({ name: "", key: "", template: "Scrum", color_hex: COLORS[0] });
+  const [keyTouched, setKeyTouched] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setKeyTouched(false);
     setForm(
       isEdit
         ? {
@@ -33,6 +46,17 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
   }, [open, isEdit, space]);
 
   const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handleNameChange = (e) => {
+    const name = e.target.value;
+    setForm((f) => ({ ...f, name, ...(!keyTouched && !isEdit ? { key: generateKey(name) } : {}) }));
+  };
+
+  const handleKeyChange = (e) => {
+    const val = e.target.value.toUpperCase().replace(/\s/g, "");
+    setKeyTouched(true);
+    setForm((f) => ({ ...f, key: val }));
+  };
 
   const submit = (event) => {
     event.preventDefault();
@@ -65,7 +89,7 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="space-name">Name</Label>
-            <Input id="space-name" value={form.name} onChange={(e) => set("name")(e.target.value)} placeholder="e.g. Semester 8" />
+            <Input id="space-name" value={form.name} onChange={handleNameChange} placeholder="e.g. Semester 8" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -75,7 +99,7 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
                 value={form.key}
                 maxLength={10}
                 disabled={isEdit}
-                onChange={(e) => set("key")(e.target.value.toUpperCase().replace(/\s/g, ""))}
+                onChange={handleKeyChange}
                 placeholder="SEM8"
               />
             </div>

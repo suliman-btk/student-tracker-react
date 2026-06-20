@@ -12,6 +12,7 @@ import {
   Circle,
   Columns3,
   LayoutDashboard,
+  Library,
   Link2,
   ListTodo,
   Loader2,
@@ -38,6 +39,7 @@ import CreateTaskModal from "@/components/study/CreateTaskModal";
 import CreateSprintModal from "@/components/study/CreateSprintModal";
 import AISprintReviewModal from "@/components/study/AISprintReviewModal";
 import AISprintPlannerModal from "@/components/study/AISprintPlannerModal";
+import AddFromDomainModal from "@/components/study/AddFromDomainModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -365,6 +367,7 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
 function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
   const [dragged, setDragged] = useState(null);
   const [optimisticStatuses, setOptimisticStatuses] = useState({});
+  const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
   const mutations = useStudyMutations();
   const tasks = getTasks(sprint);
 
@@ -437,10 +440,20 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
         <Button variant="outline" className="ml-auto border-emerald-200 text-emerald-700" onClick={actions?.completeSprint}>
           <CheckCircle2 className="mr-1.5 h-4 w-4" /> Complete
         </Button>
+        <Button variant="outline" onClick={() => setAddFromDomainOpen(true)}>
+          <Library className="mr-1.5 h-4 w-4" /> Add from domain
+        </Button>
         <Button variant="outline" onClick={actions?.createTask}>
           <Plus className="mr-1.5 h-4 w-4" /> Create task
         </Button>
       </div>
+
+      <AddFromDomainModal
+        open={addFromDomainOpen}
+        onOpenChange={setAddFromDomainOpen}
+        spaceId={spaceId}
+        sprintId={sprint?.id}
+      />
 
       <div className="grid gap-4 xl:grid-cols-3">
         {statusColumns.map((col) => {
@@ -508,6 +521,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   const [completeFor, setCompleteFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
   const [plannerOpen, setPlannerOpen] = useState(false);
+  const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
 
   if (loadingBacklog || loadingSprints) return <WorkspaceLoading label="Loading backlog and sprints..." />;
   if (backlogError) return <WorkspaceError message={backlogError.message} />;
@@ -594,6 +608,9 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
         <Button variant="outline" className="ml-auto" onClick={actions?.createSprint}>
           <Zap className="mr-1.5 h-4 w-4" /> Create sprint
         </Button>
+        <Button variant="outline" onClick={() => setAddFromDomainOpen(true)}>
+          <Library className="mr-1.5 h-4 w-4" /> Add from domain
+        </Button>
         <Button onClick={actions?.createTask}>
           <Plus className="mr-1.5 h-4 w-4" /> Create task
         </Button>
@@ -655,6 +672,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
       />
 
       <AISprintPlannerModal open={plannerOpen} onOpenChange={setPlannerOpen} spaceId={spaceId} />
+      <AddFromDomainModal open={addFromDomainOpen} onOpenChange={setAddFromDomainOpen} spaceId={spaceId} />
 
       <AlertDialog open={Boolean(startEarly)} onOpenChange={(o) => !o && setStartEarly(null)}>
         <AlertDialogContent>
@@ -926,7 +944,10 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
       className="flex items-center gap-4 px-5 py-4 cursor-grab active:cursor-grabbing"
       style={{ borderLeft: `4px solid ${priorityColour}` }}
     >
-      <Circle className="h-5 w-5 text-muted-foreground/50" />
+      {status === "Done"
+        ? <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+        : <Circle className="h-5 w-5 text-muted-foreground/50" />
+      }
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link

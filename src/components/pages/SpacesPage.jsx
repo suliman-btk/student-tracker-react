@@ -117,12 +117,12 @@ export default function SpacesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 deleteSpace.mutate(
                   { id: deleting.id },
                   {
                     onSuccess: () => { toast.success("Space deleted"); setDeleting(null); },
+                    onError: () => setDeleting(null),
                   },
                 );
               }}
