@@ -32,9 +32,10 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { focusApi, studyApi } from "@/lib/api";
-import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, watchRoom, watchRoomMembers, watchRoomMessages, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound } from "@/lib/realtime";
+import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound } from "@/lib/realtime";
 import { createAgoraRoomClient } from "@/lib/agora";
 import { auth } from "@/lib/firebase";
+import { useRoomLiveState } from "@/lib/useRoomLiveState";
 
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -110,10 +111,10 @@ export function RoomsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-muted/20">
+    <div className="flex flex-col h-full">
 
       {/* Hero header */}
-      <div className="px-8 pt-8 pb-6 bg-gradient-to-b from-primary/5 to-transparent border-b">
+      <div className="px-2 pb-6 border-b">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Group Study Rooms</h1>
@@ -144,7 +145,7 @@ export function RoomsPage() {
       </div>
 
       {/* Room grid */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 overflow-y-auto px-2 py-6">
         {rooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center pb-16">
             <div className="h-20 w-20 rounded-2xl bg-card border-2 border-dashed border-border flex items-center justify-center text-3xl">
@@ -428,9 +429,10 @@ export function RoomDetailPage({ id }) {
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
-  const [room, setRoom] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const { room, members, messages, phase, isHost, isJoined, allowVoice, allowChat, voiceLocked, chatLocked } =
+    useRoomLiveState(id);
+
+  // joined tracks whether Agora has been initialised (distinct from isJoined in Firestore)
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -446,35 +448,20 @@ export function RoomDetailPage({ id }) {
 
   const { timer, secs: timerSecs } = useCountdown(room);
 
-  const isHost = room && currentUser && room.hostUid === currentUser.uid;
-  const phase = room?.phase || "idle";
-  const allowVoice = room?.allowVoiceDuringFocus !== false;
-  const allowChat = room?.allowChatDuringFocus !== false;
-  const voiceLocked = !allowVoice && phase === "focus";
-  const chatLocked = !allowChat && phase === "focus";
-
+  // Sync joined flag when another tab/device already put this user in the room
   useEffect(() => {
-    const u1 = watchRoom(id, setRoom, console.error);
-    const u2 = watchRoomMembers(id, setMembers, console.error);
-    const u3 = watchRoomMessages(id, (msgs) => setMessages([...msgs].reverse()), console.error);
-    return () => { u1(); u2(); u3(); };
-  }, [id]);
+    if (isJoined && !joined) setJoined(true);
+  }, [isJoined, joined]);
 
-  // Auto-join: host auto-joins, others need explicit join
+  // Auto-join: host enters immediately without pressing the join button
   useEffect(() => {
-    if (!room || !currentUser || autoJoinedRef.current) return;
-    const alreadyIn = members.some((m) => m.uid === currentUser.uid);
-    if (alreadyIn) { setJoined(true); return; }
+    if (!room || !currentUser || autoJoinedRef.current || isJoined) return;
     if (room.hostUid === currentUser.uid) {
       autoJoinedRef.current = true;
       joinRoom(id).then(() => initAgora().then(() => setJoined(true))).catch(console.error);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.hostUid, currentUser?.uid]);
-
-  useEffect(() => {
-    if (currentUser && members.some((m) => m.uid === currentUser.uid) && !joined) setJoined(true);
-  }, [members, currentUser, joined]);
+  }, [room?.hostUid, currentUser?.uid, isJoined]);
 
   useEffect(() => {
     if (voiceLocked && agoraRef.current) { agoraRef.current.mute(true); setIsMuted(true); }
@@ -598,7 +585,7 @@ export function RoomDetailPage({ id }) {
   // ── LOBBY ─────────────────────────────────────────────────────────────────
   if (phase === "idle") {
     return (
-      <div className="flex flex-col h-full bg-muted/20">
+      <div className="flex flex-col h-full">
         {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
 
         {/* Minimal top bar */}
@@ -625,7 +612,7 @@ export function RoomDetailPage({ id }) {
         </div>
 
         {/* Centered lobby content */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 py-8">
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-2 py-4">
 
           {/* Room card */}
           <div className="w-full max-w-md bg-card rounded-2xl border shadow-sm p-8 flex flex-col items-center gap-5">
