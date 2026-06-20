@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { aiApi, focusApi, socialApi, studyApi, userApi } from "@/lib/api";
 import { normaliseTask, normaliseSprint } from "@/lib/task";
+import { invalidateWorkspace, invalidateTask, invalidateDomains } from "@/lib/cache";
 
 const asArr = (d) => (Array.isArray(d) ? d : d?.data ?? []);
 
@@ -216,26 +217,11 @@ export function useFocusRooms() {
 
 export function useStudyMutations() {
   const qc = useQueryClient();
-  const invalidateWorkspace = (spaceId) => {
-    qc.invalidateQueries({ queryKey: qk.study.spaces });
-    qc.invalidateQueries({ queryKey: qk.study.domains });
-    qc.invalidateQueries({ queryKey: ["study", "backlog"] });
-    qc.invalidateQueries({ queryKey: ["study", "sprints"] });
-    qc.invalidateQueries({ queryKey: ["study", "tasks"] });
-    qc.invalidateQueries({ queryKey: qk.study.notifications });
-  };
 
-  const invalidateTask = (taskId) => {
-    qc.invalidateQueries({ queryKey: ["study", "tasks"] });
-    // Sprint/Kanban boards read tasks via the sprints endpoint, so a task-level
-    // change (progress, subtasks, status) must refresh sprints too.
-    qc.invalidateQueries({ queryKey: ["study", "sprints"] });
-    if (taskId) qc.invalidateQueries({ queryKey: qk.study.task(taskId) });
-  };
-
-  const invalidateDomains = () => {
-    qc.invalidateQueries({ queryKey: qk.study.domains });
-  };
+  // Bind query-client to the imported strategies so call sites stay terse.
+  const iWorkspace = () => invalidateWorkspace(qc);
+  const iTask      = (id) => invalidateTask(qc, id);
+  const iDomains   = () => invalidateDomains(qc);
 
   const toastError = (err) => toast.error(err?.message || "Something went wrong");
 
@@ -246,77 +232,77 @@ export function useStudyMutations() {
     }),
     createTask: useMutation({
       mutationFn: studyApi.tasks.create,
-      onSuccess: (_, vars) => invalidateWorkspace(vars?.space_id),
+      onSuccess: () => iWorkspace(),
     }),
     addTasksToSpace: useMutation({
       mutationFn: ({ spaceId, taskIds }) => studyApi.spacesTasks(spaceId, taskIds),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     createSprint: useMutation({
       mutationFn: studyApi.sprints.create,
-      onSuccess: (_, vars) => invalidateWorkspace(vars?.space_id),
+      onSuccess: () => iWorkspace(),
     }),
     startSprint: useMutation({
       mutationFn: ({ sprintId }) => studyApi.sprints.start(sprintId),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     closeSprint: useMutation({
       mutationFn: ({ sprintId, body }) => studyApi.sprints.close(sprintId, body),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     updateSprintTaskStatus: useMutation({
       mutationFn: ({ sprintId, taskId, status }) => studyApi.sprints.updateTaskStatus(sprintId, taskId, status),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     addTasksToSprint: useMutation({
       mutationFn: ({ sprintId, taskIds }) => studyApi.sprints.addTasks(sprintId, taskIds),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     removeTaskFromSprint: useMutation({
       mutationFn: ({ sprintId, taskId }) => studyApi.sprints.removeTask(sprintId, taskId),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     updateTask: useMutation({
       mutationFn: ({ id, body }) => studyApi.tasks.update(id, body),
       onSuccess: (_, vars) => {
-        invalidateTask(vars.id);
-        invalidateWorkspace(vars.spaceId);
+        iTask(vars.id);
+        iWorkspace();
       },
     }),
     deleteTask: useMutation({
       mutationFn: ({ id }) => studyApi.tasks.remove(id),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
     }),
     updateTaskStatus: useMutation({
       mutationFn: ({ id, status }) => studyApi.tasks.updateStatus(id, status),
       onSuccess: (_, vars) => {
-        invalidateTask(vars.id);
-        invalidateWorkspace(vars.spaceId);
+        iTask(vars.id);
+        iWorkspace();
       },
     }),
     updateTaskProgress: useMutation({
       mutationFn: ({ id, progress, notes }) => studyApi.tasks.updateProgress(id, progress, notes),
-      onSuccess: (_, vars) => invalidateTask(vars.id),
+      onSuccess: (_, vars) => iTask(vars.id),
     }),
     assignTask: useMutation({
       mutationFn: ({ id, assignedTo }) => studyApi.tasks.assign(id, assignedTo),
-      onSuccess: (_, vars) => invalidateTask(vars.id),
+      onSuccess: (_, vars) => iTask(vars.id),
     }),
     addSubtask: useMutation({
       mutationFn: ({ taskId, body }) => studyApi.tasks.addSubtask(taskId, body),
-      onSuccess: (_, vars) => invalidateTask(vars.taskId),
+      onSuccess: (_, vars) => iTask(vars.taskId),
     }),
     updateSubtask: useMutation({
       mutationFn: ({ taskId, subtaskId, body }) => studyApi.tasks.updateSubtask(taskId, subtaskId, body),
-      onSuccess: (_, vars) => invalidateTask(vars.taskId),
+      onSuccess: (_, vars) => iTask(vars.taskId),
     }),
     removeSubtask: useMutation({
       mutationFn: ({ taskId, subtaskId }) => studyApi.tasks.removeSubtask(taskId, subtaskId),
-      onSuccess: (_, vars) => invalidateTask(vars.taskId),
+      onSuccess: (_, vars) => iTask(vars.taskId),
     }),
     toggleSubtask: useMutation({
       mutationFn: ({ taskId, subtaskId }) => studyApi.tasks.toggleSubtask(taskId, subtaskId),
-      onSuccess: (_, vars) => invalidateTask(vars.taskId),
+      onSuccess: (_, vars) => iTask(vars.taskId),
     }),
     addComment: useMutation({
       mutationFn: ({ taskId, content }) => studyApi.tasks.addComment(taskId, content),
@@ -326,23 +312,23 @@ export function useStudyMutations() {
     }),
     createDomain: useMutation({
       mutationFn: studyApi.domains.create,
-      onSuccess: invalidateDomains,
+      onSuccess: () => iDomains(),
     }),
     updateDomain: useMutation({
       mutationFn: ({ id, body }) => studyApi.domains.update(id, body),
       onSuccess: (_, vars) => {
-        invalidateDomains();
+        iDomains();
         qc.invalidateQueries({ queryKey: qk.study.domain(vars.id) });
       },
     }),
     deleteDomain: useMutation({
       mutationFn: ({ id }) => studyApi.domains.remove(id),
-      onSuccess: invalidateDomains,
+      onSuccess: () => iDomains(),
     }),
     toggleDomain: useMutation({
       mutationFn: ({ id }) => studyApi.domains.toggleActive(id),
       onSuccess: (_, vars) => {
-        invalidateDomains();
+        iDomains();
         qc.invalidateQueries({ queryKey: qk.study.domain(vars.id) });
       },
     }),
@@ -350,20 +336,20 @@ export function useStudyMutations() {
       mutationFn: ({ domainId, body }) => studyApi.domains.createTask(domainId, body),
       onSuccess: (_, vars) => {
         qc.invalidateQueries({ queryKey: qk.study.domainTasks(vars.domainId) });
-        invalidateWorkspace(vars.body?.space_id);
+        iWorkspace();
       },
     }),
     updateSprint: useMutation({
       mutationFn: ({ sprintId, body }) => studyApi.sprints.update(sprintId, body),
       onSuccess: (_, vars) => {
-        invalidateWorkspace(vars.spaceId);
+        iWorkspace();
         qc.invalidateQueries({ queryKey: qk.study.sprint(vars.sprintId) });
       },
       onError: toastError,
     }),
     deleteSprint: useMutation({
       mutationFn: ({ sprintId }) => studyApi.sprints.remove(sprintId),
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
       onError: toastError,
     }),
     updateSpace: useMutation({
@@ -384,7 +370,7 @@ export function useStudyMutations() {
         if (fromSprintId) await studyApi.sprints.removeTask(fromSprintId, taskId);
         if (spaceId) await studyApi.spacesTasks(spaceId, [taskId]);
       },
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
       onError: toastError,
     }),
     moveTaskToSprint: useMutation({
@@ -394,7 +380,7 @@ export function useStudyMutations() {
         }
         await studyApi.sprints.addTasks(toSprintId, [taskId]);
       },
-      onSuccess: (_, vars) => invalidateWorkspace(vars.spaceId),
+      onSuccess: () => iWorkspace(),
       onError: toastError,
     }),
     acceptSuggestion: useMutation({
@@ -435,14 +421,14 @@ export function useStudyMutations() {
     }),
     applyMultiSprintPlan: useMutation({
       mutationFn: (body) => aiApi.applyMultiSprintPlan(body),
-      onSuccess: (_, vars) => invalidateWorkspace(vars?.space_id),
+      onSuccess: () => iWorkspace(),
       onError: toastError,
     }),
     bulkCreateDomainTasks: useMutation({
       mutationFn: ({ domainId, tasks }) => studyApi.domains.bulkTasks(domainId, tasks),
       onSuccess: (_, vars) => {
         qc.invalidateQueries({ queryKey: qk.study.domainTasks(vars.domainId) });
-        invalidateWorkspace();
+        iWorkspace();
       },
       onError: toastError,
     }),

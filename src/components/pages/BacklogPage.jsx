@@ -6,6 +6,7 @@ import { Loader2, Plus } from "lucide-react";
 import { Header } from "./SpacesPage";
 import { useBacklog, useSprints, useStudyMutations } from "@/lib/query-hooks";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
+import { PRIORITY_COLOURS } from "@/lib/priority";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,7 @@ export default function BacklogPage() {
   const { data: sprintsPayload = [] } = useSprints();
   const backlog = asArray(backlogPayload);
   const sprints = asArray(sprintsPayload).filter((s) => !isCompleted(s));
-  const { addTasksToSprint } = useStudyMutations();
+  const { addTasksToSprint, updateTaskStatus } = useStudyMutations();
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -47,8 +48,11 @@ export default function BacklogPage() {
           <h3 className="text-sm font-semibold">Backlog ({backlog.length})</h3>
           <div className="space-y-2">
             {backlog.map((t) => (
-              <div key={t.id} className="rounded-xl border bg-card p-3 flex items-center gap-3 hover:shadow-sm">
-                <div className="h-2 w-2 rounded-full bg-primary" />
+              <div
+                key={t.id}
+                className="rounded-xl border bg-card p-3 flex items-center gap-3 hover:shadow-sm"
+                style={{ borderLeft: `4px solid ${PRIORITY_COLOURS[t.priority] ?? PRIORITY_COLOURS.Medium}` }}
+              >
                 <div className="flex-1 min-w-0">
                   <Link to="/tasks/$id" params={{ id: String(t.id) }} className="text-sm font-medium hover:text-primary">
                     {t.title}
@@ -57,6 +61,16 @@ export default function BacklogPage() {
                     {t.priority} · {t.hours}h · {t.points} pts · due {t.deadline || "—"}
                   </div>
                 </div>
+                <select
+                  value={t.status}
+                  onChange={(e) => updateTaskStatus.mutate({ id: t.id, status: e.target.value })}
+                  onClick={(e) => e.stopPropagation()}
+                  className="rounded-full bg-muted px-3 py-1 text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+                >
+                  <option value="To Do">To Do</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Done">Done</option>
+                </select>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="ghost" disabled={sprints.length === 0}>Move to sprint</Button>

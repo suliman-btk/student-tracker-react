@@ -28,6 +28,7 @@ import {
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useReducer } from "react";
 import { useActiveSprint, useBacklog, useCapacity, useSpace, useSprints, useStudyMutations } from "@/lib/query-hooks";
 import { PRIORITY_COLOURS } from "@/lib/priority";
 import { aiApi } from "@/lib/api";
@@ -149,10 +150,21 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   const { data: space, isLoading: loadingSpace, error: spaceError } = useSpace(spaceId);
   const { data: sprint, isLoading: loadingSprint } = useActiveSprint(spaceId);
   const mutations = useStudyMutations();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [createTaskOpen, setCreateTaskOpen] = useState(false);
-  const [createSprintOpen, setCreateSprintOpen] = useState(false);
-  const [completeOpen, setCompleteOpen] = useState(false);
+  const [modals, dispatchModal] = useReducer(
+    (state, action) => {
+      switch (action) {
+        case "OPEN_CREATE_TASK":   return { ...state, menu: false, createTask: true };
+        case "OPEN_CREATE_SPRINT": return { ...state, menu: false, createSprint: true };
+        case "OPEN_COMPLETE":      return { ...state, menu: false, complete: true };
+        case "TOGGLE_MENU":        return { ...state, menu: !state.menu };
+        case "CLOSE_TASK":         return { ...state, createTask: false };
+        case "CLOSE_SPRINT":       return { ...state, createSprint: false };
+        case "CLOSE_COMPLETE":     return { ...state, complete: false };
+        default:                   return state;
+      }
+    },
+    { menu: false, createTask: false, createSprint: false, complete: false },
+  );
 
   useEffect(() => {
     if (spaceId) setActiveSpace(spaceId);
@@ -162,9 +174,9 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   if (spaceError) return <WorkspaceError message={spaceError.message} />;
 
   const actions = {
-    createTask: () => { setMenuOpen(false); setCreateTaskOpen(true); },
-    createSprint: () => { setMenuOpen(false); setCreateSprintOpen(true); },
-    completeSprint: () => { setMenuOpen(false); setCompleteOpen(true); },
+    createTask:     () => dispatchModal("OPEN_CREATE_TASK"),
+    createSprint:   () => dispatchModal("OPEN_CREATE_SPRINT"),
+    completeSprint: () => dispatchModal("OPEN_COMPLETE"),
   };
 
   const spaceName = space?.name || `Space ${spaceId}`;
@@ -208,10 +220,10 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
             <Button variant="outline" onClick={() => openAI({ spaceId, sprintId: sprint?.id })}>
               <Bot className="mr-1.5 h-4 w-4" /> AI Scrum
             </Button>
-            <Button size="icon" variant="ghost" onClick={() => setMenuOpen((value) => !value)} aria-label="Workspace actions">
+            <Button size="icon" variant="ghost" onClick={() => dispatchModal("TOGGLE_MENU")} aria-label="Workspace actions">
               <MoreVertical className="h-4 w-4" />
             </Button>
-            {menuOpen && (
+            {modals.menu && (
               <div className="absolute right-0 top-11 z-20 w-52 rounded-lg border bg-popover p-1.5 shadow-lg">
                 <MenuButton icon={CheckCircle2} label="Create task" onClick={actions.createTask} />
                 <MenuButton icon={Zap} label="Create sprint" onClick={actions.createSprint} />
@@ -245,9 +257,9 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
         {tab === "members" && <WorkspaceMembersPlaceholder />}
       </div>
 
-      <CreateTaskModal open={createTaskOpen} onOpenChange={setCreateTaskOpen} spaceId={spaceId} />
-      <CreateSprintModal open={createSprintOpen} onOpenChange={setCreateSprintOpen} spaceId={spaceId} />
-      <AlertDialog open={completeOpen} onOpenChange={setCompleteOpen}>
+      <CreateTaskModal open={modals.createTask} onOpenChange={(o) => !o && dispatchModal("CLOSE_TASK")} spaceId={spaceId} />
+      <CreateSprintModal open={modals.createSprint} onOpenChange={(o) => !o && dispatchModal("CLOSE_SPRINT")} spaceId={spaceId} />
+      <AlertDialog open={modals.complete} onOpenChange={(o) => !o && dispatchModal("CLOSE_COMPLETE")}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Complete this sprint?</AlertDialogTitle>
@@ -263,7 +275,7 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
                 if (!sprint?.id) return;
                 mutations.closeSprint.mutate(
                   { sprintId: sprint.id, body: { move_incomplete_to: "backlog" }, spaceId },
-                  { onSuccess: () => { setCompleteOpen(false); triggerSprintReview(sprint.id); } },
+                  { onSuccess: () => { dispatchModal("CLOSE_COMPLETE"); triggerSprintReview(sprint.id); } },
                 );
               }}
             >
