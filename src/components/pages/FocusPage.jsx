@@ -18,61 +18,39 @@ const fmtDate = (v) => {
   return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 };
 
-// Bell chime when a phase ends. Plays the same bell sound as the mobile app,
-// falling back to a synthesized two-tone chime if the audio file can't load.
-let _bell;
-function getBell() {
-  if (!_bell) {
-    _bell = new Audio("/sounds/bell.wav");
-    _bell.preload = "auto";
-  }
-  return _bell;
-}
-
-// Call from a user gesture (Start) to unlock audio, so the bell is allowed to
-// play later when the timer callback fires.
-function primeAudio() {
-  try {
-    const a = getBell();
-    a.muted = true;
-    const p = a.play();
-    if (p && p.then) {
-      p.then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; });
-    }
-  } catch (_) {}
-}
-
-function playChime() {
-  try {
-    const a = getBell();
-    a.muted = false;
-    a.currentTime = 0;
-    const p = a.play();
-    if (p && p.catch) p.catch(() => synthChime());
-  } catch (_) {
-    synthChime();
-  }
-}
-
-function synthChime() {
+// Quiet synthesised tones for phase transitions.
+// Three distinct sounds: focus start (ascending 2-note), break start (single
+// calm low tone), break end (gentle 2-note pull-back). All at low volume.
+function synthTone(freq, volume, delaySeconds = 0) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    [{ freq: 880, at: 0 }, { freq: 587.33, at: 0.2 }].forEach(({ freq, at }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      const t = now + at;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
-      osc.start(t);
-      osc.stop(t + 1.5);
-    });
+    const now = ctx.currentTime + delaySeconds;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+    osc.start(now);
+    osc.stop(now + 0.8);
   } catch (_) {}
+}
+
+function soundFocusStart() {
+  synthTone(523.25, 0.08);       // C5 — soft ascending start
+  synthTone(659.25, 0.06, 0.2);  // E5
+}
+
+function soundBreakStart() {
+  synthTone(392, 0.08);          // G4 — lower, calmer
+}
+
+function soundBreakEnd() {
+  synthTone(587.33, 0.08);       // D5 — gentle return
+  synthTone(698.46, 0.06, 0.2);  // F5
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
@@ -122,6 +100,15 @@ export default function FocusPage() {
   const [running, setRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const sessionIdRef = useRef(null);
+
+  // ── Transition banner ─────────────────────────────────────────────────────
+  const [banner, setBanner] = useState(null);
+  const bannerTimer = useRef(null);
+  const showBanner = useCallback((msg) => {
+    setBanner(msg);
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+    bannerTimer.current = setTimeout(() => setBanner(null), 2500);
+  }, []);
   // Mirror the id in a ref so we can read/clear it synchronously — guarantees a
   // session is never ended twice (a 2nd /end 404s as "Active session not found").
   const setSession = useCallback((id) => { sessionIdRef.current = id; setSessionId(id); }, []);
@@ -172,20 +159,31 @@ export default function FocusPage() {
   // ── Completion: fires once when the countdown reaches zero ──────────────────
   useEffect(() => {
     if (!running || seconds > 0) return;
-    playChime();
     endSession("completed");
     setRunning(false);
-    toast.success(mode === "focus"
-      ? "Focus session complete! Take a break."
-      : "Break over! Ready to focus?");
+    if (mode === "focus") {
+      soundBreakStart();
+      showBanner("Focus complete — take a break!");
+      toast.success("Focus session complete! Take a break.");
+    } else {
+      soundBreakEnd();
+      showBanner("Break over — back to focus!");
+      toast.success("Break over! Ready to focus?");
+    }
   }, [running, seconds, mode]); // eslint-disable-line
 
   // ── Controls ──────────────────────────────────────────────────────────────
   const handleStart = () => {
     if (!running) {
-      primeAudio(); // unlock audio during this click so the end-bell can play
       if (!sessionIdRef.current) startMut.mutate();
       setRunning(true);
+      if (mode === "focus") {
+        soundFocusStart();
+        showBanner("Focus session started");
+      } else {
+        soundBreakStart();
+        showBanner("Break started");
+      }
     } else {
       setRunning(false);
     }
@@ -231,6 +229,12 @@ export default function FocusPage() {
 
       {/* ── Timer card ── */}
       <div className="rounded-2xl border bg-card p-8 flex flex-col items-center gap-6">
+        {/* Phase transition banner */}
+        {banner && (
+          <div className="w-full text-center py-2.5 px-4 rounded-lg bg-primary/10 text-primary text-sm font-medium animate-in slide-in-from-top-3 duration-300">
+            {banner}
+          </div>
+        )}
         {/* Mode tabs */}
         <div className="inline-flex rounded-md border p-0.5">
           {["focus", "break"].map((m) => (

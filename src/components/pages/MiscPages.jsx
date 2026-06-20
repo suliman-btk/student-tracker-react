@@ -51,7 +51,15 @@ export function RoomsPage() {
   const [codeError, setCodeError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ name: "", focus_duration: 25, break_duration: 5, is_private: false, allowVoiceDuringFocus: true, allowChatDuringFocus: true });
+  const [form, setForm] = useState({ name: "", subject_tag: "", focus_duration: 25, break_duration: 5, is_private: false, allowVoiceDuringFocus: true, allowChatDuringFocus: true });
+
+  const SUBJECT_TAGS = ["Math", "CS", "Science", "Engineering", "Languages", "Other"];
+  const DURATION_PRESETS = [
+    { label: "25 / 5", desc: "Classic Pomodoro", focus: 25, brk: 5 },
+    { label: "50 / 10", desc: "Deep Work", focus: 50, brk: 10 },
+    { label: "Custom", desc: "", focus: null, brk: null },
+  ];
+  const [activePreset, setActivePreset] = useState(0);
 
   useEffect(() => watchPublicRooms(setRooms, console.error), []);
 
@@ -79,11 +87,11 @@ export function RoomsPage() {
       const user = auth.currentUser;
       const roomCode = generateRoomCode();
       const firestoreId = await createFirestoreRoom({
-        name: form.name, focusDuration: form.focus_duration, breakDuration: form.break_duration,
+        name: form.name, subjectTag: form.subject_tag, focusDuration: form.focus_duration, breakDuration: form.break_duration,
         hostUid: user?.uid, hostName: user?.displayName || user?.email?.split("@")[0] || "Host",
         roomCode, isPrivate: form.is_private, allowVoiceDuringFocus: form.allowVoiceDuringFocus, allowChatDuringFocus: form.allowChatDuringFocus,
       });
-      try { await focusApi.rooms.create({ name: form.name, focus_duration: form.focus_duration, break_duration: form.break_duration, firestore_room_id: firestoreId, is_private: form.is_private, allow_voice_during_focus: form.allowVoiceDuringFocus, allow_chat_during_focus: form.allowChatDuringFocus }); } catch {}
+      try { await focusApi.rooms.create({ name: form.name, subject_tag: form.subject_tag || null, focus_duration: form.focus_duration, break_duration: form.break_duration, firestore_room_id: firestoreId, is_private: form.is_private, allow_voice_during_focus: form.allowVoiceDuringFocus, allow_chat_during_focus: form.allowChatDuringFocus }); } catch {}
       setShowCreate(false);
       navigate({ to: "/rooms/$id", params: { id: firestoreId } });
     } catch (e) { console.error(e); }
@@ -127,34 +135,51 @@ export function RoomsPage() {
         </div>
       </div>
 
-      {/* Room list — Discord channel style */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+      {/* Room lobby — card grid */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {rooms.length === 0 && (
-          <div className="text-center py-20 text-muted-foreground text-sm">No public rooms yet. Create one!</div>
+          <div className="flex flex-col items-center justify-center h-full py-20 text-muted-foreground text-sm gap-2">
+            <Users className="h-10 w-10 opacity-30" />
+            <p>No public rooms active. Create one to get started!</p>
+          </div>
         )}
-        {rooms.map((r) => {
-          const { label, cls } = phaseLabel(r);
-          return (
-            <Link key={r.id} to="/rooms/$id" params={{ id: r.id }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/60 transition-colors group">
-              <div className="text-muted-foreground group-hover:text-foreground transition-colors">
-                {r.isPrivate ? <Lock className="h-4 w-4" /> : <Hash className="h-4 w-4" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm truncate">{r.roomName || r.name}</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${cls} shrink-0`}>{label}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {rooms.map((r) => {
+            const { label, cls } = phaseLabel(r);
+            return (
+              <div key={r.id} className="rounded-xl border bg-card p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-semibold text-sm truncate">{r.roomName || r.name}</span>
+                      {r.isPrivate && <Lock className="h-3 w-3 text-muted-foreground shrink-0" />}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{r.hostName}</div>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${cls}`}>{label}</span>
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {r.hostName} · {r.focusDuration || 25}m/{r.breakDuration || 5}m
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(r.subjectTag || r.subject_tag) && (
+                    <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                      {r.subjectTag || r.subject_tag}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground">{r.focusDuration || 25}m / {r.breakDuration || 5}m</span>
+                </div>
+
+                <div className="flex items-center justify-between mt-auto pt-1">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Users className="h-3.5 w-3.5" /> {r.memberCount || 0} studying
+                  </div>
+                  <Link to="/rooms/$id" params={{ id: r.id }}>
+                    <Button size="sm" className="h-7 text-xs px-3">Join</Button>
+                  </Link>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                <Users className="h-3.5 w-3.5" /> {r.memberCount || 0}
-              </div>
-            </Link>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Create dialog */}
@@ -166,21 +191,51 @@ export function RoomsPage() {
               <Label>Room name</Label>
               <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Late Night Algo Crunch" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Focus: {form.focus_duration}m</Label>
-                <Slider min={5} max={90} step={5} value={[form.focus_duration]} onValueChange={([v]) => setForm((f) => ({ ...f, focus_duration: v }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Break: {form.break_duration}m</Label>
-                <Slider min={1} max={30} step={1} value={[form.break_duration]} onValueChange={([v]) => setForm((f) => ({ ...f, break_duration: v }))} />
+
+            <div className="space-y-1.5">
+              <Label>Subject</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {SUBJECT_TAGS.map((tag) => (
+                  <button key={tag} type="button"
+                    onClick={() => setForm((f) => ({ ...f, subject_tag: f.subject_tag === tag ? "" : tag }))}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${form.subject_tag === tag ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"}`}>
+                    {tag}
+                  </button>
+                ))}
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>Duration</Label>
+              <div className="flex gap-2">
+                {DURATION_PRESETS.map((p, i) => (
+                  <button key={p.label} type="button"
+                    onClick={() => { setActivePreset(i); if (p.focus) setForm((f) => ({ ...f, focus_duration: p.focus, break_duration: p.brk })); }}
+                    className={`flex-1 rounded-lg border px-2 py-2 text-xs text-center transition-colors ${activePreset === i ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50"}`}>
+                    <div className="font-semibold">{p.label}</div>
+                    {p.desc && <div className="opacity-70 mt-0.5">{p.desc}</div>}
+                  </button>
+                ))}
+              </div>
+              {activePreset === 2 && (
+                <div className="grid grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Focus: {form.focus_duration}m</Label>
+                    <Slider min={5} max={90} step={5} value={[form.focus_duration]} onValueChange={([v]) => setForm((f) => ({ ...f, focus_duration: v }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Break: {form.break_duration}m</Label>
+                    <Slider min={1} max={30} step={1} value={[form.break_duration]} onValueChange={([v]) => setForm((f) => ({ ...f, break_duration: v }))} />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm">Private room</Label>
-                  <p className="text-xs text-muted-foreground">Require approval to join</p>
+                  <p className="text-xs text-muted-foreground">Require a code to join</p>
                 </div>
                 <Switch checked={form.is_private} onCheckedChange={(v) => setForm((f) => ({ ...f, is_private: v }))} />
               </div>
@@ -457,6 +512,11 @@ export function RoomDetailPage({ id }) {
   const phaseLabel = phase === "focus" ? "FOCUSING" : phase === "breakTime" ? "ON BREAK" : "WAITING TO START";
   const roundNum = (room.roundsCompleted || 0) + (phase === "focus" ? 1 : 0);
 
+  // Mood palette — shifts with phase
+  const moodPanelBg = phase === "focus" ? "bg-indigo-950/[0.04]" : phase === "breakTime" ? "bg-amber-50/60 dark:bg-amber-900/10" : "bg-background";
+  const moodCenterBg = phase === "focus" ? "bg-indigo-950/[0.06]" : phase === "breakTime" ? "bg-amber-50/80 dark:bg-amber-900/20" : "bg-background";
+  const moodTimerGlow = phase === "focus" ? "drop-shadow-[0_0_24px_rgba(99,102,241,0.25)]" : phase === "breakTime" ? "drop-shadow-[0_0_24px_rgba(245,158,11,0.3)]" : "";
+
   // ── LOBBY ─────────────────────────────────────────────────────────────────
   if (phase === "idle") {
     return (
@@ -580,7 +640,7 @@ export function RoomDetailPage({ id }) {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left: Voice panel */}
-        <div className="w-56 shrink-0 border-r flex flex-col bg-background">
+        <div className={`w-56 shrink-0 border-r flex flex-col transition-colors duration-700 ${moodPanelBg}`}>
           <div className="px-4 py-2.5 border-b">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Voice · {members.length}</p>
           </div>
@@ -590,7 +650,7 @@ export function RoomDetailPage({ id }) {
               const speaking = vol > 5;
               return (
                 <div key={m.uid}
-                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${speaking ? "bg-primary/5" : "hover:bg-muted/50"}`}>
+                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${speaking ? "bg-primary/5" : phase === "focus" ? "bg-indigo-500/5 animate-pulse" : "hover:bg-muted/50"}`}>
                   {/* Avatar with speaking animation */}
                   <div className="relative shrink-0">
                     {speaking && (
@@ -642,8 +702,8 @@ export function RoomDetailPage({ id }) {
         </div>
 
         {/* Center: Timer */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 gap-4 bg-background">
-          <div className={`text-[7rem] font-bold tabular-nums tracking-tight leading-none ${phaseColor}`}>
+        <div className={`flex-1 flex flex-col items-center justify-center p-8 gap-4 transition-colors duration-700 ${moodCenterBg}`}>
+          <div className={`text-[7rem] font-bold tabular-nums tracking-tight leading-none transition-all duration-700 ${phaseColor} ${moodTimerGlow}`}>
             {timer}
           </div>
           <div className={`flex items-center gap-2 text-sm font-medium ${phaseColor}`}>
