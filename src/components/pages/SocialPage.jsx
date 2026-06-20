@@ -559,20 +559,34 @@ function CommentsSection({ postId }) {
 
 function PostCard({ post, currentUserId }) {
   const qc = useQueryClient();
-  const [liked, setLiked] = useState(post.liked_by_me || false);
-  const [likeCount, setLikeCount] = useState(post.likes_count ?? post.likes ?? 0);
+  const [myReaction, setMyReaction] = useState(post.my_reaction_type ?? (post.liked_by_me || post.is_liked_by_me ? "like" : null));
+  const [counts, setCounts] = useState({
+    like: post.likes_count ?? post.likes ?? 0,
+    motivated: post.motivated_count ?? 0,
+    keep_going: post.keep_going_count ?? 0,
+  });
   const [showComments, setShowComments] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { mutate: toggleLike } = useMutation({
-    mutationFn: () => (liked ? socialApi.posts.unlike(post.id) : socialApi.posts.like(post.id)),
-    onMutate: () => {
-      setLiked((l) => !l);
-      setLikeCount((c) => (liked ? c - 1 : c + 1));
+  const { mutate: react } = useMutation({
+    mutationFn: (type) => {
+      if (myReaction === type) return socialApi.posts.unlike(post.id);
+      return socialApi.posts.like(post.id, type);
     },
-    onError: () => {
-      setLiked((l) => !l);
-      setLikeCount((c) => (liked ? c + 1 : c - 1));
+    onMutate: (type) => {
+      const prev = myReaction;
+      setCounts((c) => {
+        const next = { ...c };
+        if (prev) next[prev] = Math.max(0, next[prev] - 1);
+        if (prev !== type) next[type] = (next[type] ?? 0) + 1;
+        return next;
+      });
+      setMyReaction(prev === type ? null : type);
+      return { prev };
+    },
+    onError: (_e, _type, ctx) => {
+      setMyReaction(ctx.prev);
+      setCounts({ like: post.likes_count ?? 0, motivated: post.motivated_count ?? 0, keep_going: post.keep_going_count ?? 0 });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["social", "feed"] }),
   });
@@ -625,7 +639,12 @@ function PostCard({ post, currentUserId }) {
           ) : (
             <div className="text-sm font-medium">{name}</div>
           )}
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+            {(post.author_streak ?? 0) >= 2 && (
+              <span className="inline-flex items-center gap-0.5 text-orange-500 font-semibold">
+                🔥 Day {post.author_streak}
+              </span>
+            )}
             <span>{timeAgo(post.created_at)}</span>
             <span>·</span>
             {post.visibility === "public" ? (
@@ -692,13 +711,29 @@ function PostCard({ post, currentUserId }) {
         </a>
       )}
 
-      <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+      <div className="mt-3 flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
         <button
-          className={`inline-flex items-center gap-1 transition-colors hover:text-foreground ${liked ? "text-red-500" : ""}`}
-          onClick={() => toggleLike()}
+          className={`inline-flex items-center gap-1 transition-colors hover:text-foreground ${myReaction === "like" ? "text-red-500" : ""}`}
+          onClick={() => react("like")}
         >
-          <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
-          {likeCount}
+          <Heart className={`h-4 w-4 ${myReaction === "like" ? "fill-current" : ""}`} />
+          {counts.like > 0 && <span>{counts.like}</span>}
+        </button>
+        <button
+          className={`inline-flex items-center gap-1 transition-colors hover:text-orange-500 ${myReaction === "motivated" ? "text-orange-500 font-medium" : ""}`}
+          onClick={() => react("motivated")}
+          title="Motivated me"
+        >
+          <span className="text-base leading-none">🔥</span>
+          {counts.motivated > 0 && <span>{counts.motivated}</span>}
+        </button>
+        <button
+          className={`inline-flex items-center gap-1 transition-colors hover:text-blue-500 ${myReaction === "keep_going" ? "text-blue-500 font-medium" : ""}`}
+          onClick={() => react("keep_going")}
+          title="Keep going"
+        >
+          <span className="text-base leading-none">💪</span>
+          {counts.keep_going > 0 && <span>{counts.keep_going}</span>}
         </button>
         <button
           onClick={() => setShowComments((v) => !v)}

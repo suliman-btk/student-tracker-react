@@ -111,7 +111,7 @@ export const socialApi = {
     create: (body) => apiRequest("/social/posts", { method: "POST", body }).then(unwrapData),
     show: (id) => apiRequest(`/social/posts/${id}`).then(unwrapData),
     remove: (id) => apiRequest(`/social/posts/${id}`, { method: "DELETE" }),
-    like: (id) => apiRequest(`/social/posts/${id}/like`, { method: "POST" }),
+    like: (id, reactionType = "like") => apiRequest(`/social/posts/${id}/like`, { method: "POST", body: { reaction_type: reactionType } }),
     unlike: (id) => apiRequest(`/social/posts/${id}/like`, { method: "DELETE" }),
     comments: (id) => apiRequest(`/social/posts/${id}/comments`).then((p) => unwrapData(p, [])),
     addComment: (id, content) => apiRequest(`/social/posts/${id}/comments`, { method: "POST", body: { content } }).then(unwrapData),
@@ -155,6 +155,7 @@ export const aiApi = {
   applyMultiSprintPlan: (body) => apiRequest("/ai/multi-sprint-plan/apply", { method: "POST", body }).then(unwrapData),
   weeklyPlan: (body) => apiRequest("/ai/weekly-plan", { method: "POST", body }).then(unwrapData),
   scrumCoach: (kind, body) => apiRequest(`/ai/${kind}`, { method: "POST", body }).then(unwrapData),
+  chat: (message) => apiRequest("/ai/chat", { method: "POST", body: { message } }).then(unwrapData),
   extractTasks: (file, domainId) => {
     const fd = new FormData();
     fd.append("file", file);
