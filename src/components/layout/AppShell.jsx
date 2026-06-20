@@ -2,6 +2,7 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import AIDrawer from "./AIDrawer";
+import WelcomeModal from "@/components/study/WelcomeModal";
 
 export default function AppShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -16,6 +17,7 @@ export default function AppShell({ children }) {
         </main>
       </div>
       <AIDrawer />
+      <WelcomeModal />
     </div>
   );
 }

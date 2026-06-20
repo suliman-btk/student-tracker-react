@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -5,10 +6,12 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@tanstack/react-router";
-import { Menu } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
+import CreateTaskModal from "@/components/study/CreateTaskModal";
 
 export default function Topbar({ onMobileMenu }) {
   const { user, profile, logout } = useAuthStore();
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
   const displayName = profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
   const email = profile?.email || user?.email || "";
   const avatar = profile?.avatar_url || user?.photoURL;
@@ -29,7 +32,11 @@ export default function Topbar({ onMobileMenu }) {
       {/* RAQIP wordmark — mobile only (desktop has it in sidebar) */}
       <span className="lg:hidden font-semibold tracking-tight text-sm">RAQIP</span>
 
-      <div className="ml-auto flex items-center">
+      <div className="ml-auto flex items-center gap-2">
+        <Button size="sm" className="gap-1.5" onClick={() => setTaskModalOpen(true)}>
+          <Plus className="h-4 w-4" /> New task
+        </Button>
+        <CreateTaskModal open={taskModalOpen} onOpenChange={setTaskModalOpen} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-9 px-1.5 gap-2">

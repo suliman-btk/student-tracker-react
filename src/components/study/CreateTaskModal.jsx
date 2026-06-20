@@ -7,8 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDomains, useStudyMutations } from "@/lib/query-hooks";
+import { PRIORITIES, PRIORITY_COLOURS } from "@/lib/priority";
+import { cn } from "@/lib/utils";
 
-const PRIORITIES = ["Lowest", "Low", "Medium", "High", "Critical", "Highest"];
+const HOUR_CHIPS = [
+  { label: "30m", value: 0.5 },
+  { label: "1h", value: 1 },
+  { label: "2h", value: 2 },
+  { label: "4h", value: 4 },
+  { label: "8h", value: 8 },
+];
+
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Very Hard"];
 const NO_DOMAIN = "__none__";
 const asArray = (payload) => (Array.isArray(payload) ? payload : payload?.data || []);
@@ -43,11 +52,13 @@ export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId,
   const [subtasks, setSubtasks] = useState([]);
   const [subtaskDraft, setSubtaskDraft] = useState("");
   const [error, setError] = useState(null);
+  const [customHours, setCustomHours] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setError(null);
     setSubtaskDraft("");
+    setCustomHours(false);
     if (isEdit) {
       setForm({
         title: task.title || "",
@@ -138,20 +149,72 @@ export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId,
               <Input id="deadline" type="date" value={form.deadline} onChange={(e) => set("deadline")(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hours">Expected hours</Label>
-              <Input id="hours" type="number" min="0" step="0.5" value={form.expected_hours} onChange={(e) => set("expected_hours")(e.target.value)} />
+              <Label>Expected hours</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {HOUR_CHIPS.map((chip) => (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => { set("expected_hours")(chip.value); setCustomHours(false); }}
+                    className={cn(
+                      "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                      !customHours && form.expected_hours === chip.value
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background hover:bg-muted",
+                    )}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setCustomHours(true)}
+                  className={cn(
+                    "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                    customHours
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background hover:bg-muted",
+                  )}
+                >
+                  Custom
+                </button>
+              </div>
+              {customHours && (
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={form.expected_hours}
+                  onChange={(e) => set("expected_hours")(e.target.value)}
+                  placeholder="e.g. 1.5"
+                  className="mt-1.5"
+                  autoFocus
+                />
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Priority</Label>
-              <Select value={form.priority} onValueChange={set("priority")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-1.5">
+                {PRIORITIES.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => set("priority")(p)}
+                    className={cn(
+                      "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                      form.priority === p
+                        ? "border-transparent text-white"
+                        : "border-border bg-background hover:bg-muted",
+                    )}
+                    style={form.priority === p ? { background: PRIORITY_COLOURS[p] } : {}}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Difficulty</Label>

@@ -4,12 +4,10 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from "rechar
 import {
   AlertTriangle,
   BrainCircuit,
-  CalendarDays,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Sparkles,
   Timer,
   XCircle,
   Zap,
@@ -18,12 +16,10 @@ import { Button } from "@/components/ui/button";
 import {
   useActiveSprint,
   useCapacityCheck,
-  useKanbanInsight,
   usePomodoroSessions,
   useProfile,
   useSpaces,
   useStandupToday,
-  useStudyMutations,
   useTasks,
   useUserStats,
 } from "@/lib/query-hooks";
@@ -33,11 +29,8 @@ import { normalizeFeedback } from "@/lib/standup";
 import StandupModal from "@/components/study/StandupModal";
 
 const asArray = (p) => (Array.isArray(p) ? p : p?.data || []);
-const DONE = ["done", "Done", "completed", "complete"];
-const PROG = ["in_progress", "In Progress", "doing"];
-const taskStatus = (t) => t?.pivot_status || t?.pivotStatus || t?.status;
-const isDone = (t) => DONE.includes(taskStatus(t));
-const isProg = (t) => PROG.includes(taskStatus(t));
+const isDone = (t) => t?.status === "Done";
+const isProg = (t) => t?.status === "In Progress";
 const PRIORITY_WEIGHT = { Critical: 4, Highest: 4, High: 3, Medium: 2, Low: 1, Lowest: 1 };
 
 function parseDate(v) {
@@ -71,7 +64,6 @@ export default function DashboardPage() {
   const { data: sprint } = useActiveSprint(activeSpaceId);
   const { data: pomoPayload } = usePomodoroSessions();
   const { data: standup } = useStandupToday();
-  const { weeklyPlan } = useStudyMutations();
 
   const tasks = asArray(tasksPayload);
   const pomodoro = asArray(pomoPayload);
@@ -103,8 +95,6 @@ export default function DashboardPage() {
   const sprintEnd = parseDate(sprint?.end_date || sprint?.endDate);
   const daysLeft = sprintEnd ? Math.ceil((sprintEnd - new Date()) / 86400000) : null;
 
-  // AI Scrum Master — kanban insight from in-progress count.
-  const { data: kanban } = useKanbanInsight(sprint ? sprintProg : undefined);
   // Sprint capacity check.
   const sprintTaskIds = useMemo(() => sprintTasks.map((t) => t.id).filter(Boolean), [sprintTasks]);
   const { data: capacity } = useCapacityCheck(sprintTaskIds);
@@ -191,50 +181,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* AI Scrum Master + Today's Coaching — side by side */}
-      <div className="grid gap-4 lg:grid-cols-2">
-      {kanban && (kanban.warning || kanban.advice) && (
-        <div className="rounded-xl p-4" style={{ background: "#ECE7F4" }}>
-          <div className="mb-2 flex items-center gap-2">
-            <Sparkles className="h-4 w-4" style={{ color: "#4B3E73" }} />
-            <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#4B3E73" }}>AI Scrum Master</span>
-            <span className="ml-auto text-[11px] font-bold uppercase tracking-wider" style={{ color: "#4B3E73" }}>AI Insight</span>
-          </div>
-          {kanban.warning && <p className="text-sm leading-relaxed">{kanban.warning}</p>}
-          {kanban.advice && <p className="mt-2 text-sm leading-relaxed">{kanban.advice}</p>}
-        </div>
-      )}
-
-      {/* Today's Coaching */}
-      <div className="rounded-xl border-l-4 p-4" style={{ background: "#F1EDE2", borderColor: "#C9A66B" }}>
-        <div className="mb-2 flex items-center gap-2">
-          <BrainCircuit className="h-4 w-4" style={{ color: "#6B4F1E" }} />
-          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#6B4F1E" }}>Today's Coaching</span>
-          {submitted ? (
-            <span className="ml-auto text-xs text-emerald-700">Checked in</span>
-          ) : (
-            <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={() => setStandupOpen(true)}>Check in</Button>
-          )}
-        </div>
-        {coaching ? (
-          <p className="text-sm leading-relaxed">{coaching}</p>
-        ) : (
-          <p className="text-sm text-muted-foreground">Do your 3-tap check-in to get today's coaching.</p>
-        )}
-        {suggestedTask && (
-          <div className="mt-2 flex items-start gap-1.5 text-sm" style={{ color: "#7C6FDB" }}>
-            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>Suggested: {suggestedTask}</span>
-          </div>
-        )}
-      </div>
-      </div>
-
-      {/* This Week's Plan */}
-      <WeeklyPlanCard mutation={weeklyPlan} />
-
-      {/* Urgent Tasks */}
-      {/* Sprint Progress + Urgent Tasks — side by side */}
+      {/* Sprint Progress + Urgent Tasks — core utility first */}
       <div className="grid gap-4 lg:grid-cols-2">
         <section>
           <SectionHead label="Current Sprint" title="Sprint Progress" />
@@ -323,6 +270,30 @@ export default function DashboardPage() {
             <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">No urgent tasks right now.</div>
           )}
         </section>
+      </div>
+
+      {/* Today's Coaching */}
+      <div className="rounded-xl border-l-4 p-4" style={{ background: "#F1EDE2", borderColor: "#C9A66B" }}>
+        <div className="mb-2 flex items-center gap-2">
+          <BrainCircuit className="h-4 w-4" style={{ color: "#6B4F1E" }} />
+          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#6B4F1E" }}>Today's Coaching</span>
+          {submitted ? (
+            <span className="ml-auto text-xs text-emerald-700">Checked in</span>
+          ) : (
+            <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={() => setStandupOpen(true)}>Check in</Button>
+          )}
+        </div>
+        {coaching ? (
+          <p className="text-sm leading-relaxed">{coaching}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Do your 3-tap check-in to get today's coaching.</p>
+        )}
+        {suggestedTask && (
+          <div className="mt-2 flex items-start gap-1.5 text-sm" style={{ color: "#7C6FDB" }}>
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>Suggested: {suggestedTask}</span>
+          </div>
+        )}
       </div>
 
       {/* Workload Timeline + Focus Analytics — side by side */}
@@ -420,43 +391,6 @@ function FocusStat({ icon: Icon, color, label, value }) {
   );
 }
 
-function WeeklyPlanCard({ mutation }) {
-  const plan = mutation.data;
-  const weekPlan = plan?.week_plan || {};
-  return (
-    <button
-      type="button"
-      onClick={() => !plan && mutation.mutate()}
-      className="w-full rounded-xl p-4 text-left"
-      style={{ background: "#E2EEDF" }}
-    >
-      <div className="flex items-center gap-3">
-        <CalendarDays className="h-5 w-5" style={{ color: "#2F5C45" }} />
-        <div className="flex-1">
-          <div className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#2F5C45" }}>This Week's Plan</div>
-          <div className="text-sm text-foreground/90">
-            {mutation.isPending ? "Generating your weekly plan..." : plan ? (plan.advice || "Your weekly plan is ready.") : "Tap to generate your AI weekly study plan"}
-          </div>
-        </div>
-        {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" style={{ color: "#2F5C45" }} />}
-      </div>
-      {plan && (
-        <div className="mt-3 space-y-1.5">
-          {Object.entries(weekPlan).map(([day, items]) => (
-            <div key={day} className="text-sm">
-              <span className="font-medium">{day}:</span>{" "}
-              <span className="text-muted-foreground">
-                {Array.isArray(items) && items.length
-                  ? items.map((it) => `${it.task} (${it.hours}h)`).join(", ")
-                  : "—"}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </button>
-  );
-}
 
 function YearHeatmap({ activity }) {
   const currentYear = new Date().getFullYear();

@@ -29,6 +29,8 @@ import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useActiveSprint, useBacklog, useCapacity, useSpace, useSprints, useStudyMutations } from "@/lib/query-hooks";
+import { PRIORITY_COLOURS } from "@/lib/priority";
+import { aiApi } from "@/lib/api";
 import { useUI } from "@/store/ui";
 import { cn } from "@/lib/utils";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
@@ -64,18 +66,12 @@ const tabs = [
 ];
 
 const statusColumns = [
-  { key: "To Do", api: "todo", aliases: ["todo", "to_do", "To Do", "pending", "open"], label: "TO DO", color: "#c9c9c2" },
-  { key: "In Progress", api: "in_progress", aliases: ["in_progress", "In Progress", "doing", "started"], label: "IN PROGRESS", color: "#7f99bf" },
-  { key: "Done", api: "done", aliases: ["done", "Done", "completed", "complete"], label: "DONE", color: "#6fa187" },
+  { key: "To Do", label: "TO DO", color: "#c9c9c2" },
+  { key: "In Progress", label: "IN PROGRESS", color: "#7f99bf" },
+  { key: "Done", label: "DONE", color: "#6fa187" },
 ];
 
-const priorityColors = {
-  Highest: "#ef4444",
-  High: "#f97316",
-  Medium: "#f59e0b",
-  Low: "#3b82f6",
-  Lowest: "#94a3b8",
-};
+const priorityColors = PRIORITY_COLOURS;
 
 function getTasks(sprint) {
   return sprint?.tasks || sprint?.tasks_data || sprint?.items || [];
@@ -83,15 +79,6 @@ function getTasks(sprint) {
 
 function asArray(payload) {
   return Array.isArray(payload) ? payload : payload?.data || [];
-}
-
-function statusKey(status) {
-  const normalized = status || "todo";
-  return statusColumns.find((col) => col.aliases.includes(normalized))?.key || "To Do";
-}
-
-function statusApi(status) {
-  return statusColumns.find((col) => col.key === status)?.api || "todo";
 }
 
 function taskTitle(task) {
@@ -150,7 +137,7 @@ function daysLeftLabel(value) {
 }
 
 function sprintVelocity(sprint, tasks) {
-  const done = tasks.filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) === "Done").length;
+  const done = tasks.filter((task) => task.status === "Done").length;
   if (Number.isFinite(Number(sprint?.velocity))) return Number(sprint.velocity);
   return tasks.length ? (done / tasks.length) * 100 : 0;
 }
@@ -158,7 +145,7 @@ function sprintVelocity(sprint, tasks) {
 function sprintPoints(tasks) {
   const total = tasks.reduce((sum, task) => sum + taskPoints(task), 0);
   const done = tasks
-    .filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) === "Done")
+    .filter((task) => task.status === "Done")
     .reduce((sum, task) => sum + taskPoints(task), 0);
   return { done, total };
 }
@@ -166,7 +153,7 @@ function sprintPoints(tasks) {
 function countByStatus(tasks) {
   return statusColumns.map((column) => ({
     ...column,
-    count: tasks.filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) === column.key).length,
+    count: tasks.filter((task) => task.status === column.key).length,
   }));
 }
 
@@ -180,7 +167,7 @@ function priorityData(tasks) {
 
 function openDeadlineTasks(tasks) {
   return tasks
-    .filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) !== "Done")
+    .filter((task) => task.status !== "Done")
     .filter((task) => parseDate(task.deadline || task.due_date))
     .sort((a, b) => parseDate(a.deadline || a.due_date) - parseDate(b.deadline || b.due_date));
 }
@@ -188,6 +175,15 @@ function openDeadlineTasks(tasks) {
 export default function WorkspacePage({ tab = "summary", spaceId }) {
   const navigate = useNavigate();
   const { openAI, setActiveSpace } = useUI();
+
+  const triggerSprintReview = async (sprintId) => {
+    try {
+      const review = await aiApi.generateSprintReview(sprintId);
+      openAI({ sprintReview: review?.data?.summary || review?.summary });
+    } catch {
+      openAI({});
+    }
+  };
   const { data: space, isLoading: loadingSpace, error: spaceError } = useSpace(spaceId);
   const { data: sprint, isLoading: loadingSprint } = useActiveSprint(spaceId);
   const mutations = useStudyMutations();
@@ -282,8 +278,8 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
       <div className="py-5">
         {tab === "summary" && <WorkspaceSummary sprint={sprint} loadingSprint={loadingSprint} spaceId={spaceId} />}
         {tab === "board" && <WorkspaceBoard sprint={sprint} loadingSprint={loadingSprint} spaceId={spaceId} actions={actions} />}
-        {tab === "backlog" && <WorkspaceBacklog spaceId={spaceId} activeSprintId={sprint?.id} actions={actions} />}
-        {tab === "sprints" && <WorkspaceBacklog spaceId={spaceId} activeSprintId={sprint?.id} actions={actions} />}
+        {tab === "backlog" && <WorkspaceBacklog spaceId={spaceId} activeSprintId={sprint?.id} actions={actions} onSprintComplete={triggerSprintReview} />}
+        {tab === "sprints" && <WorkspaceBacklog spaceId={spaceId} activeSprintId={sprint?.id} actions={actions} onSprintComplete={triggerSprintReview} />}
         {tab === "members" && <WorkspaceMembersPlaceholder />}
       </div>
 
@@ -305,7 +301,7 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
                 if (!sprint?.id) return;
                 mutations.closeSprint.mutate(
                   { sprintId: sprint.id, body: { move_incomplete_to: "backlog" }, spaceId },
-                  { onSuccess: () => setCompleteOpen(false) },
+                  { onSuccess: () => { setCompleteOpen(false); triggerSprintReview(sprint.id); } },
                 );
               }}
             >
@@ -335,7 +331,7 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
   const { data: capacity } = useCapacity();
   const [reviewOpen, setReviewOpen] = useState(false);
   const tasks = getTasks(sprint);
-  const done = tasks.filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) === "Done").length;
+  const done = tasks.filter((task) => task.status === "Done").length;
   const counts = countByStatus(tasks);
   const points = sprintPoints(tasks);
   const velocity = sprintVelocity(sprint, tasks);
@@ -405,7 +401,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
       const next = { ...prev };
       let changed = false;
       tasks.forEach((task) => {
-        const serverStatus = statusKey(task.pivot_status || task.pivotStatus || task.status);
+        const serverStatus = task.status;
         if (task.id in next && next[task.id] === serverStatus) {
           delete next[task.id];
           changed = true;
@@ -418,7 +414,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
   const resolvedStatus = (task) =>
     task.id in optimisticStatuses
       ? optimisticStatuses[task.id]
-      : statusKey(task.pivot_status || task.pivotStatus || task.status);
+      : task.status;
 
   const tasksWithResolved = tasks.map((t) => ({ ...t, _resolvedStatus: resolvedStatus(t) }));
   const inProgress = tasksWithResolved.filter((t) => t._resolvedStatus === "In Progress").length;
@@ -504,7 +500,6 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
                     task={task}
                     draggable
                     onDragStart={() => setDragged(task)}
-                    onStep={(dir) => stepTask(task, dir)}
                   />
                 ))}
                 {colTasks.length === 0 && (
@@ -524,7 +519,7 @@ function todayISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function WorkspaceBacklog({ spaceId, activeSprintId, actions }) {
+function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }) {
   const { data: backlogPayload = [], isLoading: loadingBacklog, error: backlogError } = useBacklog(spaceId);
   const { data: sprintsPayload = [], isLoading: loadingSprints, error: sprintsError } = useSprints(spaceId);
   const m = useStudyMutations();
@@ -561,6 +556,14 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions }) {
   const deleteTask = (task) =>
     m.deleteTask.mutate({ id: task.id, spaceId }, { onSuccess: () => toast.success("Task deleted") });
 
+  const changeStatus = (task, fromSprintId, newStatus) => {
+    if (fromSprintId) {
+      m.updateSprintTaskStatus.mutate({ sprintId: fromSprintId, taskId: task.id, status: newStatus, spaceId });
+    } else {
+      m.updateTaskStatus.mutate({ id: task.id, status: newStatus, spaceId });
+    }
+  };
+
   const dropToSprint = (toSprintId) => {
     if (dragged) moveToSprint(dragged.task, dragged.fromSprintId, toSprintId);
     setDragged(null);
@@ -591,7 +594,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions }) {
     else doStart(sprint, false);
   };
 
-  const move = { toSprint: moveToSprint, toBacklog: moveToBacklog, deleteTask };
+  const move = { toSprint: moveToSprint, toBacklog: moveToBacklog, deleteTask, changeStatus };
   const sprintActions = {
     start: startSprint,
     complete: (sprint) => setCompleteFor(sprint),
@@ -601,7 +604,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions }) {
 
   const completeTasks = completeFor ? getTasks(completeFor) : [];
   const completeDone = completeTasks.filter(
-    (t) => statusKey(t.pivot_status || t.pivotStatus || t.status) === "Done",
+    (t) => t.status === "Done",
   ).length;
 
   return (
@@ -716,7 +719,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions }) {
                 const sprint = completeFor;
                 m.closeSprint.mutate(
                   { sprintId: sprint.id, body: { move_incomplete_to: "backlog" }, spaceId },
-                  { onSuccess: () => { toast.success("Sprint completed"); setCompleteFor(null); } },
+                  { onSuccess: () => { toast.success("Sprint completed"); setCompleteFor(null); onSprintComplete?.(sprint.id); } },
                 );
               }}
             >
@@ -806,7 +809,7 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
   const [expanded, setExpanded] = useState(active || !completed);
   const [over, setOver] = useState(false);
   const tasks = getTasks(sprint);
-  const done = tasks.filter((task) => statusKey(task.pivot_status || task.pivotStatus || task.status) === "Done").length;
+  const done = tasks.filter((task) => task.status === "Done").length;
   const counts = countByStatus(tasks);
   const percent = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
 
@@ -898,25 +901,26 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
   );
 }
 
-function TaskCard({ task, draggable, onDragStart, onStep }) {
+function TaskCard({ task, draggable, onDragStart }) {
   const due = task.deadline || task.due_date;
-  const atRisk = daysLeft(due) !== null && daysLeft(due) <= 5 && statusKey(task.pivot_status || task.pivotStatus || task.status) !== "Done";
+  const atRisk = daysLeft(due) !== null && daysLeft(due) <= 5 && task.status !== "Done";
+  const priorityColour = PRIORITY_COLOURS[task.priority] || PRIORITY_COLOURS.Medium;
 
   return (
     <article
       draggable={draggable}
       onDragStart={onDragStart}
       className="cursor-grab rounded-lg border bg-background p-4 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+      style={{ borderLeft: `4px solid ${priorityColour}` }}
     >
       <div className="flex items-start gap-3">
-        <span className="mt-1 h-4 w-1 rounded-full bg-muted" />
         <div className="min-w-0 flex-1">
           <Link
             to="/tasks/$id"
             params={{ id: String(task.id) }}
             className={cn(
               "text-base font-semibold hover:text-primary",
-              statusKey(task.pivot_status || task.pivotStatus || task.status) === "Done" && "text-muted-foreground line-through",
+              task.status === "Done" && "text-muted-foreground line-through",
             )}
           >
             {taskTitle(task)}
@@ -928,15 +932,7 @@ function TaskCard({ task, draggable, onDragStart, onStep }) {
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
             <span>{taskCode(task)}</span>
-            <div className="ml-auto flex items-center gap-2">
-              {taskPoints(task) > 0 && <span className="rounded bg-muted px-2 py-1 text-xs font-semibold">{taskPoints(task)} pt</span>}
-              <button className="rounded-md bg-muted p-1.5 hover:bg-muted-foreground/20" onClick={() => onStep?.(-1)} aria-label="Move left">
-                <ChevronLeftMini />
-              </button>
-              <button className="rounded-md bg-muted p-1.5 hover:bg-muted-foreground/20" onClick={() => onStep?.(1)} aria-label="Move right">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            {taskPoints(task) > 0 && <span className="ml-auto rounded bg-muted px-2 py-1 text-xs font-semibold">{taskPoints(task)} pt</span>}
           </div>
         </div>
       </div>
@@ -945,15 +941,17 @@ function TaskCard({ task, draggable, onDragStart, onStep }) {
 }
 
 function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move, onDragStart }) {
-  const status = statusKey(task.pivot_status || task.pivotStatus || task.status);
+  const status = task.status;
   const inSprint = fromSprintId != null;
   const moveTargets = sprints.filter((s) => String(s.id) !== String(fromSprintId ?? ""));
+  const priorityColour = PRIORITY_COLOURS[task.priority] || PRIORITY_COLOURS.Medium;
 
   return (
     <div
       draggable
       onDragStart={() => onDragStart?.({ task, fromSprintId: fromSprintId ?? null })}
       className="flex items-center gap-4 px-5 py-4 cursor-grab active:cursor-grabbing"
+      style={{ borderLeft: `4px solid ${priorityColour}` }}
     >
       <Circle className="h-5 w-5 text-muted-foreground/50" />
       <div className="min-w-0 flex-1">
@@ -972,7 +970,17 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
           {taskCode(task)} · {task.priority || "Medium"} · {taskPoints(task)} pts · {taskHours(task)}h · {daysLeftLabel(task.deadline || task.due_date)}
         </div>
       </div>
-      <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold">{status}</span>
+
+      <select
+        value={status}
+        onChange={(e) => move?.changeStatus(task, fromSprintId, e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        className="rounded-full bg-muted px-3 py-1 text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+      >
+        <option value="To Do">To Do</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Done">Done</option>
+      </select>
 
       {inSprint ? (
         <Button size="icon" variant="ghost" aria-label="Move to backlog" onClick={() => move?.toBacklog(task, fromSprintId)}>
@@ -1157,9 +1165,6 @@ function Chip({ children, className }) {
   );
 }
 
-function ChevronLeftMini() {
-  return <ChevronRight className="h-4 w-4 rotate-180" />;
-}
 
 function EmptySprint({ spaceId }) {
   return (
