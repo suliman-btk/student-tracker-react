@@ -81,26 +81,6 @@ function asArray(payload) {
   return Array.isArray(payload) ? payload : payload?.data || [];
 }
 
-function taskTitle(task) {
-  return task?.title || task?.name || `Task ${task?.id}`;
-}
-
-function taskCode(task) {
-  return task?.key || task?.code || task?.task_key || `TS-${task?.id}`;
-}
-
-function taskDomain(task) {
-  return task?.domain?.domain_name || task?.domain?.domainName || task?.domain_name || task?.domain || "FYP";
-}
-
-function taskPoints(task) {
-  return Number(task?.points ?? task?.story_points ?? task?.pivot?.points ?? 0);
-}
-
-function taskHours(task) {
-  return Number(task?.expected_hours ?? task?.estimated_hours ?? task?.hours ?? 0);
-}
-
 function parseDate(value) {
   if (!value) return null;
   const date = new Date(value);
@@ -119,23 +99,6 @@ function dateRange(sprint) {
   return `${start} - ${end}`;
 }
 
-function daysLeft(value) {
-  const date = parseDate(value);
-  if (!date) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
-  return Math.ceil((date - today) / 86400000);
-}
-
-function daysLeftLabel(value) {
-  const days = daysLeft(value);
-  if (days === null) return "No deadline";
-  if (days < 0) return `${Math.abs(days)}d overdue`;
-  if (days === 0) return "Due today";
-  return `${days}d left`;
-}
-
 function sprintVelocity(sprint, tasks) {
   const done = tasks.filter((task) => task.status === "Done").length;
   if (Number.isFinite(Number(sprint?.velocity))) return Number(sprint.velocity);
@@ -143,10 +106,10 @@ function sprintVelocity(sprint, tasks) {
 }
 
 function sprintPoints(tasks) {
-  const total = tasks.reduce((sum, task) => sum + taskPoints(task), 0);
+  const total = tasks.reduce((sum, task) => sum + task.points, 0);
   const done = tasks
     .filter((task) => task.status === "Done")
-    .reduce((sum, task) => sum + taskPoints(task), 0);
+    .reduce((sum, task) => sum + task.points, 0);
   return { done, total };
 }
 
@@ -160,16 +123,15 @@ function countByStatus(tasks) {
 function priorityData(tasks) {
   return ["Highest", "High", "Medium", "Low", "Lowest"].map((priority) => ({
     priority,
-    count: tasks.filter((task) => (task.priority || "Medium") === priority).length,
+    count: tasks.filter((task) => task.priority === priority).length,
     color: priorityColors[priority],
   }));
 }
 
 function openDeadlineTasks(tasks) {
   return tasks
-    .filter((task) => task.status !== "Done")
-    .filter((task) => parseDate(task.deadline || task.due_date))
-    .sort((a, b) => parseDate(a.deadline || a.due_date) - parseDate(b.deadline || b.due_date));
+    .filter((task) => task.status !== "Done" && task.deadlineDate)
+    .sort((a, b) => a.deadlineDate - b.deadlineDate);
 }
 
 export default function WorkspacePage({ tab = "summary", spaceId }) {
@@ -348,7 +310,7 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Active</span>
-                <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">{daysLeftLabel(sprint.end_date || sprint.endDate)}</span>
+                <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">{dateLabel(sprint.end_date || sprint.endDate, "No end date")}</span>
               </div>
               <h2 className="mt-4 text-2xl font-semibold tracking-tight">{sprint.name || "Active Sprint"}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{dateRange(sprint)}</p>
@@ -543,14 +505,14 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
     if (String(fromSprintId ?? "") === String(toSprintId)) return;
     m.moveTaskToSprint.mutate(
       { fromSprintId: fromSprintId ?? null, toSprintId, taskId: task.id, spaceId },
-      { onSuccess: () => toast.success(`"${taskTitle(task)}" moved to sprint`) },
+      { onSuccess: () => toast.success(`"${task.title}" moved to sprint`) },
     );
   };
   const moveToBacklog = (task, fromSprintId) => {
     if (!fromSprintId) return;
     m.moveTaskToBacklog.mutate(
       { fromSprintId, taskId: task.id, spaceId },
-      { onSuccess: () => toast.success(`"${taskTitle(task)}" moved to backlog`) },
+      { onSuccess: () => toast.success(`"${task.title}" moved to backlog`) },
     );
   };
   const deleteTask = (task) =>
@@ -902,8 +864,7 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
 }
 
 function TaskCard({ task, draggable, onDragStart }) {
-  const due = task.deadline || task.due_date;
-  const atRisk = daysLeft(due) !== null && daysLeft(due) <= 5 && task.status !== "Done";
+  const atRisk = task.daysLeft !== null && task.daysLeft <= 5 && task.status !== "Done";
   const priorityColour = PRIORITY_COLOURS[task.priority] || PRIORITY_COLOURS.Medium;
 
   return (
@@ -923,16 +884,16 @@ function TaskCard({ task, draggable, onDragStart }) {
               task.status === "Done" && "text-muted-foreground line-through",
             )}
           >
-            {taskTitle(task)}
+            {task.title}
           </Link>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Chip>{taskDomain(task)}</Chip>
-            {due && <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(due)}</Chip>}
+            <Chip>{task.domain}</Chip>
+            {task.deadline && <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline)}</Chip>}
             {atRisk && <Chip className="bg-amber-50 text-amber-800"><AlertTriangle className="h-3 w-3" /> At Risk</Chip>}
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{taskCode(task)}</span>
-            {taskPoints(task) > 0 && <span className="ml-auto rounded bg-muted px-2 py-1 text-xs font-semibold">{taskPoints(task)} pt</span>}
+            <span>{task.code}</span>
+            {task.points > 0 && <span className="ml-auto rounded bg-muted px-2 py-1 text-xs font-semibold">{task.points} pt</span>}
           </div>
         </div>
       </div>
@@ -961,13 +922,13 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
             params={{ id: String(task.id) }}
             className={cn("font-semibold hover:text-primary", status === "Done" && "text-muted-foreground line-through")}
           >
-            {taskTitle(task)}
+            {task.title}
           </Link>
-          <Chip>{taskDomain(task)}</Chip>
-          {task.deadline || task.due_date ? <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline || task.due_date)}</Chip> : null}
+          <Chip>{task.domain}</Chip>
+          {task.deadline && <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline)}</Chip>}
         </div>
         <div className="mt-1 text-sm text-muted-foreground">
-          {taskCode(task)} · {task.priority || "Medium"} · {taskPoints(task)} pts · {taskHours(task)}h · {daysLeftLabel(task.deadline || task.due_date)}
+          {task.code} · {task.priority} · {task.points} pts · {task.hours}h · {task.deadlineLabel}
         </div>
       </div>
 
@@ -1114,11 +1075,11 @@ function SprintTaskPreview({ tasks }) {
           <div key={task.id} className="flex items-center gap-3 py-3">
             <span className="h-8 w-1 rounded-full bg-primary/60" />
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">{taskTitle(task)}</div>
-              <div className="text-xs text-muted-foreground">{taskCode(task)} · {taskDomain(task)}</div>
+              <div className="truncate text-sm font-medium">{task.title}</div>
+              <div className="text-xs text-muted-foreground">{task.code} · {task.domain}</div>
             </div>
             <Chip>{task.priority || "Medium"}</Chip>
-            <span className="text-xs text-muted-foreground">{dateLabel(task.deadline || task.due_date, "")}</span>
+            <span className="text-xs text-muted-foreground">{dateLabel(task.deadline, "")}</span>
           </div>
         ))}
         {tasks.length === 0 && <div className="py-6 text-sm text-muted-foreground">No tasks in this sprint.</div>}
@@ -1129,7 +1090,7 @@ function SprintTaskPreview({ tasks }) {
 
 function DeadlineAwareness({ tasks }) {
   const dueSoon = tasks.filter((task) => {
-    const days = daysLeft(task.deadline || task.due_date);
+    const days = task.daysLeft;
     return days !== null && days <= 7;
   });
   return (
@@ -1142,8 +1103,8 @@ function DeadlineAwareness({ tasks }) {
         {dueSoon.slice(0, 6).map((task) => (
           <div key={task.id} className="flex items-center gap-3">
             <span className="h-9 w-1 rounded-full bg-amber-400" />
-            <div className="min-w-0 flex-1 truncate text-sm">{taskTitle(task)}</div>
-            <span className="text-sm text-muted-foreground">{dateLabel(task.deadline || task.due_date)}</span>
+            <div className="min-w-0 flex-1 truncate text-sm">{task.title}</div>
+            <span className="text-sm text-muted-foreground">{dateLabel(task.deadline)}</span>
           </div>
         ))}
         {dueSoon.length === 0 && <p className="text-sm text-muted-foreground">No urgent deadlines in the active sprint.</p>}

@@ -24,7 +24,7 @@ import {
   useUserStats,
 } from "@/lib/query-hooks";
 import { useUI } from "@/store/ui";
-import { cn, parseWall } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { normalizeFeedback } from "@/lib/standup";
 import StandupModal from "@/components/study/StandupModal";
 
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       const ws = new Date(now); ws.setDate(ws.getDate() + d);
       const we = new Date(ws); we.setDate(we.getDate() + 3);
       const count = tasks.filter((t) => {
-        const dl = parseDate(t.deadline || t.due_date);
+        const dl = t.deadlineDate;
         return dl && !isDone(t) && dl >= new Date(ws.getTime() - 86400000) && dl < we;
       }).length;
       if (count >= 3) return `Heavy week: ${count} tasks due around ${monthShort(ws.getMonth())} ${ws.getDate()}–${we.getDate()}. Consider rescheduling.`;
@@ -114,7 +114,7 @@ export default function DashboardPage() {
     return null;
   }, [tasks]);
 
-  const urgentTasks = tasks.filter((t) => t.priority === "Critical" || t.task_type === "Emergency").slice(0, 4);
+  const urgentTasks = tasks.filter((t) => t.priority === "Critical" || t.isEmergency).slice(0, 4);
 
   const workload = useMemo(() => {
     const now = new Date();
@@ -124,7 +124,7 @@ export default function DashboardPage() {
       const end = new Date(start); end.setDate(end.getDate() + 7);
       let score = 0;
       tasks.forEach((t) => {
-        const dl = parseDate(t.deadline || t.due_date);
+        const dl = t.deadlineDate;
         if (dl && !isDone(t) && dl > start && dl < end) score += PRIORITY_WEIGHT[t.priority] || 1;
       });
       scores.push({ start, score });
@@ -224,9 +224,8 @@ export default function DashboardPage() {
           {urgentTasks.length > 0 ? (
             <div className="space-y-2">
               {urgentTasks.map((t) => {
-                const isEmergency = t.task_type === "Emergency";
-                const rawDate = t.deadline || t.due_date;
-                const dueDate = rawDate ? parseWall(rawDate) : null;
+                const isEmergency = t.isEmergency;
+                const dueDate = t.deadlineDate;
                 const formattedDue = dueDate && !Number.isNaN(dueDate.getTime())
                   ? dueDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
                   : null;
@@ -242,7 +241,7 @@ export default function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <div className={cn("truncate text-sm font-medium", isDone(t) && "text-muted-foreground line-through")}>{t.title}</div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span className="truncate">{t.domain?.domain_name || t.domain_name || "—"}</span>
+                        <span className="truncate">{t.domain || "—"}</span>
                         {formattedDue && (
                           <>
                             <span>·</span>
@@ -260,7 +259,7 @@ export default function DashboardPage() {
                         color: isEmergency ? "#991B1B" : "#854D0E",
                       }}
                     >
-                      {isEmergency ? "Emergency" : t.priority || "Critical"}
+                      {isEmergency ? "Emergency" : t.priority}
                     </span>
                   </Link>
                 );

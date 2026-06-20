@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { aiApi, focusApi, socialApi, studyApi, userApi } from "@/lib/api";
+import { normaliseTask, normaliseSprint } from "@/lib/task";
+
+const asArr = (d) => (Array.isArray(d) ? d : d?.data ?? []);
 
 export const qk = {
   user: {
@@ -76,6 +79,7 @@ export function useDomainTasks(domainId) {
   return useQuery({
     queryKey: qk.study.domainTasks(domainId),
     queryFn: () => studyApi.domains.tasks(domainId),
+    select: (data) => asArr(data).map(normaliseTask),
     enabled: enabledAuth(domainId),
     retry: 1,
   });
@@ -85,6 +89,7 @@ export function useTasks(params) {
   return useQuery({
     queryKey: qk.study.tasks(params),
     queryFn: () => studyApi.tasks.list(params),
+    select: (data) => asArr(data).map(normaliseTask),
     retry: 1,
   });
 }
@@ -93,6 +98,7 @@ export function useTask(taskId) {
   return useQuery({
     queryKey: qk.study.task(taskId),
     queryFn: () => studyApi.tasks.show(taskId),
+    select: (data) => (data ? normaliseTask(data) : data),
     enabled: enabledAuth(taskId),
     retry: 1,
   });
@@ -111,6 +117,7 @@ export function useBacklog(spaceId) {
   return useQuery({
     queryKey: qk.study.backlog(spaceId),
     queryFn: () => studyApi.tasks.backlog(spaceId ? { space_id: spaceId } : undefined),
+    select: (data) => asArr(data).map(normaliseTask),
   });
 }
 
@@ -118,6 +125,7 @@ export function useActiveSprint(spaceId) {
   return useQuery({
     queryKey: qk.study.activeSprint(spaceId),
     queryFn: () => studyApi.sprints.active(spaceId ? { space_id: spaceId } : undefined),
+    select: (data) => (data ? normaliseSprint(data) : data),
     enabled: enabledAuth(spaceId),
     retry: false,
   });
@@ -127,6 +135,7 @@ export function useSprints(spaceId) {
   return useQuery({
     queryKey: qk.study.sprints(spaceId),
     queryFn: () => studyApi.sprints.list(spaceId ? { space_id: spaceId } : undefined),
+    select: (data) => asArr(data).map(normaliseSprint),
   });
 }
 
@@ -134,6 +143,7 @@ export function useSprint(sprintId) {
   return useQuery({
     queryKey: qk.study.sprint(sprintId),
     queryFn: () => studyApi.sprints.show(sprintId),
+    select: (data) => (data ? normaliseSprint(data) : data),
     enabled: enabledAuth(sprintId),
   });
 }

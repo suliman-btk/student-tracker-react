@@ -51,10 +51,10 @@ export default function BacklogPage() {
                 <div className="h-2 w-2 rounded-full bg-primary" />
                 <div className="flex-1 min-w-0">
                   <Link to="/tasks/$id" params={{ id: String(t.id) }} className="text-sm font-medium hover:text-primary">
-                    {t.title || `Task ${t.id}`}
+                    {t.title}
                   </Link>
                   <div className="text-xs text-muted-foreground">
-                    {(t.priority || "Medium")} · {(t.expected_hours ?? 0)}h · {(t.points ?? 0)} pts · due {t.deadline || "—"}
+                    {t.priority} · {t.hours}h · {t.points} pts · due {t.deadline || "—"}
                   </div>
                 </div>
                 <DropdownMenu>
