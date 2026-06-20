@@ -306,7 +306,7 @@ export default function FocusPage() {
               {sessions.length === 0 && (
                 <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground text-sm">No sessions yet.</td></tr>
               )}
-              {sessions.map((p) => (
+              {sessions.slice(0, 10).map((p) => (
                 <tr key={p.id}>
                   <td className="px-4 py-3">{fmtDate(p.started_at || p.startedAt || p.created_at)}</td>
                   <td className="px-4 py-3">{p.focus_duration ?? p.focusDuration ?? "25"}m</td>

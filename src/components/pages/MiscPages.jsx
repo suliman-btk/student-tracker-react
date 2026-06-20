@@ -111,10 +111,10 @@ export function RoomsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col -mx-4 lg:-mx-8 -my-6" style={{ height: "calc(100% + 3rem)" }}>
 
       {/* Hero header */}
-      <div className="px-2 pb-6 border-b">
+      <div className="px-6 lg:px-8 pt-6 pb-6 border-b">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Group Study Rooms</h1>
@@ -145,7 +145,7 @@ export function RoomsPage() {
       </div>
 
       {/* Room grid */}
-      <div className="flex-1 overflow-y-auto px-2 py-6">
+      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-6">
         {rooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center pb-16">
             <div className="h-20 w-20 rounded-2xl bg-card border-2 border-dashed border-border flex items-center justify-center text-3xl">
@@ -585,102 +585,93 @@ export function RoomDetailPage({ id }) {
   // ── LOBBY ─────────────────────────────────────────────────────────────────
   if (phase === "idle") {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col -mx-4 lg:-mx-8 -my-6" style={{ height: "calc(100% + 3rem)" }}>
         {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
 
-        {/* Minimal top bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b bg-card/80 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <h1 className="font-bold text-sm truncate max-w-[200px]">{room.roomName || room.name}</h1>
-            {(room.subjectTag || room.subject_tag) && (
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">{room.subjectTag || room.subject_tag}</span>
-            )}
-            {room.isPrivate && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+        {/* Hero header — full width */}
+        <div className="border-b px-6 lg:px-8 py-5 flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center text-xl shrink-0">📚</div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg font-bold truncate">{room.roomName || room.name}</h1>
+                {(room.subjectTag || room.subject_tag) && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">{room.subjectTag || room.subject_tag}</span>
+                )}
+                {room.isPrivate && <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+              </div>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <span className="text-xs text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full"><Play className="h-2.5 w-2.5 inline mr-1" />{room.focusDuration || 25}m focus</span>
+                <span className="text-xs text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">☕ {room.breakDuration || 5}m break</span>
+                {room.isPrivate && <span className="text-xs text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full"><Lock className="h-2.5 w-2.5 inline mr-1" />Private</span>}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {room.roomCode && (
-              <button onClick={copyCode} className="flex items-center gap-1.5 font-mono text-xs bg-muted hover:bg-muted/70 px-2.5 py-1.5 rounded-lg transition-colors">
+              <button onClick={copyCode} className="flex items-center gap-1.5 font-mono text-xs bg-muted hover:bg-muted/70 px-3 py-2 rounded-lg border transition-colors">
                 <span className="tracking-widest font-bold">{room.roomCode}</span>
-                <Copy className="h-3 w-3 text-muted-foreground" />
-                {codeCopied && <span className="text-emerald-500 font-sans">✓</span>}
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                {codeCopied && <span className="text-emerald-500 font-sans not-italic ml-1">✓</span>}
               </button>
             )}
-            <Button variant="ghost" size="sm" onClick={handleLeaveClick} className="text-muted-foreground hover:text-destructive gap-1 h-8 text-xs">
-              <LogOut className="h-3.5 w-3.5" /> Leave
+            <Button variant="ghost" size="sm" onClick={handleLeaveClick} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5">
+              <LogOut className="h-4 w-4" /> Leave
             </Button>
           </div>
         </div>
 
-        {/* Centered lobby content */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-2 py-4">
-
-          {/* Room card */}
-          <div className="w-full max-w-md bg-card rounded-2xl border shadow-sm p-8 flex flex-col items-center gap-5">
-            {/* Icon */}
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl">📚</div>
-
-            <div className="text-center">
-              <h2 className="text-2xl font-bold">{room.roomName || room.name}</h2>
-              <p className="text-sm text-muted-foreground mt-1">Waiting for session to start</p>
-            </div>
-
-            {/* Session stats */}
-            <div className="flex items-center gap-3 flex-wrap justify-center">
-              <div className="flex items-center gap-1.5 bg-muted/60 px-3 py-1.5 rounded-full text-xs font-medium">
-                <Play className="h-3 w-3" /> {room.focusDuration || 25}m focus
-              </div>
-              <div className="flex items-center gap-1.5 bg-muted/60 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground">
-                ☕ {room.breakDuration || 5}m break
-              </div>
-              {room.isPrivate && (
-                <div className="flex items-center gap-1.5 bg-muted/60 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground">
-                  <Lock className="h-3 w-3" /> Private
-                </div>
-              )}
-            </div>
-
-            {/* Members */}
-            <div className="w-full">
-              <p className="text-xs font-semibold text-muted-foreground mb-3 text-center">
-                {members.length === 0 ? "No one here yet" : `${members.length} ${members.length === 1 ? "person" : "people"} in lobby`}
-              </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                {members.map((m) => (
-                  <div key={m.uid} className="flex flex-col items-center gap-1.5">
-                    <div className="relative">
-                      <Avatar className="h-11 w-11 ring-2 ring-background shadow-sm">
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
-                          {(m.displayName || "?")[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-card" />
-                    </div>
-                    <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[60px] text-center">
-                      {m.uid === room.hostUid ? "🎯 Host" : m.displayName?.split(" ")[0] || "Member"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div className="w-full pt-2">
-              {!joined ? (
-                <Button onClick={handleJoin} disabled={joining} className="w-full h-11 gap-2 text-sm font-semibold">
-                  {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                  Join lobby
-                </Button>
-              ) : isHost ? (
-                <Button onClick={handleStart} className="w-full h-11 gap-2 text-sm font-semibold bg-primary hover:bg-primary/90">
-                  <Play className="h-4 w-4" /> Start Study Session
-                </Button>
-              ) : (
-                <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Waiting for host to start…
-                </div>
-              )}
-            </div>
+        {/* Members grid — full width */}
+        <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold text-foreground">
+              {members.length === 0 ? "Lobby is empty" : `${members.length} ${members.length === 1 ? "person" : "people"} here`}
+            </p>
+            <span className="text-xs text-muted-foreground">Waiting to start…</span>
           </div>
+
+          {members.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
+              <Users className="h-12 w-12 opacity-20" />
+              <p className="text-sm">No one has joined yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {members.map((m) => (
+                <div key={m.uid} className="bg-card rounded-xl border p-4 flex flex-col items-center gap-2.5 text-center hover:shadow-sm transition-all">
+                  <div className="relative">
+                    <Avatar className="h-14 w-14">
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                        {(m.displayName || "?")[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-card" />
+                  </div>
+                  <span className="text-sm font-medium truncate w-full">{m.displayName || "Member"}</span>
+                  {m.uid === room.hostUid
+                    ? <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">HOST</span>
+                    : <span className="text-xs text-emerald-600 font-medium">Ready</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Action bar — pinned bottom */}
+        <div className="border-t px-6 lg:px-8 py-4 bg-card/60 flex items-center gap-3">
+          {!joined ? (
+            <Button onClick={handleJoin} disabled={joining} size="lg" className="gap-2">
+              {joining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} Join lobby
+            </Button>
+          ) : isHost ? (
+            <Button onClick={handleStart} size="lg" className="gap-2">
+              <Play className="h-4 w-4" /> Start Study Session
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Waiting for host to start…
+            </div>
+          )}
         </div>
       </div>
     );
@@ -688,7 +679,7 @@ export function RoomDetailPage({ id }) {
 
   // ── ACTIVE SESSION — 3-panel ──────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col -mx-4 lg:-mx-8 -my-6" style={{ height: "calc(100% + 3rem)" }}>
       {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
 
@@ -708,9 +699,8 @@ export function RoomDetailPage({ id }) {
             {codeCopied && <span className="text-emerald-500 font-sans not-italic font-semibold">✓</span>}
           </button>
         )}
-        <div className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
-          style={{ background: ringColor + "18", color: ringColor }}>
-          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: ringColor }} />
+        <div className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${phaseColor} bg-muted`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${phaseDot} ${phase === "focus" ? "animate-pulse" : ""}`} />
           {phaseLabel}
         </div>
         <div className="ml-auto">
@@ -742,10 +732,9 @@ export function RoomDetailPage({ id }) {
                     : isStudying ? "border-border/50 bg-card/60"
                     : "border-border/50 bg-card/60"}`}>
                   <div className="relative shrink-0">
-                    {speaking && <span className="absolute inset-0 rounded-full animate-ping" style={{ background: ringColor + "30" }} />}
-                    <Avatar className="h-9 w-9 relative" style={speaking ? { boxShadow: `0 0 0 2px ${ringColor}` } : {}}>
-                      <AvatarFallback className={`text-sm font-bold ${speaking ? "text-indigo-600" : "text-muted-foreground"}`}
-                        style={speaking ? { background: ringColor + "20" } : {}}>
+                    {speaking && <span className="absolute inset-0 rounded-full animate-ping bg-primary/20" />}
+                    <Avatar className={`h-9 w-9 relative ${speaking ? "ring-2 ring-primary ring-offset-1" : ""}`}>
+                      <AvatarFallback className={`text-sm font-bold ${speaking ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                         {(m.displayName || "?")[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -764,8 +753,8 @@ export function RoomDetailPage({ id }) {
                   {speaking && (
                     <div className="flex items-end gap-[2px] shrink-0" style={{ height: 14 }}>
                       {[0.4, 1, 0.6, 0.9, 0.5].map((h, i) => (
-                        <span key={i} className="w-0.5 rounded-full animate-bounce"
-                          style={{ height: `${h * 12}px`, background: ringColor, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }} />
+                        <span key={i} className="w-0.5 rounded-full animate-bounce bg-primary"
+                          style={{ height: `${h * 12}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }} />
                       ))}
                     </div>
                   )}
@@ -781,8 +770,7 @@ export function RoomDetailPage({ id }) {
               className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all
                 ${voiceLocked ? "opacity-40 cursor-not-allowed bg-muted text-muted-foreground"
                 : isMuted ? "bg-muted hover:bg-muted/70 text-foreground"
-                : "text-white shadow-sm"}`}
-              style={!voiceLocked && !isMuted ? { background: ringColor } : {}}>
+                : "bg-primary hover:bg-primary/90 text-primary-foreground"}`}>
               {voiceLocked ? <MicOff className="h-4 w-4" /> : isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               {voiceLocked ? "Voice blocked" : isMuted ? "Unmute" : "Mute"}
             </button>
@@ -790,56 +778,45 @@ export function RoomDetailPage({ id }) {
         </div>
 
         {/* Center: Timer */}
-        <div className={`flex-1 flex flex-col items-center justify-center gap-6 relative overflow-hidden transition-colors duration-700 ${moodCenterBg}`}>
-          {/* Radial glow */}
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${ringTrack.replace("0.12", "0.18")}, transparent 70%)` }} />
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-background">
 
-          {/* SVG ring + timer */}
-          <div className="relative w-72 h-72 shrink-0">
+          {/* SVG ring + timer — clean, simple */}
+          <div className="relative w-64 h-64 shrink-0">
             <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
-              {/* Track */}
-              <circle cx="50" cy="50" r="44" fill="none" stroke={ringColor} strokeWidth="3" opacity="0.15" />
-              {/* Progress */}
+              {/* Track — neutral gray */}
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#e5e7eb" strokeWidth="4" />
+              {/* Progress — primary color, simple */}
               <circle cx="50" cy="50" r="44" fill="none"
-                stroke={ringColor} strokeWidth="3"
+                stroke="hsl(var(--primary))" strokeWidth="4"
                 strokeDasharray={circumference}
                 strokeDashoffset={circumference * (1 - timerPct)}
                 strokeLinecap="round"
-                style={{ transition: "stroke-dashoffset 1s linear, stroke 0.7s ease" }}
+                style={{ transition: "stroke-dashoffset 1s linear" }}
               />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-              <span className="text-5xl font-bold tabular-nums tracking-tight leading-none transition-colors duration-700"
-                style={{ color: ringColor, textShadow: `0 0 40px ${ringColor}50` }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+              <span className="text-5xl font-bold tabular-nums tracking-tight text-foreground">
                 {timer}
               </span>
-              <span className="text-[11px] font-bold uppercase tracking-[0.15em] transition-colors duration-700"
-                style={{ color: ringColor, opacity: 0.7 }}>
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 {phaseLabel}
               </span>
             </div>
           </div>
 
-          {/* Round dots */}
-          <div className="flex items-center gap-2">
-            {Array.from({ length: Math.max(roundNum + 1, 4) }).map((_, i) => (
-              <span key={i} className="h-1.5 w-1.5 rounded-full transition-all duration-500"
-                style={{ background: i < roundNum ? ringColor : ringTrack }} />
-            ))}
-            <span className="text-xs text-muted-foreground ml-1">Round {roundNum}</span>
-          </div>
+          {/* Round counter — simple text */}
+          <p className="text-sm text-muted-foreground font-medium">Round {roundNum}</p>
 
           {/* Controls */}
           {isHost && (
             <div className="flex items-center gap-3">
               <button onClick={handleSkip}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border bg-card/80 backdrop-blur-sm hover:bg-card text-sm font-medium transition-all shadow-sm">
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border hover:bg-muted text-sm font-medium transition-colors">
                 <SkipForward className="h-4 w-4" />
                 {phase === "focus" ? "Start break" : "Start focus"}
               </button>
               <button onClick={handleEnd}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm font-medium transition-all shadow-sm">
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border hover:bg-muted text-sm font-medium transition-colors text-muted-foreground">
                 <Square className="h-4 w-4" /> End session
               </button>
             </div>
