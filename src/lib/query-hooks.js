@@ -6,6 +6,42 @@ import { invalidateWorkspace, invalidateTask, invalidateDomains } from "@/lib/ca
 
 const asArr = (d) => (Array.isArray(d) ? d : d?.data ?? []);
 
+// ─── Optimistic drag-and-drop helpers ──────────────────────────────────────
+// Query caches store the RAW payload (the select transform runs on read), which
+// may be a bare array or a paginated `{ data: [...] }` envelope. These helpers
+// edit the underlying list while preserving the envelope, so a dragged task
+// jumps to its new column instantly instead of waiting for the refetch.
+const sameId = (a, b) => a != null && b != null && String(a) === String(b);
+const getTaskId = (t) => t?.id ?? t?.task_id ?? t?.task?.id;
+
+const unwrapList = (payload) => {
+  if (Array.isArray(payload)) return { list: payload, rewrap: (l) => l };
+  if (payload && Array.isArray(payload.data)) return { list: payload.data, rewrap: (l) => ({ ...payload, data: l }) };
+  return { list: [], rewrap: () => payload };
+};
+
+const sprintTasks = (s) => s?.tasks ?? s?.tasks_data ?? s?.items ?? [];
+// normaliseSprint reads `tasks` first, so always writing to `.tasks` wins.
+const withTasks = (s, tasks) => ({ ...s, tasks });
+
+// Remove a task from a possibly-wrapped task list; returns { payload, removed }.
+const removeTaskFromList = (payload, id) => {
+  const { list, rewrap } = unwrapList(payload);
+  let removed = null;
+  const next = list.filter((t) => {
+    if (removed == null && sameId(getTaskId(t), id)) { removed = t; return false; }
+    return true;
+  });
+  return { payload: rewrap(next), removed };
+};
+
+// Prepend a task to a possibly-wrapped task list (no-op if already present).
+const addTaskToList = (payload, task) => {
+  const { list, rewrap } = unwrapList(payload);
+  if (list.some((t) => sameId(getTaskId(t), getTaskId(task)))) return rewrap(list);
+  return rewrap([task, ...list]);
+};
+
 export const qk = {
   user: {
     profile: ["user", "profile"],
@@ -370,8 +406,42 @@ export function useStudyMutations() {
         if (fromSprintId) await studyApi.sprints.removeTask(fromSprintId, taskId);
         if (spaceId) await studyApi.spacesTasks(spaceId, [taskId]);
       },
-      onSuccess: () => iWorkspace(),
-      onError: toastError,
+      onMutate: async ({ fromSprintId, taskId, spaceId }) => {
+        const backlogKey = qk.study.backlog(spaceId);
+        const sprintsKey = qk.study.sprints(spaceId);
+        await Promise.all([
+          qc.cancelQueries({ queryKey: backlogKey }),
+          qc.cancelQueries({ queryKey: sprintsKey }),
+        ]);
+        const prevBacklog = qc.getQueryData(backlogKey);
+        const prevSprints = qc.getQueryData(sprintsKey);
+
+        let moved = null;
+        if (prevSprints !== undefined) {
+          const { list, rewrap } = unwrapList(prevSprints);
+          const nextSprints = list.map((s) => {
+            if (!sameId(s.id, fromSprintId)) return s;
+            const res = removeTaskFromList(sprintTasks(s), taskId);
+            if (res.removed) moved = res.removed;
+            return withTasks(s, unwrapList(res.payload).list);
+          });
+          qc.setQueryData(sprintsKey, rewrap(nextSprints));
+        }
+        if (moved && prevBacklog !== undefined) {
+          // Demoting back to the backlog clears any sprint-pivot status.
+          const { pivot, ...bare } = moved;
+          qc.setQueryData(backlogKey, addTaskToList(prevBacklog, bare));
+        }
+        return { backlogKey, sprintsKey, prevBacklog, prevSprints };
+      },
+      onError: (err, _vars, ctx) => {
+        if (ctx) {
+          qc.setQueryData(ctx.backlogKey, ctx.prevBacklog);
+          qc.setQueryData(ctx.sprintsKey, ctx.prevSprints);
+        }
+        toastError(err);
+      },
+      onSettled: () => iWorkspace(),
     }),
     moveTaskToSprint: useMutation({
       mutationFn: async ({ fromSprintId, toSprintId, taskId }) => {
@@ -380,8 +450,59 @@ export function useStudyMutations() {
         }
         await studyApi.sprints.addTasks(toSprintId, [taskId]);
       },
-      onSuccess: () => iWorkspace(),
-      onError: toastError,
+      onMutate: async ({ fromSprintId, toSprintId, taskId, spaceId }) => {
+        const backlogKey = qk.study.backlog(spaceId);
+        const sprintsKey = qk.study.sprints(spaceId);
+        await Promise.all([
+          qc.cancelQueries({ queryKey: backlogKey }),
+          qc.cancelQueries({ queryKey: sprintsKey }),
+        ]);
+        const prevBacklog = qc.getQueryData(backlogKey);
+        const prevSprints = qc.getQueryData(sprintsKey);
+
+        let moved = null;
+        // Pull the task out of its source — either a sprint or the backlog.
+        if (fromSprintId && prevSprints !== undefined) {
+          const { list, rewrap } = unwrapList(prevSprints);
+          const stripped = list.map((s) => {
+            if (!sameId(s.id, fromSprintId)) return s;
+            const res = removeTaskFromList(sprintTasks(s), taskId);
+            if (res.removed) moved = res.removed;
+            return withTasks(s, unwrapList(res.payload).list);
+          });
+          qc.setQueryData(sprintsKey, rewrap(stripped));
+        } else if (!fromSprintId && prevBacklog !== undefined) {
+          const res = removeTaskFromList(prevBacklog, taskId);
+          moved = res.removed;
+          qc.setQueryData(backlogKey, res.payload);
+        }
+
+        // Drop it into the destination sprint as a "To Do" item.
+        if (moved) {
+          const current = qc.getQueryData(sprintsKey);
+          if (current !== undefined) {
+            const { list, rewrap } = unwrapList(current);
+            // Backend seeds a fresh "To Do" pivot; mirror that so the task lands
+            // in the To Do column immediately (status accessor reads pivot.status).
+            const placed = { ...moved, status: "To Do", pivot: { ...(moved.pivot || {}), status: "To Do" } };
+            const nextSprints = list.map((s) =>
+              sameId(s.id, toSprintId)
+                ? withTasks(s, unwrapList(addTaskToList(sprintTasks(s), placed)).list)
+                : s,
+            );
+            qc.setQueryData(sprintsKey, rewrap(nextSprints));
+          }
+        }
+        return { backlogKey, sprintsKey, prevBacklog, prevSprints };
+      },
+      onError: (err, _vars, ctx) => {
+        if (ctx) {
+          qc.setQueryData(ctx.backlogKey, ctx.prevBacklog);
+          qc.setQueryData(ctx.sprintsKey, ctx.prevSprints);
+        }
+        toastError(err);
+      },
+      onSettled: () => iWorkspace(),
     }),
     acceptSuggestion: useMutation({
       mutationFn: aiApi.acceptSuggestion,
