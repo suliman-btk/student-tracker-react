@@ -229,11 +229,19 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
                 <Zap className="h-3.5 w-3.5" /> Sprint Active
               </span>
             )}
-            <Button variant="outline" onClick={() => openAI({ spaceId, sprintId: sprint?.id })}>
-              <Bot className="mr-1.5 h-4 w-4" /> Azzam
+            <Button
+              variant="outline"
+              className="border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5"
+              onClick={() => openAI({ spaceId, sprintId: sprint?.id })}
+            >
+              <Sparkles className="mr-1.5 h-4 w-4" /> Azzam
             </Button>
-            <Button variant="outline" onClick={() => setHeaderPlannerOpen(true)}>
-              <Sparkles className="mr-1.5 h-4 w-4" /> Plan sprints
+            <Button
+              variant="outline"
+              className="border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5"
+              onClick={() => setHeaderPlannerOpen(true)}
+            >
+              <Bot className="mr-1.5 h-4 w-4" /> Azzam · Sprint Planner
             </Button>
           </div>
         </div>
@@ -522,7 +530,6 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   const [forceStart, setForceStart] = useState(null);
   const [completeFor, setCompleteFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
-  const [plannerOpen, setPlannerOpen] = useState(false);
   const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
   const [createTaskOpen2, setCreateTaskOpen2] = useState(false);
 
@@ -608,13 +615,6 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant="outline"
-          className="border-[color:var(--ai)]/40 text-[color:var(--ai)]"
-          onClick={() => setPlannerOpen(true)}
-        >
-          <Sparkles className="mr-2 h-4 w-4" /> AI Sprint Planner
-        </Button>
         <Button variant="outline" className="ml-auto" onClick={actions?.createSprint}>
           <Zap className="mr-1.5 h-4 w-4" /> Create sprint
         </Button>
@@ -678,7 +678,6 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
         sprint={editSprint}
       />
 
-      <AISprintPlannerModal open={plannerOpen} onOpenChange={setPlannerOpen} spaceId={spaceId} />
       <AddFromDomainModal open={addFromDomainOpen} onOpenChange={setAddFromDomainOpen} spaceId={spaceId} />
       <TaskEntryModal open={createTaskOpen2} onOpenChange={setCreateTaskOpen2} spaceId={spaceId} />
 
