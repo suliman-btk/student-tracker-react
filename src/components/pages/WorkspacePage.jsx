@@ -354,12 +354,14 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
         <div className="space-y-4">
           <Button
             variant="outline"
-            className="h-14 w-full border-[color:var(--ai)]/40 text-[color:var(--ai)]"
+            className="h-14 w-full border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5"
             onClick={() => setReviewOpen(true)}
           >
-            <Sparkles className="mr-2 h-4 w-4" /> AI Review
+            <Sparkles className="mr-2 h-4 w-4" /> Azzam · Sprint Review
           </Button>
           <DeadlineAwareness tasks={deadlineTasks} />
+          <SprintHealth sprint={sprint} tasks={tasks} />
+          <EffortOverview tasks={tasks} />
         </div>
       </section>
 
@@ -1180,6 +1182,91 @@ function DeadlineAwareness({ tasks }) {
           </div>
         ))}
         {dueSoon.length === 0 && <p className="text-sm text-muted-foreground">No urgent deadlines in the active sprint.</p>}
+      </div>
+    </section>
+  );
+}
+
+function SprintHealth({ sprint, tasks }) {
+  const endDate = sprint?.end_date || sprint?.endDate;
+  const end = endDate ? new Date(endDate) : null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysLeft = end ? Math.max(0, Math.ceil((end - today) / 86400000)) : null;
+  const remaining = tasks.filter((t) => t.status !== "Done").length;
+  const overdue = tasks.filter((t) => {
+    const d = t.deadline || t.due_date;
+    return d && new Date(d) < today && t.status !== "Done";
+  }).length;
+  const dailyTarget = daysLeft > 0 ? Math.ceil(remaining / daysLeft) : remaining;
+
+  return (
+    <section className="rounded-xl border bg-card p-5 space-y-4">
+      <h3 className="font-semibold">Sprint Health</h3>
+      <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="rounded-lg bg-muted/60 p-3">
+          <div className="text-2xl font-bold text-primary">{daysLeft ?? "—"}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Days left</div>
+        </div>
+        <div className="rounded-lg bg-muted/60 p-3">
+          <div className="text-2xl font-bold">{remaining}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Remaining</div>
+        </div>
+        <div className={`rounded-lg p-3 ${overdue > 0 ? "bg-rose-50" : "bg-muted/60"}`}>
+          <div className={`text-2xl font-bold ${overdue > 0 ? "text-rose-600" : ""}`}>{overdue}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Overdue</div>
+        </div>
+      </div>
+      {daysLeft !== null && remaining > 0 && (
+        <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2.5 text-sm">
+          <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
+          <span>Complete <strong>{dailyTarget}</strong> task{dailyTarget !== 1 ? "s" : ""}/day to finish on time</span>
+        </div>
+      )}
+      {overdue > 0 && (
+        <div className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span><strong>{overdue}</strong> overdue task{overdue !== 1 ? "s" : ""} need attention</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function EffortOverview({ tasks }) {
+  const total = tasks.reduce((s, t) => s + parseFloat(t.hours || t.expected_hours || 0), 0);
+  const done  = tasks.filter((t) => t.status === "Done").reduce((s, t) => s + parseFloat(t.hours || t.expected_hours || 0), 0);
+  const remaining = total - done;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  return (
+    <section className="rounded-xl border bg-card p-5 space-y-4">
+      <h3 className="font-semibold">Effort Overview</h3>
+      <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="rounded-lg bg-muted/60 p-3">
+          <div className="text-xl font-bold">{total.toFixed(1)}h</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Total</div>
+        </div>
+        <div className="rounded-lg bg-emerald-50 p-3">
+          <div className="text-xl font-bold text-emerald-700">{done.toFixed(1)}h</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Done</div>
+        </div>
+        <div className="rounded-lg bg-muted/60 p-3">
+          <div className="text-xl font-bold text-amber-600">{remaining.toFixed(1)}h</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Left</div>
+        </div>
+      </div>
+      <div>
+        <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+          <span>Hours completed</span>
+          <span className="font-medium text-foreground">{pct}%</span>
+        </div>
+        <div className="h-2 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500 transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
       </div>
     </section>
   );
