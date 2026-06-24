@@ -168,7 +168,7 @@ export default function LandingPage() {
             <div className="relative h-12 w-12 rounded-2xl bg-primary-foreground/15 grid place-items-center">
               <Sparkles className="h-6 w-6" />
             </div>
-            <h3 className="relative mt-5 text-xl font-bold">Meet your AI Scrum Coach</h3>
+            <h3 className="relative mt-5 text-xl font-bold">Meet Azzam, your AI Scrum Coach</h3>
             <p className="relative mt-2 text-sm text-primary-foreground/85 leading-relaxed">
               Think of it as the friend who's great at planning. It maps out your sprints, grooms
               your backlog, reminds you before things blow up, and checks in to keep your FYP on track.

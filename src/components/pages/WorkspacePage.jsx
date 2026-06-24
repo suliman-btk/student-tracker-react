@@ -40,6 +40,7 @@ import CreateSprintModal from "@/components/study/CreateSprintModal";
 import AISprintReviewModal from "@/components/study/AISprintReviewModal";
 import AISprintPlannerModal from "@/components/study/AISprintPlannerModal";
 import AddFromDomainModal from "@/components/study/AddFromDomainModal";
+import SelectDomainModal from "@/components/study/SelectDomainModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,20 +153,21 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   const { data: space, isLoading: loadingSpace, error: spaceError } = useSpace(spaceId);
   const { data: sprint, isLoading: loadingSprint } = useActiveSprint(spaceId);
   const mutations = useStudyMutations();
+  const [pendingSprintId, setPendingSprintId] = useState(null);
+  const [headerPlannerOpen, setHeaderPlannerOpen] = useState(false);
   const [modals, dispatchModal] = useReducer(
     (state, action) => {
       switch (action) {
-        case "OPEN_CREATE_TASK":   return { ...state, menu: false, createTask: true };
-        case "OPEN_CREATE_SPRINT": return { ...state, menu: false, createSprint: true };
-        case "OPEN_COMPLETE":      return { ...state, menu: false, complete: true };
-        case "TOGGLE_MENU":        return { ...state, menu: !state.menu };
+        case "OPEN_CREATE_TASK":   return { ...state, createTask: true };
+        case "OPEN_CREATE_SPRINT": return { ...state, createSprint: true };
+        case "OPEN_COMPLETE":      return { ...state, complete: true };
         case "CLOSE_TASK":         return { ...state, createTask: false };
         case "CLOSE_SPRINT":       return { ...state, createSprint: false };
         case "CLOSE_COMPLETE":     return { ...state, complete: false };
         default:                   return state;
       }
     },
-    { menu: false, createTask: false, createSprint: false, complete: false },
+    { createTask: false, createSprint: false, complete: false },
   );
 
   useEffect(() => {
@@ -176,12 +178,13 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   if (spaceError) return <WorkspaceError message={spaceError.message} />;
 
   const actions = {
-    createTask:     () => dispatchModal("OPEN_CREATE_TASK"),
-    createSprint:   () => dispatchModal("OPEN_CREATE_SPRINT"),
-    completeSprint: () => dispatchModal("OPEN_COMPLETE"),
+    createTask:           () => { setPendingSprintId(null); dispatchModal("OPEN_CREATE_TASK"); },
+    createSprintTask:     (sprintId) => { setPendingSprintId(sprintId); dispatchModal("OPEN_CREATE_TASK"); },
+    createSprint:         () => dispatchModal("OPEN_CREATE_SPRINT"),
+    completeSprint:       () => dispatchModal("OPEN_COMPLETE"),
   };
 
-  const spaceName = space?.name || `Space ${spaceId}`;
+  const spaceName = space?.name || space?.space_name || space?.title || `Space ${spaceId}`;
   const spaceKey = space?.key || space?.slug || spaceName.slice(0, 3).toUpperCase();
   const spaceColor = space?.color_hex || space?.color || "var(--primary)";
 
@@ -213,25 +216,18 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
             </div>
             <p className="text-sm text-muted-foreground">{space?.description || "Sprint workspace for summary, board, and backlog."}</p>
           </div>
-          <div className="relative ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             {sprint && (
               <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                 <Zap className="h-3.5 w-3.5" /> Sprint Active
               </span>
             )}
             <Button variant="outline" onClick={() => openAI({ spaceId, sprintId: sprint?.id })}>
-              <Bot className="mr-1.5 h-4 w-4" /> AI Scrum
+              <Bot className="mr-1.5 h-4 w-4" /> Azzam
             </Button>
-            <Button size="icon" variant="ghost" onClick={() => dispatchModal("TOGGLE_MENU")} aria-label="Workspace actions">
-              <MoreVertical className="h-4 w-4" />
+            <Button variant="outline" onClick={() => setHeaderPlannerOpen(true)}>
+              <Sparkles className="mr-1.5 h-4 w-4" /> Plan sprints
             </Button>
-            {modals.menu && (
-              <div className="absolute right-0 top-11 z-20 w-52 rounded-lg border bg-popover p-1.5 shadow-lg">
-                <MenuButton icon={CheckCircle2} label="Create task" onClick={actions.createTask} />
-                <MenuButton icon={Zap} label="Create sprint" onClick={actions.createSprint} />
-                <MenuButton icon={CheckCircle2} label="Complete sprint" disabled={!sprint} onClick={actions.completeSprint} />
-              </div>
-            )}
           </div>
         </div>
 
@@ -259,8 +255,14 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
         {tab === "members" && <WorkspaceMembersPlaceholder />}
       </div>
 
-      <CreateTaskModal open={modals.createTask} onOpenChange={(o) => !o && dispatchModal("CLOSE_TASK")} spaceId={spaceId} />
+      <CreateTaskModal
+        open={modals.createTask}
+        onOpenChange={(o) => { if (!o) { dispatchModal("CLOSE_TASK"); setPendingSprintId(null); } }}
+        spaceId={spaceId}
+        sprintId={pendingSprintId}
+      />
       <CreateSprintModal open={modals.createSprint} onOpenChange={(o) => !o && dispatchModal("CLOSE_SPRINT")} spaceId={spaceId} />
+      <AISprintPlannerModal open={headerPlannerOpen} onOpenChange={setHeaderPlannerOpen} spaceId={spaceId} />
       <AlertDialog open={modals.complete} onOpenChange={(o) => !o && dispatchModal("CLOSE_COMPLETE")}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -287,19 +289,6 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-}
-
-function MenuButton({ icon: Icon, label, disabled, onClick }) {
-  return (
-    <button
-      disabled={disabled}
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
-    >
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      {label}
-    </button>
   );
 }
 
@@ -368,6 +357,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
   const [dragged, setDragged] = useState(null);
   const [optimisticStatuses, setOptimisticStatuses] = useState({});
   const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
+  const [selectDomainOpen, setSelectDomainOpen] = useState(false);
   const mutations = useStudyMutations();
   const tasks = getTasks(sprint);
 
@@ -440,13 +430,17 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
         <Button variant="outline" className="ml-auto border-emerald-200 text-emerald-700" onClick={actions?.completeSprint}>
           <CheckCircle2 className="mr-1.5 h-4 w-4" /> Complete
         </Button>
-        <Button variant="outline" onClick={() => setAddFromDomainOpen(true)}>
-          <Library className="mr-1.5 h-4 w-4" /> Add from domain
-        </Button>
-        <Button variant="outline" onClick={actions?.createTask}>
+        <Button variant="outline" onClick={() => setSelectDomainOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Create task
         </Button>
       </div>
+
+      <SelectDomainModal
+        open={selectDomainOpen}
+        onOpenChange={setSelectDomainOpen}
+        spaceId={spaceId}
+        sprintId={sprint?.id}
+      />
 
       <AddFromDomainModal
         open={addFromDomainOpen}
@@ -518,10 +512,12 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   const [dragged, setDragged] = useState(null);
   const [editSprint, setEditSprint] = useState(null);
   const [startEarly, setStartEarly] = useState(null);
+  const [forceStart, setForceStart] = useState(null);
   const [completeFor, setCompleteFor] = useState(null);
   const [deleteFor, setDeleteFor] = useState(null);
   const [plannerOpen, setPlannerOpen] = useState(false);
   const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
+  const [selectDomainOpen, setSelectDomainOpen] = useState(false);
 
   if (loadingBacklog || loadingSprints) return <WorkspaceLoading label="Loading backlog and sprints..." />;
   if (backlogError) return <WorkspaceError message={backlogError.message} />;
@@ -575,6 +571,13 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
     }
   };
   const startSprint = (sprint) => {
+    const alreadyActive = activeOrPlanned.find(
+      (s) => (s.status === "active" || s.is_active) && String(s.id) !== String(sprint.id),
+    );
+    if (alreadyActive) {
+      setForceStart({ newSprint: sprint, existingSprint: alreadyActive });
+      return;
+    }
     const start = parseDate(sprint.start_date || sprint.startDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -608,10 +611,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
         <Button variant="outline" className="ml-auto" onClick={actions?.createSprint}>
           <Zap className="mr-1.5 h-4 w-4" /> Create sprint
         </Button>
-        <Button variant="outline" onClick={() => setAddFromDomainOpen(true)}>
-          <Library className="mr-1.5 h-4 w-4" /> Add from domain
-        </Button>
-        <Button onClick={actions?.createTask}>
+        <Button onClick={() => setSelectDomainOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Create task
         </Button>
       </div>
@@ -631,7 +631,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
           key={sprint.id}
           sprint={sprint}
           active={String(sprint.id) === String(activeSprintId) || sprint.status === "active"}
-          onCreateTask={actions?.createTask}
+          onCreateTask={() => actions?.createSprintTask(sprint.id)}
           sprints={activeOrPlanned}
           activeSprintId={activeSprintId}
           move={move}
@@ -673,6 +673,37 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
 
       <AISprintPlannerModal open={plannerOpen} onOpenChange={setPlannerOpen} spaceId={spaceId} />
       <AddFromDomainModal open={addFromDomainOpen} onOpenChange={setAddFromDomainOpen} spaceId={spaceId} />
+      <SelectDomainModal open={selectDomainOpen} onOpenChange={setSelectDomainOpen} spaceId={spaceId} />
+
+      <AlertDialog open={Boolean(forceStart)} onOpenChange={(o) => !o && setForceStart(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Another sprint is already active</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{forceStart?.existingSprint?.name || "A sprint"}</strong> is currently active. Starting{" "}
+              <strong>{forceStart?.newSprint?.name || "this sprint"}</strong> will close the active sprint and update its end date to today. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                const { newSprint, existingSprint } = forceStart;
+                setForceStart(null);
+                m.closeSprint.mutate(
+                  { sprintId: existingSprint.id, body: { move_incomplete_to: "backlog" }, spaceId },
+                  {
+                    onSuccess: () => doStart(newSprint, false),
+                  },
+                );
+              }}
+            >
+              Yes, force start
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={Boolean(startEarly)} onOpenChange={(o) => !o && setStartEarly(null)}>
         <AlertDialogContent>

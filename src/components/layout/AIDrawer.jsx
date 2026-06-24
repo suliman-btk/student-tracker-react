@@ -58,7 +58,7 @@ export default function AIDrawer() {
     }
 
     if (seed.length === 0) {
-      seed.push(bubble("ai", "Hey! I'm your AI Scrum Coach. Ask me anything — \"am I on track?\", \"what should I focus on today?\", or \"is my sprint realistic?\""));
+      seed.push(bubble("ai", "Hey! I'm Azzam, your AI Scrum Coach. Ask me anything — \"am I on track?\", \"what should I focus on today?\", or \"is my sprint realistic?\""));
     }
 
     setMessages(seed);
@@ -124,7 +124,7 @@ export default function AIDrawer() {
             <Sparkles className="h-4 w-4" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-semibold">AI Scrum Coach</div>
+            <div className="text-sm font-semibold">Azzam</div>
             <div className="text-[11px] text-muted-foreground">Ask me anything about your work</div>
           </div>
           {!submitted && (

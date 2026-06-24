@@ -35,7 +35,7 @@ export const Route = createRootRouteWithContext()({
             { charSet: "utf-8" },
             { name: "viewport", content: "width=device-width, initial-scale=1" },
             { title: "RAQIP — Smart Study Companion" },
-            { name: "description", content: "Academic productivity for university students: tasks, sprints, focus, and an embedded AI Scrum Coach." },
+            { name: "description", content: "Academic productivity for university students: tasks, sprints, focus, and Azzam your AI Scrum Coach." },
         ],
         links: [
             { rel: "stylesheet", href: appCss },

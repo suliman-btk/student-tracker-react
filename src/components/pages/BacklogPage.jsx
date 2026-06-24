@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus } from "lucide-react";
 import { Header } from "./SpacesPage";
 import { useBacklog, useSprints, useStudyMutations } from "@/lib/query-hooks";
-import CreateTaskModal from "@/components/study/CreateTaskModal";
+import SelectDomainModal from "@/components/study/SelectDomainModal";
 import { PRIORITY_COLOURS } from "@/lib/priority";
 import {
   DropdownMenu,
@@ -32,7 +32,7 @@ export default function BacklogPage() {
         <Button onClick={() => setModalOpen(true)}><Plus className="h-4 w-4 mr-1.5" /> Add task</Button>
       </Header>
 
-      <CreateTaskModal open={modalOpen} onOpenChange={setModalOpen} />
+      <SelectDomainModal open={modalOpen} onOpenChange={setModalOpen} />
 
       {isLoading && (
         <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
@@ -63,7 +63,10 @@ export default function BacklogPage() {
                 </div>
                 <select
                   value={t.status}
-                  onChange={(e) => updateTaskStatus.mutate({ id: t.id, status: e.target.value })}
+                  onChange={(e) => updateTaskStatus.mutate(
+                    { id: t.id, status: e.target.value },
+                    { onError: (err) => toast.error(err?.message || "Failed to update status") },
+                  )}
                   onClick={(e) => e.stopPropagation()}
                   className="rounded-full bg-muted px-3 py-1 text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
                 >
