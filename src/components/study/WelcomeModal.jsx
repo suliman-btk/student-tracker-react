@@ -49,7 +49,7 @@ const STEPS = [
   },
   {
     icon: Bot,
-    title: "AI Scrum Coach",
+    title: "Azzam — Your AI Scrum Coach",
     body: "Submit your daily standup, get sprint reviews, and chat with your AI coach anytime. It knows your sprint progress, backlog, and study habits.",
     action: { label: "Let's go!", to: null },
   },

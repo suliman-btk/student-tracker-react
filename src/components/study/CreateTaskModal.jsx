@@ -41,7 +41,7 @@ function emptyForm(domainId) {
   };
 }
 
-export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId, task }) {
+export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId, sprintId, task }) {
   const isEdit = Boolean(task?.id);
   const lockedDomain = Boolean(domainId);
   const { data: domainsPayload } = useDomains();
@@ -104,6 +104,7 @@ export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId,
     };
     if (form.domain_id !== NO_DOMAIN) body.domain_id = Number(form.domain_id);
     if (spaceId) body.space_id = spaceId;
+    if (sprintId && !isEdit) body.sprint_id = sprintId;
 
     let payload;
     if (isEdit) payload = { id: task.id, body, spaceId };
@@ -121,6 +122,9 @@ export default function CreateTaskModal({ open, onOpenChange, domainId, spaceId,
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit task" : "New task"}</DialogTitle>
+          {sprintId && !isEdit && (
+            <p className="text-xs text-muted-foreground mt-0.5">Will be added to the selected sprint</p>
+          )}
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">

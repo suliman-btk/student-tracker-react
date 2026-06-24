@@ -281,13 +281,35 @@ export function useStudyMutations() {
     startSprint: useMutation({
       mutationFn: ({ sprintId }) => studyApi.sprints.start(sprintId),
       onSuccess: () => iWorkspace(),
+      onError: toastError,
     }),
     closeSprint: useMutation({
       mutationFn: ({ sprintId, body }) => studyApi.sprints.close(sprintId, body),
       onSuccess: () => iWorkspace(),
+      onError: toastError,
     }),
     updateSprintTaskStatus: useMutation({
       mutationFn: ({ sprintId, taskId, status }) => studyApi.sprints.updateTaskStatus(sprintId, taskId, status),
+      onMutate: async ({ sprintId, taskId, status, spaceId }) => {
+        const sprintsKey = qk.study.sprints(spaceId);
+        await qc.cancelQueries({ queryKey: sprintsKey });
+        const prev = qc.getQueryData(sprintsKey);
+        if (prev !== undefined) {
+          const { list, rewrap } = unwrapList(prev);
+          qc.setQueryData(sprintsKey, rewrap(list.map((s) => {
+            if (!sameId(s.id, sprintId)) return s;
+            const tasks = sprintTasks(s).map((t) =>
+              sameId(getTaskId(t), taskId) ? { ...t, status, pivot: { ...(t.pivot || {}), status } } : t,
+            );
+            return withTasks(s, tasks);
+          })));
+        }
+        return { sprintsKey, prev };
+      },
+      onError: (err, _vars, ctx) => {
+        if (ctx) qc.setQueryData(ctx.sprintsKey, ctx.prev);
+        toastError(err);
+      },
       onSuccess: () => iWorkspace(),
     }),
     addTasksToSprint: useMutation({
@@ -311,6 +333,20 @@ export function useStudyMutations() {
     }),
     updateTaskStatus: useMutation({
       mutationFn: ({ id, status }) => studyApi.tasks.updateStatus(id, status),
+      onMutate: async ({ id, status, spaceId }) => {
+        const backlogKey = qk.study.backlog(spaceId);
+        await qc.cancelQueries({ queryKey: backlogKey });
+        const prev = qc.getQueryData(backlogKey);
+        if (prev !== undefined) {
+          const { list, rewrap } = unwrapList(prev);
+          qc.setQueryData(backlogKey, rewrap(list.map((t) => sameId(t.id, id) ? { ...t, status } : t)));
+        }
+        return { backlogKey, prev };
+      },
+      onError: (err, _vars, ctx) => {
+        if (ctx) qc.setQueryData(ctx.backlogKey, ctx.prev);
+        toastError(err);
+      },
       onSuccess: (_, vars) => {
         iTask(vars.id);
         iWorkspace();
@@ -441,7 +477,7 @@ export function useStudyMutations() {
         }
         toastError(err);
       },
-      onSettled: () => iWorkspace(),
+      onSuccess: () => iWorkspace(),
     }),
     moveTaskToSprint: useMutation({
       mutationFn: async ({ fromSprintId, toSprintId, taskId }) => {
@@ -502,7 +538,7 @@ export function useStudyMutations() {
         }
         toastError(err);
       },
-      onSettled: () => iWorkspace(),
+      onSuccess: () => iWorkspace(),
     }),
     acceptSuggestion: useMutation({
       mutationFn: aiApi.acceptSuggestion,

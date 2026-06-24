@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { Header } from "./SpacesPage";
 import { useDomains, useStudyMutations } from "@/lib/query-hooks";
 import CreateDomainModal from "@/components/study/CreateDomainModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,7 @@ export default function DomainsPage() {
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [pausedOpen, setPausedOpen] = useState(false);
 
   const openCreate = () => { setEditing(null); setModalOpen(true); };
   const openEdit = (domain) => { setEditing(domain); setModalOpen(true); };
@@ -47,6 +49,9 @@ export default function DomainsPage() {
   return (
     <div className="space-y-6">
       <Header title="Study Domains" subtitle="Subjects, exams, FYP, and other tracks you manage.">
+        <Button variant="outline" onClick={() => setPausedOpen(true)}>
+          <Power className="h-4 w-4 mr-1.5" /> Paused domains
+        </Button>
         <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1.5" /> New domain</Button>
       </Header>
       {isLoading && (
@@ -116,6 +121,19 @@ export default function DomainsPage() {
 
       <CreateDomainModal open={modalOpen} onOpenChange={setModalOpen} domain={editing} />
 
+      <Dialog open={pausedOpen} onOpenChange={setPausedOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Paused Domains</DialogTitle>
+          </DialogHeader>
+          <PausedDomainsPanel
+            domains={domains}
+            toggleDomain={toggleDomain}
+            onDelete={(d) => { setPausedOpen(false); setDeleting(d); }}
+          />
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={Boolean(deleting)} onOpenChange={(o) => { if (!o) { setDeleting(null); setDeleteError(null); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -145,6 +163,41 @@ export default function DomainsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function PausedDomainsPanel({ domains, toggleDomain, onDelete }) {
+  const paused = domains.filter((d) => !d.is_active);
+  if (paused.length === 0) {
+    return <p className="py-6 text-center text-sm text-muted-foreground">No paused domains. All domains are active.</p>;
+  }
+  return (
+    <div className="space-y-2 py-2">
+      {paused.map((d) => (
+        <div key={d.id} className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{d.domain_name || d.name || `Domain ${d.id}`}</p>
+            <p className="text-xs text-muted-foreground">{d.area_type || "General"} · {d.priority || "Normal"}</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => toggleDomain.mutate({ id: d.id })}
+            disabled={toggleDomain.isPending}
+          >
+            <Power className="mr-1.5 h-3.5 w-3.5" /> Activate
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(d)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ))}
     </div>
   );
 }

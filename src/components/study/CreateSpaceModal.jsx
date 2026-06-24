@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStudyMutations } from "@/lib/query-hooks";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +24,7 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
   const isEdit = Boolean(space?.id);
   const { createSpace, updateSpace } = useStudyMutations();
   const mutation = isEdit ? updateSpace : createSpace;
-  const [form, setForm] = useState({ name: "", key: "", template: "Scrum", color_hex: COLORS[0] });
+  const [form, setForm] = useState({ name: "", key: "", color_hex: COLORS[0] });
   const [keyTouched, setKeyTouched] = useState(false);
   const [error, setError] = useState(null);
 
@@ -38,10 +37,9 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
         ? {
             name: space.name || "",
             key: space.key || "",
-            template: space.template || "Scrum",
             color_hex: space.color_hex || space.color || COLORS[0],
           }
-        : { name: "", key: "", template: "Scrum", color_hex: COLORS[0] },
+        : { name: "", key: "", color_hex: COLORS[0] },
     );
   }, [open, isEdit, space]);
 
@@ -49,7 +47,7 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
 
   const handleNameChange = (e) => {
     const name = e.target.value;
-    setForm((f) => ({ ...f, name, ...(!keyTouched && !isEdit ? { key: generateKey(name) } : {}) }));
+    setForm((f) => ({ ...f, name, ...(!keyTouched ? { key: generateKey(name) } : {}) }));
   };
 
   const handleKeyChange = (e) => {
@@ -69,8 +67,7 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
       setError("Space key is required.");
       return;
     }
-    const body = { name: form.name.trim(), template: form.template, color_hex: form.color_hex };
-    if (!isEdit) body.key = form.key.trim();
+    const body = { name: form.name.trim(), color_hex: form.color_hex, key: form.key.trim() };
     mutation.mutate(
       isEdit ? { id: space.id, body } : body,
       {
@@ -91,28 +88,15 @@ export default function CreateSpaceModal({ open, onOpenChange, space }) {
             <Label htmlFor="space-name">Name</Label>
             <Input id="space-name" value={form.name} onChange={handleNameChange} placeholder="e.g. Semester 8" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="space-key">Key</Label>
-              <Input
-                id="space-key"
-                value={form.key}
-                maxLength={10}
-                disabled={isEdit}
-                onChange={handleKeyChange}
-                placeholder="SEM8"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Template</Label>
-              <Select value={form.template} onValueChange={set("template")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Scrum">Scrum</SelectItem>
-                  <SelectItem value="Kanban">Kanban</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="space-key">Key</Label>
+            <Input
+              id="space-key"
+              value={form.key}
+              maxLength={10}
+              onChange={handleKeyChange}
+              placeholder="SEM8"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Color</Label>

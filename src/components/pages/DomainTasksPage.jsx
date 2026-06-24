@@ -4,6 +4,7 @@ import {
   ArrowLeft, CalendarDays, CheckCircle2, Circle, Clock3,
   Loader2, Plus, Sparkles, TrendingUp, AlertCircle, BarChart2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useDomain, useDomainTasks, useStudyMutations } from "@/lib/query-hooks";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
@@ -50,29 +51,42 @@ export default function DomainTasksPage({ id }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [optimisticStatuses, setOptimisticStatuses] = useState({});
   const { updateTask } = useStudyMutations();
+
+  const resolvedStatus = (task) => optimisticStatuses[task.id] ?? normaliseStatus(task.status);
 
   const toggleDone = (e, task) => {
     e.preventDefault();
     e.stopPropagation();
-    const next = normaliseStatus(task.status) === "Done" ? "To Do" : "Done";
-    updateTask.mutate({ id: task.id, body: { status: next } });
+    const current = resolvedStatus(task);
+    const next = current === "Done" ? "To Do" : "Done";
+    setOptimisticStatuses((prev) => ({ ...prev, [task.id]: next }));
+    updateTask.mutate(
+      { id: task.id, body: { status: next } },
+      {
+        onError: (err) => {
+          setOptimisticStatuses((prev) => ({ ...prev, [task.id]: current }));
+          toast.error(err?.message || "Failed to update task");
+        },
+      },
+    );
   };
 
   const title = domain?.domain_name || domain?.name || `Domain ${id}`;
 
-  // ── Analytics ────────────────────────────────────────────────────────────────
-  const done        = tasks.filter((t) => normaliseStatus(t.status) === "Done").length;
-  const inProgress  = tasks.filter((t) => normaliseStatus(t.status) === "In Progress").length;
-  const toDo        = tasks.filter((t) => normaliseStatus(t.status) === "To Do").length;
-  const overdue     = tasks.filter((t) => normaliseStatus(t.status) !== "Done" && isOverdue(t.deadline || t.due_date)).length;
+  // ── Analytics (use optimistic status so numbers update instantly) ────────────
+  const done        = tasks.filter((t) => resolvedStatus(t) === "Done").length;
+  const inProgress  = tasks.filter((t) => resolvedStatus(t) === "In Progress").length;
+  const toDo        = tasks.filter((t) => resolvedStatus(t) === "To Do").length;
+  const overdue     = tasks.filter((t) => resolvedStatus(t) !== "Done" && isOverdue(t.deadline || t.due_date)).length;
   const totalEst    = tasks.reduce((s, t) => s + parseFloat(t.expected_hours || t.estimated_hours || 0), 0);
-  const doneEst     = tasks.filter((t) => normaliseStatus(t.status) === "Done")
+  const doneEst     = tasks.filter((t) => resolvedStatus(t) === "Done")
                           .reduce((s, t) => s + parseFloat(t.expected_hours || t.estimated_hours || 0), 0);
   const pct         = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
 
   // ── Filtered list ────────────────────────────────────────────────────────────
-  const visible = filter === "All" ? tasks : tasks.filter((t) => normaliseStatus(t.status) === filter);
+  const visible = filter === "All" ? tasks : tasks.filter((t) => resolvedStatus(t) === filter);
 
   return (
     <div className="space-y-6">
@@ -211,7 +225,7 @@ export default function DomainTasksPage({ id }) {
 
           <div className="divide-y">
             {visible.map((task) => {
-              const status = normaliseStatus(task.status);
+              const status = resolvedStatus(task);
               const raw    = task.deadline || task.due_date;
               const od     = status !== "Done" && isOverdue(raw);
               const hours  = parseFloat(task.expected_hours || task.estimated_hours || 0);
@@ -226,7 +240,6 @@ export default function DomainTasksPage({ id }) {
                   <button
                     type="button"
                     onClick={(e) => toggleDone(e, task)}
-                    disabled={updateTask.isPending}
                     aria-label={status === "Done" ? "Mark as not done" : "Mark as done"}
                     className="shrink-0 rounded-full transition-transform hover:scale-110"
                   >

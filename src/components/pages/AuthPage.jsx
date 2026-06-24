@@ -16,7 +16,7 @@ function GoogleIcon({ className }) {
 }
 
 const HIGHLIGHTS = [
-  { icon: Sparkles, text: "AI Scrum Coach that plans your sprints" },
+  { icon: Sparkles, text: "Azzam — AI coach that plans your sprints" },
   { icon: Zap, text: "Turn the semester into finishable sprints" },
   { icon: Timer, text: "Focus timers that log your progress" },
   { icon: CalendarDays, text: "A clean, Google-style calendar" },
@@ -61,7 +61,7 @@ export default function AuthPage({ mode = "login" }) {
 
         <div className="relative space-y-6 max-w-md">
           <div className="inline-flex items-center gap-1.5 text-xs bg-primary-foreground/10 px-2.5 py-1 rounded-full">
-            <Sparkles className="h-3 w-3" /> AI Scrum Coach included
+            <Sparkles className="h-3 w-3" /> Azzam AI Coach included
           </div>
           <h1 className="text-4xl xl:text-5xl font-bold leading-[1.08] tracking-tight">
             Plan your semester like a sprint.
