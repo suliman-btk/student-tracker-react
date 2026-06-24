@@ -7,6 +7,14 @@ import { Header } from "./SpacesPage";
 import { useBacklog, useSprints, useStudyMutations } from "@/lib/query-hooks";
 import TaskEntryModal from "@/components/study/TaskEntryModal";
 import { PRIORITY_COLOURS } from "@/lib/priority";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,19 +69,30 @@ export default function BacklogPage() {
                     {t.priority} · {t.hours}h · {t.points} pts · due {t.deadline || "—"}
                   </div>
                 </div>
-                <select
+                <Select
                   value={t.status}
-                  onChange={(e) => updateTaskStatus.mutate(
-                    { id: t.id, status: e.target.value },
+                  onValueChange={(v) => updateTaskStatus.mutate(
+                    { id: t.id, status: v },
                     { onError: (err) => toast.error(err?.message || "Failed to update status") },
                   )}
-                  onClick={(e) => e.stopPropagation()}
-                  className="rounded-full bg-muted px-3 py-1 text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
                 >
-                  <option value="To Do">To Do</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Done">Done</option>
-                </select>
+                  <SelectTrigger
+                    onClick={(e) => e.stopPropagation()}
+                    className={cn(
+                      "h-7 w-32 rounded-full border-0 px-3 text-xs font-semibold shadow-none shrink-0 focus:ring-1 focus:ring-primary",
+                      t.status === "Done"        && "bg-emerald-100 text-emerald-700",
+                      t.status === "In Progress" && "bg-primary/10 text-primary",
+                      t.status === "To Do"       && "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="To Do">To Do</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Done">Done</SelectItem>
+                  </SelectContent>
+                </Select>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="ghost" disabled={sprints.length === 0}>Move to sprint</Button>

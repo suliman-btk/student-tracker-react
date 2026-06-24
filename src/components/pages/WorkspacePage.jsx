@@ -62,6 +62,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const tabs = [
   { id: "summary", label: "Summary", icon: LayoutDashboard },
@@ -996,16 +1003,27 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
         </div>
       </div>
 
-      <select
+      <Select
         value={status}
-        onChange={(e) => move?.changeStatus(task, fromSprintId, e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        className="rounded-full bg-muted px-3 py-1 text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+        onValueChange={(v) => move?.changeStatus(task, fromSprintId, v)}
       >
-        <option value="To Do">To Do</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Done">Done</option>
-      </select>
+        <SelectTrigger
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "h-7 w-32 rounded-full border-0 px-3 text-xs font-semibold shadow-none focus:ring-1 focus:ring-primary",
+            status === "Done"        && "bg-emerald-100 text-emerald-700",
+            status === "In Progress" && "bg-primary/10 text-primary",
+            status === "To Do"       && "bg-muted text-muted-foreground",
+          )}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="To Do">To Do</SelectItem>
+          <SelectItem value="In Progress">In Progress</SelectItem>
+          <SelectItem value="Done">Done</SelectItem>
+        </SelectContent>
+      </Select>
 
 
       <DropdownMenu>
