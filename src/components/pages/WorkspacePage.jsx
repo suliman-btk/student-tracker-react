@@ -255,7 +255,7 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
         {tab === "members" && <WorkspaceMembersPlaceholder />}
       </div>
 
-      <CreateTaskModal
+      <TaskEntryModal
         open={modals.createTask}
         onOpenChange={(o) => { if (!o) { dispatchModal("CLOSE_TASK"); setPendingSprintId(null); } }}
         spaceId={spaceId}
