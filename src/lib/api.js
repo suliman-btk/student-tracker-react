@@ -39,7 +39,7 @@ export const studyApi = {
     show: (id) => apiRequest(`/study/tasks/${id}`).then(unwrapData),
     update: (id, body) => apiRequest(`/study/tasks/${id}`, { method: "PATCH", body }).then(unwrapData),
     remove: (id) => apiRequest(`/study/tasks/${id}`, { method: "DELETE" }),
-    updateStatus: (id, status) => apiRequest(`/study/tasks/${id}/status`, { method: "PATCH", body: { status } }).then(unwrapData),
+    updateStatus: (id, status, spaceId) => apiRequest(`/study/tasks/${id}/status`, { method: "PATCH", body: { status, ...(spaceId ? { space_id: spaceId } : {}) } }).then(unwrapData),
     updateProgress: (id, progress, notes) =>
       apiRequest(`/study/tasks/${id}/progress`, {
         method: "PATCH",

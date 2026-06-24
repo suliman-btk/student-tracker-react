@@ -332,7 +332,7 @@ export function useStudyMutations() {
       onSuccess: () => iWorkspace(),
     }),
     updateTaskStatus: useMutation({
-      mutationFn: ({ id, status }) => studyApi.tasks.updateStatus(id, status),
+      mutationFn: ({ id, status, spaceId }) => studyApi.tasks.updateStatus(id, status, spaceId),
       onMutate: async ({ id, status, spaceId }) => {
         const backlogKey = qk.study.backlog(spaceId);
         await qc.cancelQueries({ queryKey: backlogKey });
