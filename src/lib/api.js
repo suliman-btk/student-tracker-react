@@ -14,6 +14,7 @@ export const userApi = {
 export const studyApi = {
   spaces: {
     ...crud("/study/spaces"),
+    show: (id) => apiRequest(`/study/spaces/${id}`).then(unwrapData),
     list: (params) => apiRequest("/study/spaces", { params }).then((p) => unwrapData(p, [])),
     create: (body) => apiRequest("/study/spaces", { method: "POST", body }).then(unwrapData),
     update: (id, body) => apiRequest(`/study/spaces/${id}`, { method: "PATCH", body }).then(unwrapData),

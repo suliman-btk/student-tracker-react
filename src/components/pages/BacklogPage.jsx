@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus } from "lucide-react";
 import { Header } from "./SpacesPage";
 import { useBacklog, useSprints, useStudyMutations } from "@/lib/query-hooks";
-import SelectDomainModal from "@/components/study/SelectDomainModal";
+import CreateTaskModal from "@/components/study/CreateTaskModal";
 import { PRIORITY_COLOURS } from "@/lib/priority";
 import {
   DropdownMenu,
@@ -32,7 +32,7 @@ export default function BacklogPage() {
         <Button onClick={() => setModalOpen(true)}><Plus className="h-4 w-4 mr-1.5" /> Add task</Button>
       </Header>
 
-      <SelectDomainModal open={modalOpen} onOpenChange={setModalOpen} />
+      <CreateTaskModal open={modalOpen} onOpenChange={setModalOpen} />
 
       {isLoading && (
         <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">

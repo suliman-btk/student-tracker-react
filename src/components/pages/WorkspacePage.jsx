@@ -40,7 +40,6 @@ import CreateSprintModal from "@/components/study/CreateSprintModal";
 import AISprintReviewModal from "@/components/study/AISprintReviewModal";
 import AISprintPlannerModal from "@/components/study/AISprintPlannerModal";
 import AddFromDomainModal from "@/components/study/AddFromDomainModal";
-import SelectDomainModal from "@/components/study/SelectDomainModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,7 +356,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
   const [dragged, setDragged] = useState(null);
   const [optimisticStatuses, setOptimisticStatuses] = useState({});
   const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
-  const [selectDomainOpen, setSelectDomainOpen] = useState(false);
+  const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const mutations = useStudyMutations();
   const tasks = getTasks(sprint);
 
@@ -430,14 +429,14 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
         <Button variant="outline" className="ml-auto border-emerald-200 text-emerald-700" onClick={actions?.completeSprint}>
           <CheckCircle2 className="mr-1.5 h-4 w-4" /> Complete
         </Button>
-        <Button variant="outline" onClick={() => setSelectDomainOpen(true)}>
+        <Button variant="outline" onClick={() => setCreateTaskOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Create task
         </Button>
       </div>
 
-      <SelectDomainModal
-        open={selectDomainOpen}
-        onOpenChange={setSelectDomainOpen}
+      <CreateTaskModal
+        open={createTaskOpen}
+        onOpenChange={setCreateTaskOpen}
         spaceId={spaceId}
         sprintId={sprint?.id}
       />
@@ -517,7 +516,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   const [deleteFor, setDeleteFor] = useState(null);
   const [plannerOpen, setPlannerOpen] = useState(false);
   const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
-  const [selectDomainOpen, setSelectDomainOpen] = useState(false);
+  const [createTaskOpen2, setCreateTaskOpen2] = useState(false);
 
   if (loadingBacklog || loadingSprints) return <WorkspaceLoading label="Loading backlog and sprints..." />;
   if (backlogError) return <WorkspaceError message={backlogError.message} />;
@@ -611,7 +610,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
         <Button variant="outline" className="ml-auto" onClick={actions?.createSprint}>
           <Zap className="mr-1.5 h-4 w-4" /> Create sprint
         </Button>
-        <Button onClick={() => setSelectDomainOpen(true)}>
+        <Button onClick={() => setCreateTaskOpen2(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Create task
         </Button>
       </div>
@@ -673,7 +672,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
 
       <AISprintPlannerModal open={plannerOpen} onOpenChange={setPlannerOpen} spaceId={spaceId} />
       <AddFromDomainModal open={addFromDomainOpen} onOpenChange={setAddFromDomainOpen} spaceId={spaceId} />
-      <SelectDomainModal open={selectDomainOpen} onOpenChange={setSelectDomainOpen} spaceId={spaceId} />
+      <CreateTaskModal open={createTaskOpen2} onOpenChange={setCreateTaskOpen2} spaceId={spaceId} />
 
       <AlertDialog open={Boolean(forceStart)} onOpenChange={(o) => !o && setForceStart(null)}>
         <AlertDialogContent>
