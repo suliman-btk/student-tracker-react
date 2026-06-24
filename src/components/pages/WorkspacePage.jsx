@@ -36,6 +36,7 @@ import { aiApi } from "@/lib/api";
 import { useUI } from "@/store/ui";
 import { cn } from "@/lib/utils";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
+import TaskEntryModal from "@/components/study/TaskEntryModal";
 import CreateSprintModal from "@/components/study/CreateSprintModal";
 import AISprintReviewModal from "@/components/study/AISprintReviewModal";
 import AISprintPlannerModal from "@/components/study/AISprintPlannerModal";
@@ -430,11 +431,11 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
           <CheckCircle2 className="mr-1.5 h-4 w-4" /> Complete
         </Button>
         <Button variant="outline" onClick={() => setCreateTaskOpen(true)}>
-          <Plus className="mr-1.5 h-4 w-4" /> Create task
+          <Plus className="mr-1.5 h-4 w-4" /> Add task
         </Button>
       </div>
 
-      <CreateTaskModal
+      <TaskEntryModal
         open={createTaskOpen}
         onOpenChange={setCreateTaskOpen}
         spaceId={spaceId}
@@ -611,7 +612,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
           <Zap className="mr-1.5 h-4 w-4" /> Create sprint
         </Button>
         <Button onClick={() => setCreateTaskOpen2(true)}>
-          <Plus className="mr-1.5 h-4 w-4" /> Create task
+          <Plus className="mr-1.5 h-4 w-4" /> Add task
         </Button>
       </div>
 
@@ -672,7 +673,7 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
 
       <AISprintPlannerModal open={plannerOpen} onOpenChange={setPlannerOpen} spaceId={spaceId} />
       <AddFromDomainModal open={addFromDomainOpen} onOpenChange={setAddFromDomainOpen} spaceId={spaceId} />
-      <CreateTaskModal open={createTaskOpen2} onOpenChange={setCreateTaskOpen2} spaceId={spaceId} />
+      <TaskEntryModal open={createTaskOpen2} onOpenChange={setCreateTaskOpen2} spaceId={spaceId} />
 
       <AlertDialog open={Boolean(forceStart)} onOpenChange={(o) => !o && setForceStart(null)}>
         <AlertDialogContent>
