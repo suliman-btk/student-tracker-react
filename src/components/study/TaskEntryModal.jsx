@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FilePlus2, FolderOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CreateTaskModal from "./CreateTaskModal";
@@ -6,11 +6,20 @@ import AddFromDomainModal from "./AddFromDomainModal";
 
 export default function TaskEntryModal({ open, onOpenChange, spaceId, sprintId }) {
   const [next, setNext] = useState(null); // 'create' | 'domain'
+  // Capture sprintId the moment the chooser opens — parent clears it when chooser closes,
+  // but we still need it for the modal that opens next.
+  const savedSprintId = useRef(null);
+
+  useEffect(() => {
+    if (open) savedSprintId.current = sprintId ?? null;
+  }, [open, sprintId]);
 
   const choose = (mode) => {
     onOpenChange(false);
     setNext(mode);
   };
+
+  const closeNext = () => setNext(null);
 
   return (
     <>
@@ -50,15 +59,15 @@ export default function TaskEntryModal({ open, onOpenChange, spaceId, sprintId }
 
       <CreateTaskModal
         open={next === "create"}
-        onOpenChange={(o) => !o && setNext(null)}
+        onOpenChange={(o) => !o && closeNext()}
         spaceId={spaceId}
-        sprintId={sprintId}
+        sprintId={savedSprintId.current}
       />
       <AddFromDomainModal
         open={next === "domain"}
-        onOpenChange={(o) => !o && setNext(null)}
+        onOpenChange={(o) => !o && closeNext()}
         spaceId={spaceId}
-        sprintId={sprintId}
+        sprintId={savedSprintId.current}
       />
     </>
   );
