@@ -117,6 +117,9 @@ export function watchPublicRooms(callback, onError) {
   return onSnapshot(roomsQuery, (snap) => {
     const rooms = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
+      // Only surface rooms that actually have someone in them — empty/abandoned
+      // (or count-corrupted) rooms are not joinable "active" sessions.
+      .filter((r) => (r.memberCount ?? 0) > 0)
       .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
     callback(rooms);
   }, onError);
@@ -147,6 +150,9 @@ export async function joinRoom(roomId) {
   await runTransaction(db, async (tx) => {
     const roomSnap = await tx.get(roomRef);
     if (!roomSnap.exists()) throw new Error("Room not found");
+    // Only count a join once — re-joining an existing membership must not
+    // inflate memberCount (the leave path decrements only once).
+    const alreadyMember = (await tx.get(memberRef)).exists();
     tx.set(memberRef, {
       displayName: user.displayName || user.email?.split("@")[0],
       joinedAt: serverTimestamp(),
@@ -154,7 +160,7 @@ export async function joinRoom(roomId) {
       isMuted: false,
       status: "active",
     });
-    tx.update(roomRef, { memberCount: increment(1) });
+    if (!alreadyMember) tx.update(roomRef, { memberCount: increment(1) });
   });
 }
 

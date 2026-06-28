@@ -599,7 +599,7 @@ function LiveSessionCard({ post }) {
           <div className="flex items-center gap-3">
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${phaseLabel.cls}`}>{phaseLabel.label}</span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Users className="h-3.5 w-3.5" /> {room?.memberCount ?? 0}
+              <Users className="h-3.5 w-3.5" /> {Math.max(0, room?.memberCount ?? 0)}
             </div>
           </div>
           <Button size="sm" className="h-7 text-xs px-3" onClick={() => navigate({ to: "/rooms/$id", params: { id: post.room_id } })}>
