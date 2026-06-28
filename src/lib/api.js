@@ -80,7 +80,7 @@ export const studyApi = {
   },
   notifications: {
     list: (params) => apiRequest("/study/notifications", { params }),
-    unreadCount: () => apiRequest("/study/notifications/unread-count"),
+    unreadCount: () => apiRequest("/study/notifications/unread-count").then((d) => d?.data ?? d),
     readAll: () => apiRequest("/study/notifications/read-all", { method: "PATCH" }),
     read: (id) => apiRequest(`/study/notifications/${id}/read`, { method: "PATCH" }),
   },
@@ -129,6 +129,7 @@ export const socialApi = {
   discovery: {
     search: (q) => apiRequest("/social/users/search", { params: { q } }).then((p) => unwrapData(p, [])),
     profile: (uid) => apiRequest(`/social/users/${uid}/profile`).then(unwrapData),
+    suggestions: () => apiRequest("/social/users/suggestions").then((p) => unwrapData(p, [])),
   },
   platforms: {
     usage: (params) => apiRequest("/social/platforms/usage", { params }).then((p) => unwrapData(p, [])),

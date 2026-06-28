@@ -1,17 +1,16 @@
-import { useState, useMemo, useEffect } from "react";
-import { Globe, Lock, Hourglass, RefreshCcw, ChevronRight, Loader2, Check, User, FileText, Building2, GraduationCap, ArrowLeft } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Globe, Lock, Hourglass, RefreshCcw, ChevronRight, Loader2, Check, Pencil, ArrowLeft } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/lib/query-hooks";
 import { userApi, socialApi } from "@/lib/api";
 import { qk } from "@/lib/query-hooks";
+import { Link } from "@tanstack/react-router";
 
 const COMMON_TZ = [
   "UTC","Asia/Karachi","Asia/Dubai","Asia/Kolkata","Asia/Riyadh","Asia/Singapore",
@@ -68,37 +67,8 @@ export default function SettingsPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [resetVal, setResetVal] = useState(0);
 
-  // Profile edit state
-  const [name, setName] = useState("");
-  const [bio, setBio] = useState("");
-  const [university, setUniversity] = useState("");
-  const [graduationYear, setGraduationYear] = useState("");
-  const [profileDirty, setProfileDirty] = useState(false);
-
-  useEffect(() => {
-    if (profile) {
-      setName(profile.name || profile.display_name || "");
-      setBio(profile.bio || "");
-      setUniversity(profile.university || "");
-      setGraduationYear(profile.graduation_year ? String(profile.graduation_year) : "");
-    }
-  }, [profile]);
-
-  const profileMut = useMutation({
-    mutationFn: () => userApi.updateProfile({
-      name: name.trim(),
-      bio: bio.trim() || null,
-      university: university.trim() || null,
-      graduation_year: graduationYear ? parseInt(graduationYear, 10) : null,
-    }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: qk.user.profile }); setProfileDirty(false); toast.success("Profile updated"); },
-    onError: (e) => toast.error(e?.message || "Could not update profile"),
-  });
-
   const timezone = profile?.timezone ?? "UTC";
   const isPrivate = !(profile?.profile_visibility ?? profile?.profileVisibility ?? true);
-  const avatar = profile?.avatar_url || profile?.avatarUrl;
-  const email = profile?.email || "";
 
   const filteredTz = useMemo(
     () => COMMON_TZ.filter((t) => t.toLowerCase().includes(tzQuery.toLowerCase())),
@@ -120,36 +90,18 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── Account ── */}
+      {/* ── Profile shortcut ── */}
       <div>
-        <SectionLabel>Account</SectionLabel>
+        <SectionLabel>Profile</SectionLabel>
         <Card>
-          {/* Avatar + name + email header */}
-          <div className="flex items-center gap-4 px-4 py-5 border-b">
-            <Avatar className="h-16 w-16 shrink-0">
-              <AvatarImage src={avatar} />
-              <AvatarFallback className="text-xl font-bold">{(name || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <div className="font-semibold text-base truncate">{name || "—"}</div>
-              <div className="text-sm text-muted-foreground truncate">{email}</div>
+          <Link to="/profile/edit" className="flex w-full items-center gap-3 px-4 py-4 hover:bg-muted/50 transition-colors">
+            <Pencil className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold">Edit profile</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">Name, bio, university, avatar</div>
             </div>
-          </div>
-          {/* Editable fields */}
-          <div className="divide-y">
-            <ProfileField icon={User} label="Display Name" value={name} onChange={(v) => { setName(v); setProfileDirty(true); }} placeholder="Your full name" />
-            <ProfileField icon={FileText} label="Bio" value={bio} onChange={(v) => { setBio(v); setProfileDirty(true); }} placeholder="Short description about yourself" multiline />
-            <ProfileField icon={Building2} label="University" value={university} onChange={(v) => { setUniversity(v); setProfileDirty(true); }} placeholder="e.g. MIT, Stanford…" />
-            <ProfileField icon={GraduationCap} label="Graduation Year" value={graduationYear} onChange={(v) => { setGraduationYear(v.replace(/\D/g, "").slice(0, 4)); setProfileDirty(true); }} placeholder="e.g. 2026" inputMode="numeric" />
-          </div>
-          {profileDirty && (
-            <div className="flex justify-end gap-2 px-4 py-3 border-t">
-              <Button variant="outline" size="sm" onClick={() => { setProfileDirty(false); if (profile) { setName(profile.name || ""); setBio(profile.bio || ""); setUniversity(profile.university || ""); setGraduationYear(profile.graduation_year ? String(profile.graduation_year) : ""); } }}>Cancel</Button>
-              <Button size="sm" onClick={() => profileMut.mutate()} disabled={profileMut.isPending}>
-                {profileMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-              </Button>
-            </div>
-          )}
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </Link>
         </Card>
       </div>
 
@@ -298,34 +250,6 @@ function SectionLabel({ children }) {
 
 function Card({ children }) {
   return <div className="rounded-xl border bg-card overflow-hidden">{children}</div>;
-}
-
-function ProfileField({ icon: Icon, label, value, onChange, placeholder, multiline, inputMode }) {
-  return (
-    <div className="flex items-start gap-3 px-4 py-3">
-      <Icon className="mt-2.5 h-4 w-4 shrink-0 text-muted-foreground" />
-      <div className="flex-1 min-w-0">
-        <div className="mb-1 text-xs font-semibold text-muted-foreground">{label}</div>
-        {multiline ? (
-          <Textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            rows={2}
-            className="resize-none text-sm"
-          />
-        ) : (
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            inputMode={inputMode}
-            className="text-sm h-9"
-          />
-        )}
-      </div>
-    </div>
-  );
 }
 
 function SettingRow({ icon: Icon, title, subtitle, value, onClick, disabled }) {

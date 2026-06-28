@@ -62,6 +62,7 @@ export const qk = {
     activeSprint: (spaceId) => ["study", "sprints", "active", String(spaceId || "all")],
     sprint: (id) => ["study", "sprints", String(id)],
     notifications: ["study", "notifications"],
+    notificationsUnread: ["study", "notifications", "unread"],
     calendar: (params) => ["study", "calendar", params || {}],
   },
   focus: {
@@ -195,6 +196,15 @@ export function useCalendarEvents(params) {
 
 export function useNotifications() {
   return useQuery({ queryKey: qk.study.notifications, queryFn: () => studyApi.notifications.list(), retry: 1 });
+}
+
+export function useUnreadCount() {
+  return useQuery({
+    queryKey: qk.study.notificationsUnread,
+    queryFn: () => studyApi.notifications.unreadCount(),
+    refetchInterval: 60_000,
+    retry: false,
+  });
 }
 
 export function useAiSuggestions() {

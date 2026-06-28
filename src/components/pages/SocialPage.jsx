@@ -947,6 +947,14 @@ function FriendRequestsCard() {
 
 function DiscoverCard() {
   const [q, setQ] = useState("");
+  const qc = useQueryClient();
+
+  const { data: suggestions = [], isLoading: loadingSuggestions } = useQuery({
+    queryKey: ["social", "suggestions"],
+    queryFn: socialApi.discovery.suggestions,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
   const { data: results = [], isFetching } = useQuery({
     queryKey: ["social", "discover", q],
@@ -955,18 +963,73 @@ function DiscoverCard() {
     retry: false,
   });
 
+  const [sentUids, setSentUids] = useState(new Set());
+
   const { mutate: sendRequest } = useMutation({
     mutationFn: (uid) => socialApi.friends.send(uid),
-    onSuccess: () => toast.success("Friend request sent!"),
+    onSuccess: (_, uid) => {
+      setSentUids((prev) => new Set(prev).add(uid));
+      toast.success("Connection request sent!");
+      qc.invalidateQueries({ queryKey: ["social", "suggestions"] });
+    },
     onError: () => toast.error("Could not send request"),
   });
 
-  const list = Array.isArray(results) ? results : results?.data || [];
+  const isSearching = q.trim().length >= 2;
+  const list = isSearching
+    ? (Array.isArray(results) ? results : results?.data || [])
+    : (Array.isArray(suggestions) ? suggestions : suggestions?.data || []);
+
+  function UserRow({ u }) {
+    const name = u.name || u.display_name || "User";
+    const avatar = u.avatar_url || u.avatar || "";
+    const university = u.university || "";
+    const uid = String(u.id || u.uid || "");
+    const sent = sentUids.has(uid) || u.has_sent_request;
+    return (
+      <div className="flex items-center gap-2">
+        {uid ? (
+          <Link to="/profile/$uid" params={{ uid }}>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={avatar} />
+              <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+            </Avatar>
+          </Link>
+        ) : (
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={avatar} />
+            <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+          </Avatar>
+        )}
+        <div className="flex-1 min-w-0">
+          {uid ? (
+            <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium truncate hover:underline block">
+              {name}
+            </Link>
+          ) : (
+            <div className="text-sm font-medium truncate">{name}</div>
+          )}
+          {university && (
+            <div className="text-[11px] text-muted-foreground truncate">{university}</div>
+          )}
+        </div>
+        {sent ? (
+          <span className="text-[11px] text-muted-foreground">Pending</span>
+        ) : u.is_friend ? (
+          <span className="text-[11px] text-muted-foreground">Connected</span>
+        ) : (
+          <button onClick={() => sendRequest(uid)} className="text-primary hover:text-primary/80">
+            <UserPlus className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border bg-card p-4">
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        Discover
+        {isSearching ? "Search results" : "People you may know"}
       </div>
       <div className="relative mb-3">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -977,50 +1040,20 @@ function DiscoverCard() {
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
-      {isFetching && <div className="text-xs text-muted-foreground">Searching…</div>}
-      {!isFetching && q.length >= 2 && list.length === 0 && (
+      {(isFetching || (!isSearching && loadingSuggestions)) && (
+        <div className="text-xs text-muted-foreground">Loading…</div>
+      )}
+      {!isFetching && isSearching && list.length === 0 && (
         <div className="text-xs text-muted-foreground">No users found.</div>
+      )}
+      {!loadingSuggestions && !isSearching && list.length === 0 && (
+        <div className="text-xs text-muted-foreground">No suggestions yet — connect with more people first.</div>
       )}
       {list.length > 0 && (
         <div className="space-y-2.5">
-          {list.slice(0, 5).map((u) => {
-            const name = u.name || u.display_name || "User";
-            const avatar = u.avatar_url || u.avatar || "";
-            const university = u.university || "";
-            const uid = String(u.id || u.uid || "");
-            return (
-              <div key={uid} className="flex items-center gap-2">
-                {uid ? (
-                  <Link to="/profile/$uid" params={{ uid }}>
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={avatar} />
-                      <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
-                    </Avatar>
-                  </Link>
-                ) : (
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={avatar} />
-                    <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
-                  </Avatar>
-                )}
-                <div className="flex-1 min-w-0">
-                  {uid ? (
-                    <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium truncate hover:underline">
-                      {name}
-                    </Link>
-                  ) : (
-                    <div className="text-sm font-medium truncate">{name}</div>
-                  )}
-                  {university && (
-                    <div className="text-[11px] text-muted-foreground truncate">{university}</div>
-                  )}
-                </div>
-                <button onClick={() => sendRequest(uid)} className="text-primary hover:text-primary/80">
-                  <UserPlus className="h-4 w-4" />
-                </button>
-              </div>
-            );
-          })}
+          {list.slice(0, 5).map((u) => (
+            <UserRow key={String(u.id || u.uid || u.name)} u={u} />
+          ))}
         </div>
       )}
     </div>

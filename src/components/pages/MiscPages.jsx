@@ -32,7 +32,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { focusApi, studyApi } from "@/lib/api";
-import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound } from "@/lib/realtime";
+import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound, uploadUserAvatar, uploadUserBanner } from "@/lib/realtime";
 import { createAgoraRoomClient } from "@/lib/agora";
 import { auth } from "@/lib/firebase";
 import { useRoomLiveState } from "@/lib/useRoomLiveState";
@@ -463,12 +463,18 @@ export function RoomDetailPage({ id }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.hostUid, currentUser?.uid, isJoined]);
 
-  // Auto-navigate when host ends the session or room is deleted
+  // Auto-navigate when host ends the session or room is deleted.
+  // Clean up Firestore membership before navigating so memberCount decrements
+  // (errors are swallowed so they never block navigation). leaveRoom is
+  // idempotent, so the unmount-cleanup call below is a safe no-op.
   useEffect(() => {
     if (!room) return;
     if (room.isEnded === true) {
-      if (agoraRef.current) { agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
-      navigate({ to: "/rooms" });
+      (async () => {
+        if (agoraRef.current) { await agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
+        await leaveRoom(id).catch(() => {});
+        navigate({ to: "/rooms" });
+      })();
     }
   }, [room?.isEnded]); // eslint-disable-line
 
@@ -859,7 +865,11 @@ export function RoomDetailPage({ id }) {
                     <span className="text-[10px] text-muted-foreground">{time}</span>
                   </div>
                   {isFile ? (() => {
-                    const [, name, url, type] = msg.text.split("|");
+                    // Message format: [FILE]<name>|<url>|<type> — strip the
+                    // 6-char "[FILE]" prefix before splitting so the segments
+                    // line up as [name, url, type] (the prefix is fused to the
+                    // filename in the first segment otherwise).
+                    const [name, url, type] = msg.text.slice(6).split("|");
                     return type === "image"
                       ? <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={name} className="mt-1 rounded-lg max-w-full max-h-40 object-cover border" /></a>
                       : <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary underline mt-0.5">📎 {name}</a>;
@@ -972,7 +982,7 @@ export function ProfilePage({ uid }) {
   const friends = Array.isArray(friendsList) ? friendsList : friendsList?.data || [];
   const friendIds = new Set(friends.map((f) => String(f.id || f.uid)));
   const isFriend = !isSelf && friendIds.has(String(uid));
-  const isPending = !isSelf && (otherProfile?.friend_status === "pending");
+  const isPending = !isSelf && (otherProfile?.has_sent_request === true);
 
   const { mutate: sendReq, isPending: sending } = useMutation({
     mutationFn: () => socialApi.friends.send(uid),
@@ -1018,7 +1028,16 @@ export function ProfilePage({ uid }) {
 
       {/* Header */}
       <div className="rounded-2xl border bg-card overflow-hidden">
-        <div className="h-32 bg-gradient-to-br from-primary to-[color:var(--ai,theme(colors.primary))]" />
+        <div className="relative h-32 bg-gradient-to-br from-primary to-primary/60">
+          {profile?.banner_url && (
+            <img
+              src={profile.banner_url}
+              alt="Cover"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = "none"; }}
+            />
+          )}
+        </div>
         <div className="px-6 pb-6 -mt-12">
           <div className="flex items-end justify-between gap-4">
             <Avatar className="h-24 w-24 border-4 border-card">
@@ -1027,7 +1046,7 @@ export function ProfilePage({ uid }) {
             </Avatar>
             <div className="flex gap-2 pb-1">
               {isSelf ? (
-                <Button size="sm" onClick={() => navigate({ to: "/settings" })}>
+                <Button size="sm" onClick={() => navigate({ to: "/profile/edit" })}>
                   <PencilIcon className="h-3.5 w-3.5 mr-1.5" /> Edit profile
                 </Button>
               ) : isFriend ? (
@@ -1188,12 +1207,21 @@ export function NotificationsPage() {
 
   const { mutate: markAllRead } = useMutation({
     mutationFn: studyApi.notifications.readAll,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["study", "notifications"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["study", "notifications"] });
+      qc.invalidateQueries({ queryKey: ["study", "notifications", "unread"] });
+    },
   });
+
+  // Auto-mark all read when the page mounts (same as LinkedIn / Flutter tab tap).
+  useEffect(() => { markAllRead(); }, []);
 
   const { mutate: markRead } = useMutation({
     mutationFn: (id) => studyApi.notifications.read(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["study", "notifications"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["study", "notifications"] });
+      qc.invalidateQueries({ queryKey: ["study", "notifications", "unread"] });
+    },
   });
 
   const reqList = Array.isArray(requests) ? requests : requests?.data || [];
@@ -1201,9 +1229,7 @@ export function NotificationsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Header title="Notifications">
-        <Button variant="outline" onClick={() => markAllRead()}><Check className="h-4 w-4 mr-1.5" /> Mark all read</Button>
-      </Header>
+      <Header title="Notifications" />
 
       {/* Friend requests section */}
       <div>
@@ -1769,6 +1795,188 @@ function Stat({ label, value }) {
     <div className="rounded-xl border bg-card p-4">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="text-lg font-semibold mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+// ─── Edit Profile Page ────────────────────────────────────────────────────────
+
+export function EditProfilePage() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const { data: profile } = useProfile();
+
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [university, setUniversity] = useState("");
+  const [gradYear, setGradYear] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!profile) return;
+    setName(profile.name || profile.display_name || "");
+    setBio(profile.bio || "");
+    setUniversity(profile.university || "");
+    setGradYear(profile.graduation_year ? String(profile.graduation_year) : "");
+    setIsPublic(profile.profile_visibility ?? profile.profileVisibility ?? true);
+    setAvatarUrl(profile.avatar_url || profile.avatar || "");
+    setBannerUrl(profile.banner_url || "");
+  }, [profile]);
+
+  const { mutate: save, isPending: saving } = useMutation({
+    mutationFn: async () => {
+      await userApi.updateProfile({
+        name: name.trim(),
+        bio: bio.trim() || null,
+        university: university.trim() || null,
+        graduation_year: gradYear ? parseInt(gradYear, 10) : null,
+        avatar_url: avatarUrl || null,
+        banner_url: bannerUrl || null,
+      });
+      await userApi.updatePrivacy({ profile_visibility: isPublic });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.user.profile });
+      toast.success("Profile updated");
+      navigate({ to: "/profile/$uid", params: { uid: String(profile?.id || profile?.uid || "") } });
+    },
+    onError: () => toast.error("Could not save profile"),
+  });
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const url = await uploadUserAvatar(file);
+      setAvatarUrl(url);
+    } catch {
+      toast.error("Avatar upload failed");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  async function handleBannerChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerUploading(true);
+    try {
+      const url = await uploadUserBanner(file);
+      setBannerUrl(url);
+    } catch {
+      toast.error("Cover photo upload failed");
+    } finally {
+      setBannerUploading(false);
+    }
+  }
+
+  const displayName = name || "Me";
+  const initials = displayName.slice(0, 2).toUpperCase();
+
+  return (
+    <div className="max-w-xl mx-auto space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: -1 })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-lg font-bold flex-1">Edit profile</h1>
+        <Button size="sm" disabled={saving || !name.trim()} onClick={() => save()}>
+          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+          Save
+        </Button>
+      </div>
+
+      {/* Banner + Avatar */}
+      <div className="rounded-xl border bg-card overflow-hidden">
+        {/* Banner */}
+        <div className="relative h-32 bg-gradient-to-br from-primary to-primary/60 group">
+          {bannerUrl && (
+            <img src={bannerUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+          )}
+          <button
+            className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors"
+            onClick={() => bannerInputRef.current?.click()}
+            disabled={bannerUploading}
+          >
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-white text-xs font-semibold bg-black/40 rounded-full px-3 py-1.5">
+              {bannerUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}
+              {bannerUploading ? "Uploading…" : "Change cover photo"}
+            </span>
+          </button>
+          <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerChange} />
+        </div>
+        {/* Avatar overlapping banner */}
+        <div className="px-6 pb-5 -mt-10 flex flex-col items-start gap-2">
+          <div className="relative">
+            <Avatar className="h-20 w-20 border-4 border-card">
+              <AvatarImage src={avatarUrl} />
+              <AvatarFallback className="text-xl font-bold">{initials}</AvatarFallback>
+            </Avatar>
+            <button
+              className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarUploading}
+            >
+              {avatarUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          </div>
+          <p className="text-xs text-muted-foreground">Click the pencil to change your photo</p>
+        </div>
+      </div>
+
+      {/* Personal info */}
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Personal info</p>
+        <Field label="Display name" required>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
+        </Field>
+        <Field label="Bio">
+          <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short description about yourself" rows={3} />
+        </Field>
+        <Field label="University / Institution">
+          <Input value={university} onChange={(e) => setUniversity(e.target.value)} placeholder="e.g. MIT, Stanford…" />
+        </Field>
+        <Field label="Graduation year">
+          <Input
+            value={gradYear}
+            onChange={(e) => setGradYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            placeholder="e.g. 2026"
+            inputMode="numeric"
+          />
+        </Field>
+      </div>
+
+      {/* Privacy */}
+      <div className="rounded-xl border bg-card p-5">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4">Privacy</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold">Public profile</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Allow other students to view your profile and study stats</p>
+          </div>
+          <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, required, children }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-semibold text-muted-foreground">
+        {label}{required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+      {children}
     </div>
   );
 }

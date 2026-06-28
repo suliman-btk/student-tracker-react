@@ -3,6 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   increment,
   limit,
@@ -102,7 +103,17 @@ export async function updateMutedState(roomId, isMuted) {
 }
 
 export function watchPublicRooms(callback, onError) {
-  const roomsQuery = query(collection(db, "pomodoro_rooms"), where("isPrivate", "==", false));
+  // Exclude ended (ghost) rooms and rooms older than 24h so stale sessions
+  // disappear from the list. Mirrors the Flutter watchPublicRooms query.
+  // Sorting stays in-memory (no orderBy) so no extra index is needed beyond
+  // the composite index this filter combination already requires.
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const roomsQuery = query(
+    collection(db, "pomodoro_rooms"),
+    where("isPrivate", "==", false),
+    where("isEnded", "==", false),
+    where("createdAt", ">", cutoff),
+  );
   return onSnapshot(roomsQuery, (snap) => {
     const rooms = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
@@ -185,6 +196,14 @@ export async function uploadUserAvatar(file) {
   const user = currentUserOrThrow();
   const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
   const storageRef = ref(storage, `avatars/${user.uid}/${Date.now()}_${safeName}`);
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+}
+
+export async function uploadUserBanner(file) {
+  const user = currentUserOrThrow();
+  const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+  const storageRef = ref(storage, `banners/${user.uid}/${Date.now()}_${safeName}`);
   await uploadBytes(storageRef, file);
   return await getDownloadURL(storageRef);
 }

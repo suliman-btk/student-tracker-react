@@ -6,8 +6,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@tanstack/react-router";
-import { Menu, Plus } from "lucide-react";
+import { Menu, Plus, Bell } from "lucide-react";
 import CreateTaskModal from "@/components/study/CreateTaskModal";
+import { useUnreadCount } from "@/lib/query-hooks";
 
 export default function Topbar({ onMobileMenu }) {
   const { user, profile, logout } = useAuthStore();
@@ -15,6 +16,9 @@ export default function Topbar({ onMobileMenu }) {
   const displayName = profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
   const email = profile?.email || user?.email || "";
   const avatar = profile?.avatar_url || user?.photoURL;
+
+  const { data: unreadData } = useUnreadCount();
+  const unread = unreadData?.unread_count ?? 0;
 
   return (
     <header className="sticky top-0 z-30 h-14 border-b bg-background/80 backdrop-blur flex items-center px-4 lg:px-6 gap-2">
@@ -37,6 +41,19 @@ export default function Topbar({ onMobileMenu }) {
           <Plus className="h-4 w-4" /> New task
         </Button>
         <CreateTaskModal open={taskModalOpen} onOpenChange={setTaskModalOpen} />
+
+        {/* Notifications bell */}
+        <Button variant="ghost" size="icon" className="relative" asChild>
+          <Link to="/notifications" aria-label="Notifications">
+            <Bell className="h-5 w-5" />
+            {unread > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </Link>
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-9 px-1.5 gap-2">
