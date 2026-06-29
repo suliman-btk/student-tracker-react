@@ -870,11 +870,13 @@ export function RoomDetailPage({ id }) {
           {/* SVG ring + timer — clean, simple */}
           <div className="relative w-64 h-64 shrink-0">
             <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
-              {/* Track — neutral gray */}
-              <circle cx="50" cy="50" r="44" fill="none" stroke="#e5e7eb" strokeWidth="4" />
-              {/* Progress — arc length = timerPct × circumference, starts full and depletes */}
+              {/* Track — phase-tinted neutral */}
+              <circle cx="50" cy="50" r="44" fill="none" stroke={ringTrack} strokeWidth="4" />
+              {/* Progress — arc length = timerPct × circumference, starts full and depletes.
+                  Uses ringColor (a real hex); hsl(var(--primary)) was invalid here because
+                  --primary is a hex value, not an HSL triple, so the arc never rendered. */}
               <circle cx="50" cy="50" r="44" fill="none"
-                stroke="hsl(var(--primary))" strokeWidth="4"
+                stroke={ringColor} strokeWidth="4"
                 strokeDasharray={`${circumference * timerPct} ${circumference}`}
                 strokeLinecap="round"
                 style={{ transition: "stroke-dasharray 1s linear" }}
