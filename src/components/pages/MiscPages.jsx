@@ -1920,7 +1920,13 @@ export function EditProfilePage() {
       toast.success("Profile updated");
       navigate({ to: "/profile/$uid", params: { uid: String(profile?.id || profile?.uid || "") } });
     },
-    onError: () => toast.error("Could not save profile"),
+    // Surface the real server error (status + message) instead of a generic
+    // toast — a 500 here is almost always a missing column/migration in the
+    // backend, and seeing the actual message stops the guesswork.
+    onError: (e) => {
+      console.error("Profile save failed:", e?.status, e?.message, e?.data);
+      toast.error(e?.message ? `Could not save profile: ${e.message}` : "Could not save profile");
+    },
   });
 
   async function handleAvatarChange(e) {
