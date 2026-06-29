@@ -563,14 +563,22 @@ function CommentsSection({ postId }) {
 function LiveSessionCard({ post }) {
   const navigate = useNavigate();
   const [room, setRoom] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!post.room_id) return;
-    return watchRoom(post.room_id, setRoom);
+    if (!post.room_id) { setLoaded(true); return; }
+    setLoaded(false);
+    return watchRoom(
+      post.room_id,
+      (data) => { setRoom(data); setLoaded(true); },
+      () => { setRoom(null); setLoaded(true); },
+    );
   }, [post.room_id]);
 
-  const isActive = room && room.phase !== "idle" && room.phase !== "completed" && room.phase !== undefined;
-  const isEnded = room === null || room?.phase === "completed";
+  // A session is over when its room doc is gone (deleted) or explicitly marked
+  // ended. endRoom() sets isEnded:true and phase:"idle" — there is no
+  // "completed" phase, which is why the old check never detected ended rooms.
+  const isEnded = loaded && (room === null || room.isEnded === true);
 
   const phaseLabel = room?.phase === "focus"
     ? { label: "Focusing 🔴", cls: "text-red-600 bg-red-50" }
@@ -592,7 +600,11 @@ function LiveSessionCard({ post }) {
 
       <p className="text-sm text-muted-foreground leading-relaxed">{post.content}</p>
 
-      {isEnded ? (
+      {!loaded ? (
+        <div className="rounded-lg bg-muted px-3 py-2 flex items-center justify-center">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : isEnded ? (
         <div className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground text-center">Session ended</div>
       ) : (
         <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
