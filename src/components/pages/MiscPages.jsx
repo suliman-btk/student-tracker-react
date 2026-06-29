@@ -524,6 +524,9 @@ export function RoomDetailPage({ id }) {
 
   const doLeave = async () => {
     if (agoraRef.current) { await agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
+    // Host leaving ends the session for everyone — mark the room ended so all
+    // members are auto-bounced and it stops showing in the active list.
+    if (isHost) await endRoom(id).catch(() => {});
     await leaveRoom(id).catch(() => {});
     navigate({ to: "/rooms" });
   };

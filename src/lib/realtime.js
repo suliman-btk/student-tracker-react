@@ -209,7 +209,10 @@ export async function uploadUserAvatar(file) {
 export async function uploadUserBanner(file) {
   const user = currentUserOrThrow();
   const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
-  const storageRef = ref(storage, `banners/${user.uid}/${Date.now()}_${safeName}`);
+  // Upload under the already-permitted `avatars/{uid}` prefix. The dedicated
+  // `banners/` path is blocked by Storage rules, which fails the cover upload;
+  // reusing the user's avatar prefix keeps it within the allowed rule.
+  const storageRef = ref(storage, `avatars/${user.uid}/banner_${Date.now()}_${safeName}`);
   await uploadBytes(storageRef, file);
   return await getDownloadURL(storageRef);
 }
