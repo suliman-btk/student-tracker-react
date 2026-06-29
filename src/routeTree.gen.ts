@@ -28,6 +28,7 @@ import { Route as TasksIdRouteImport } from './routes/tasks.$id'
 import { Route as SprintsIdRouteImport } from './routes/sprints.$id'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
 import { Route as RoomsIdRouteImport } from './routes/rooms.$id'
+import { Route as ProfileEditRouteImport } from './routes/profile.edit'
 import { Route as ProfileUidRouteImport } from './routes/profile.$uid'
 import { Route as DomainsIdRouteImport } from './routes/domains.$id'
 import { Route as SpacesSpaceIdSummaryRouteImport } from './routes/spaces.$spaceId.summary'
@@ -131,6 +132,11 @@ const RoomsIdRoute = RoomsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => RoomsRoute,
 } as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/profile/edit',
+  path: '/profile/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileUidRoute = ProfileUidRouteImport.update({
   id: '/profile/$uid',
   path: '/profile/$uid',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/sprints': typeof SprintsRouteWithChildren
   '/domains/$id': typeof DomainsIdRoute
   '/profile/$uid': typeof ProfileUidRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/rooms/$id': typeof RoomsIdRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRouteWithChildren
   '/sprints/$id': typeof SprintsIdRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/sprints': typeof SprintsRouteWithChildren
   '/domains/$id': typeof DomainsIdRoute
   '/profile/$uid': typeof ProfileUidRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/rooms/$id': typeof RoomsIdRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRouteWithChildren
   '/sprints/$id': typeof SprintsIdRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/sprints': typeof SprintsRouteWithChildren
   '/domains/$id': typeof DomainsIdRoute
   '/profile/$uid': typeof ProfileUidRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/rooms/$id': typeof RoomsIdRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRouteWithChildren
   '/sprints/$id': typeof SprintsIdRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/sprints'
     | '/domains/$id'
     | '/profile/$uid'
+    | '/profile/edit'
     | '/rooms/$id'
     | '/spaces/$spaceId'
     | '/sprints/$id'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/sprints'
     | '/domains/$id'
     | '/profile/$uid'
+    | '/profile/edit'
     | '/rooms/$id'
     | '/spaces/$spaceId'
     | '/sprints/$id'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/sprints'
     | '/domains/$id'
     | '/profile/$uid'
+    | '/profile/edit'
     | '/rooms/$id'
     | '/spaces/$spaceId'
     | '/sprints/$id'
@@ -356,6 +368,7 @@ export interface RootRouteChildren {
   SpacesRoute: typeof SpacesRouteWithChildren
   SprintsRoute: typeof SprintsRouteWithChildren
   ProfileUidRoute: typeof ProfileUidRoute
+  ProfileEditRoute: typeof ProfileEditRoute
   TasksIdRoute: typeof TasksIdRoute
 }
 
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsIdRouteImport
       parentRoute: typeof RoomsRoute
     }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/profile/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/$uid': {
       id: '/profile/$uid'
       path: '/profile/$uid'
@@ -626,6 +646,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpacesRoute: SpacesRouteWithChildren,
   SprintsRoute: SprintsRouteWithChildren,
   ProfileUidRoute: ProfileUidRoute,
+  ProfileEditRoute: ProfileEditRoute,
   TasksIdRoute: TasksIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -1939,23 +1939,23 @@ export function EditProfilePage() {
       {/* Personal info */}
       <div className="rounded-xl border bg-card p-5 space-y-4">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Personal info</p>
-        <Field label="Display name" required>
+        <FormField label="Display name" required>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
-        </Field>
-        <Field label="Bio">
+        </FormField>
+        <FormField label="Bio">
           <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short description about yourself" rows={3} />
-        </Field>
-        <Field label="University / Institution">
+        </FormField>
+        <FormField label="University / Institution">
           <Input value={university} onChange={(e) => setUniversity(e.target.value)} placeholder="e.g. MIT, Stanford…" />
-        </Field>
-        <Field label="Graduation year">
+        </FormField>
+        <FormField label="Graduation year">
           <Input
             value={gradYear}
             onChange={(e) => setGradYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
             placeholder="e.g. 2026"
             inputMode="numeric"
           />
-        </Field>
+        </FormField>
       </div>
 
       {/* Privacy */}
@@ -1973,7 +1973,7 @@ export function EditProfilePage() {
   );
 }
 
-function Field({ label, required, children }) {
+function FormField({ label, required, children }) {
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-semibold text-muted-foreground">
