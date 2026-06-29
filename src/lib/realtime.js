@@ -93,6 +93,13 @@ export async function incrementRound(roomId) {
   await updateDoc(doc(db, "pomodoro_rooms", roomId), { roundsCompleted: increment(1) });
 }
 
+// Reconcile a drifted memberCount to the real member total. The host calls this
+// while present so a stored count corrupted by earlier join/leave bugs heals to
+// the actual number of people in the room.
+export async function setRoomMemberCount(roomId, count) {
+  await updateDoc(doc(db, "pomodoro_rooms", roomId), { memberCount: Math.max(0, count) });
+}
+
 export async function endRoom(roomId) {
   await updateDoc(doc(db, "pomodoro_rooms", roomId), { isEnded: true, phase: "idle", isRunning: false, phaseEndsAt: null });
 }

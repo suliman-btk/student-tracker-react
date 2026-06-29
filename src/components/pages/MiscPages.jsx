@@ -4,7 +4,7 @@ import { Header } from "./SpacesPage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Users, MessageCircle, BellRing, Check, Mic, MicOff, LogOut, Send, Lock, Globe, Hash, Copy, Play, Pause, SkipForward, Square, ChevronRight } from "lucide-react";
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from "recharts";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useBlocker } from "@tanstack/react-router";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { ArrowLeft, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { useTask, useTaskComments, useStudyMutations, useActiveSprint, useProfile } from "@/lib/query-hooks";
@@ -32,7 +32,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { focusApi, studyApi } from "@/lib/api";
-import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound, uploadUserAvatar, uploadUserBanner } from "@/lib/realtime";
+import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound, uploadUserAvatar, uploadUserBanner, setRoomMemberCount } from "@/lib/realtime";
 import { createAgoraRoomClient } from "@/lib/agora";
 import { auth } from "@/lib/firebase";
 import { useRoomLiveState } from "@/lib/useRoomLiveState";
@@ -445,8 +445,29 @@ export function RoomDetailPage({ id }) {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const autoJoinedRef = useRef(false);
+  // Set true right before any intentional exit (Leave button, host-ended bounce)
+  // so the navigation-guard blocker doesn't double-prompt on those paths.
+  const intentionalLeaveRef = useRef(false);
 
   const { timer, secs: timerSecs } = useCountdown(room);
+
+  // Confirm before leaving when navigating away via the sidebar/back button.
+  // withResolver lets us render our own dialog; proceed()/reset() resolve it.
+  const { status: blockStatus, proceed: blockProceed, reset: blockReset } = useBlocker({
+    shouldBlockFn: () => !intentionalLeaveRef.current && joined && room?.isEnded !== true,
+    withResolver: true,
+  });
+
+  // Self-heal a drifted memberCount: while the host is present, reconcile the
+  // stored count to the real number of members (fixes counts corrupted by
+  // earlier join/leave bugs). Guarded on members.length > 0 so a transient
+  // empty snapshot during load never writes a bogus 0.
+  useEffect(() => {
+    if (!isHost || !joined || !room) return;
+    if (members.length > 0 && room.memberCount !== members.length) {
+      setRoomMemberCount(id, members.length).catch(() => {});
+    }
+  }, [isHost, joined, members.length, room?.memberCount, id]);
 
   // Sync joined flag when another tab/device already put this user in the room
   useEffect(() => {
@@ -471,6 +492,7 @@ export function RoomDetailPage({ id }) {
     if (!room) return;
     if (room.isEnded === true) {
       (async () => {
+        intentionalLeaveRef.current = true;
         if (agoraRef.current) { await agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
         await leaveRoom(id).catch(() => {});
         navigate({ to: "/rooms" });
@@ -523,12 +545,23 @@ export function RoomDetailPage({ id }) {
   };
 
   const doLeave = async () => {
+    intentionalLeaveRef.current = true;
     if (agoraRef.current) { await agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
     // Host leaving ends the session for everyone — mark the room ended so all
     // members are auto-bounced and it stops showing in the active list.
     if (isHost) await endRoom(id).catch(() => {});
     await leaveRoom(id).catch(() => {});
     navigate({ to: "/rooms" });
+  };
+
+  // Confirmed leave from the navigation-guard dialog: clean up membership, then
+  // let the blocked navigation continue to wherever the user was headed.
+  const confirmLeaveAndProceed = async () => {
+    intentionalLeaveRef.current = true;
+    if (agoraRef.current) { await agoraRef.current.leave().catch(() => {}); agoraRef.current = null; }
+    if (isHost) await endRoom(id).catch(() => {});
+    await leaveRoom(id).catch(() => {});
+    blockProceed();
   };
 
   const handleLeaveClick = () => {
@@ -572,6 +605,27 @@ export function RoomDetailPage({ id }) {
   };
   const handleEnd = async () => { if (!isHost) return; await endRoom(id); };
 
+  // Confirm dialog shown when the user tries to navigate away while still in the
+  // room (sidebar click, back button). Leaving here cleans up membership.
+  const leaveGuardDialog = (
+    <AlertDialog open={blockStatus === "blocked"}>
+      <AlertDialogContent className="rounded-2xl">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Leave this room?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {isHost
+              ? "You're the host — leaving will end the session for everyone in the room."
+              : "You'll exit the study session. You can rejoin anytime with the room code."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => blockReset?.()}>Stay</AlertDialogCancel>
+          <AlertDialogAction onClick={() => confirmLeaveAndProceed()}>Leave room</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   if (!room) return (
     <div className="flex items-center justify-center h-64">
       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -605,6 +659,7 @@ export function RoomDetailPage({ id }) {
     return (
       <div className="flex flex-col -mx-4 lg:-mx-8 -my-6" style={{ height: "calc(100% + 3rem)" }}>
         {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
+        {leaveGuardDialog}
 
         {/* Hero header — full width */}
         <div className="border-b px-6 lg:px-8 py-5 flex items-start justify-between gap-4">
@@ -699,6 +754,7 @@ export function RoomDetailPage({ id }) {
   return (
     <div className="flex flex-col -mx-4 lg:-mx-8 -my-6" style={{ height: "calc(100% + 3rem)" }}>
       {showLeaveSheet && <LeaveTaskSheet onDone={doLeave} onSkip={doLeave} />}
+      {leaveGuardDialog}
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
 
       {/* Top bar */}
