@@ -477,13 +477,15 @@ export function RoomDetailPage({ id }) {
     if (isJoined && !joined) setJoined(true);
   }, [isJoined, joined]);
 
-  // Auto-join: host enters immediately without pressing the join button
+  // Auto-join: anyone who opens the room (host or guest) is added to the lobby
+  // immediately. Clicking "Join" on a room card should put you in without a
+  // second manual step — otherwise a guest sits in the room with no member doc
+  // and never shows up to the host. The "Join lobby" button stays as a fallback.
   useEffect(() => {
     if (!room || !currentUser || autoJoinedRef.current || isJoined) return;
-    if (room.hostUid === currentUser.uid) {
-      autoJoinedRef.current = true;
-      joinRoom(id).then(() => initAgora().then(() => setJoined(true))).catch(console.error);
-    }
+    if (room.isEnded === true) return; // don't (re)join a closed room
+    autoJoinedRef.current = true;
+    joinRoom(id).then(() => initAgora().then(() => setJoined(true))).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.hostUid, currentUser?.uid, isJoined]);
 
