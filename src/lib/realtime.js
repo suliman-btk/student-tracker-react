@@ -103,23 +103,18 @@ export async function updateMutedState(roomId, isMuted) {
 }
 
 export function watchPublicRooms(callback, onError) {
-  // Exclude ended (ghost) rooms and rooms older than 24h so stale sessions
-  // disappear from the list. Mirrors the Flutter watchPublicRooms query.
-  // Sorting stays in-memory (no orderBy) so no extra index is needed beyond
-  // the composite index this filter combination already requires.
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const roomsQuery = query(
-    collection(db, "pomodoro_rooms"),
-    where("isPrivate", "==", false),
-    where("isEnded", "==", false),
-    where("createdAt", ">", cutoff),
-  );
+  // Only the single `isPrivate == false` equality filter runs server-side —
+  // that needs no composite index. Combining it with `isEnded == false` AND a
+  // `createdAt >` range would require a composite index (and breaks the query
+  // entirely if that index is missing), so we apply those filters in memory.
+  const cutoffSeconds = (Date.now() - 24 * 60 * 60 * 1000) / 1000;
+  const roomsQuery = query(collection(db, "pomodoro_rooms"), where("isPrivate", "==", false));
   return onSnapshot(roomsQuery, (snap) => {
     const rooms = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
-      // Only surface rooms that actually have someone in them — empty/abandoned
-      // (or count-corrupted) rooms are not joinable "active" sessions.
-      .filter((r) => (r.memberCount ?? 0) > 0)
+      // Exclude ended (ghost) rooms, rooms older than 24h, and empty/abandoned
+      // (or count-corrupted) rooms — none of those are joinable "active" sessions.
+      .filter((r) => r.isEnded !== true && (r.memberCount ?? 0) > 0 && (r.createdAt?.seconds ?? 0) > cutoffSeconds)
       .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
     callback(rooms);
   }, onError);
