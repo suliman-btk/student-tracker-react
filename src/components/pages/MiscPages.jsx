@@ -448,6 +448,9 @@ export function RoomDetailPage({ id }) {
   // Set true right before any intentional exit (Leave button, host-ended bounce)
   // so the navigation-guard blocker doesn't double-prompt on those paths.
   const intentionalLeaveRef = useRef(false);
+  // Mirror isHost into a ref so the unmount/unload cleanup (which closes over a
+  // fixed [id]) can read the current value and end the room when the host exits.
+  const isHostRef = useRef(false);
 
   const { timer, secs: timerSecs } = useCountdown(room);
 
@@ -508,9 +511,16 @@ export function RoomDetailPage({ id }) {
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Keep the host flag current for the unmount/unload cleanup below.
+  useEffect(() => { isHostRef.current = isHost; }, [isHost]);
+
   // Stop mic immediately on unmount (covers sidebar nav, back button, tab close)
   useEffect(() => {
-    const stopOnUnload = () => { if (agoraRef.current) agoraRef.current.leave().catch(() => {}); };
+    const stopOnUnload = () => {
+      if (agoraRef.current) agoraRef.current.leave().catch(() => {});
+      // Host exit closes the room for everyone — best-effort on tab close.
+      if (isHostRef.current) endRoom(id).catch(() => {});
+    };
     window.addEventListener("beforeunload", stopOnUnload);
     return () => {
       window.removeEventListener("beforeunload", stopOnUnload);
@@ -518,7 +528,8 @@ export function RoomDetailPage({ id }) {
         agoraRef.current.leave().catch(() => {});
         agoraRef.current = null;
       }
-      // Also leave Firestore room membership silently
+      // Host leaving by ANY path closes the room; everyone else just leaves.
+      if (isHostRef.current) endRoom(id).catch(() => {});
       leaveRoom(id).catch(() => {});
     };
   }, [id]);
