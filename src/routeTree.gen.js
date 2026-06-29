@@ -24,6 +24,7 @@ import { Route as TasksIdRouteImport } from './routes/tasks.$id';
 import { Route as SprintsIdRouteImport } from './routes/sprints.$id';
 import { Route as RoomsIdRouteImport } from './routes/rooms.$id';
 import { Route as ProfileUidRouteImport } from './routes/profile.$uid';
+import { Route as ProfileEditRouteImport } from './routes/profile.edit';
 import { Route as DomainsIdRouteImport } from './routes/domains.$id';
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId';
 import { Route as SpacesSpaceIdSummaryRouteImport } from './routes/spaces.$spaceId.summary';
@@ -125,6 +126,13 @@ const ProfileUidRoute = ProfileUidRouteImport.update({
     path: '/profile/$uid',
     getParentRoute: () => rootRouteImport,
 });
+// Static /profile/edit must be registered alongside /profile/$uid, otherwise
+// "edit" is captured as a $uid param and rendered as a (missing) user profile.
+const ProfileEditRoute = ProfileEditRouteImport.update({
+    id: '/profile/edit',
+    path: '/profile/edit',
+    getParentRoute: () => rootRouteImport,
+});
 const DomainsIdRoute = DomainsIdRouteImport.update({
     id: '/domains/$id',
     path: '/domains/$id',
@@ -181,6 +189,7 @@ const rootRouteChildren = {
     SprintsIdRoute: SprintsIdRoute,
     TasksIdRoute: TasksIdRoute,
     ProfileUidRoute: ProfileUidRoute,
+    ProfileEditRoute: ProfileEditRoute,
 };
 export const routeTree = rootRouteImport
     ._addFileChildren(rootRouteChildren)
