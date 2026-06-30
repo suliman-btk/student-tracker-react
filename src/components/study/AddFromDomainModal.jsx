@@ -35,8 +35,10 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
     return s === "done" || s === "completed" || s === "complete";
   };
 
+  const isBlocked = (t) => isDone(t) || (!sprintId && t?.in_sprint);
+
   const toggleAll = () => {
-    const selectable = domainTasks.filter((t) => !isDone(t)).map((t) => t.id);
+    const selectable = domainTasks.filter((t) => !isBlocked(t)).map((t) => t.id);
     if (selectedIds.size === selectable.length && selectable.length > 0) {
       setSelectedIds(new Set());
     } else {
@@ -113,7 +115,7 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
                 <p className="p-4 text-sm text-muted-foreground">No tasks in this domain.</p>
               )}
               {!loadingTasks && domainTasks.length > 0 && (() => {
-                const selectable = domainTasks.filter((t) => !isDone(t));
+                const selectable = domainTasks.filter((t) => !isBlocked(t));
                 return (
                   <button
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
@@ -127,14 +129,15 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
                 );
               })()}
               {domainTasks.map((t) => {
+                const blocked = isBlocked(t);
                 const done = isDone(t);
                 const checked = selectedIds.has(t.id);
                 return (
                   <button
                     key={t.id}
-                    disabled={done}
+                    disabled={blocked}
                     className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-                    onClick={() => !done && toggleTask(t.id)}
+                    onClick={() => !blocked && toggleTask(t.id)}
                   >
                     {done
                       ? <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -148,6 +151,7 @@ export default function AddFromDomainModal({ open, onOpenChange, spaceId, sprint
                           {t.priority && <span>{t.priority}</span>}
                           {t.priority && t.status && <span> · </span>}
                           {t.status && <span>{t.status}</span>}
+                          {!sprintId && t.in_sprint && <span> · In sprint</span>}
                         </div>
                       )}
                     </div>
