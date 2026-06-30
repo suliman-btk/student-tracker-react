@@ -1321,7 +1321,7 @@ export function NotificationsPage() {
                 const user = req.sender || req.user || req;
                 const name = user.name || user.display_name || "User";
                 const avatar = user.avatar_url || user.avatar || "";
-                const uid = String(user.id || req.sender_id || "");
+                const uid = String(user.uid || user.firebase_uid || req.uid || req.firebase_uid || user.id || req.sender_id || "");
                 const university = user.university || "";
                 return (
                   <div key={uid} className="p-4 flex items-center gap-3">

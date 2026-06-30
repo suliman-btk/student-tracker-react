@@ -916,7 +916,7 @@ function FriendRequestsCard() {
           const user = req.sender || req.user || req;
           const name = user.name || user.display_name || "User";
           const avatar = user.avatar_url || user.avatar || "";
-          const uid = String(user.id || req.sender_id || "");
+          const uid = String(user.uid || user.firebase_uid || req.uid || req.firebase_uid || user.id || req.sender_id || "");
           return (
             <div key={uid} className="flex items-center gap-2">
               {uid ? (
