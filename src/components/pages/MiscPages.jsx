@@ -998,15 +998,29 @@ function statusBadge(status) {
 }
 
 function ActivityHeatmap({ activity }) {
-  // activity: array of { date: 'YYYY-MM-DD', level: 0-4 } for last 12 weeks
-  const cells = activity && activity.length > 0
-    ? activity
-    : Array.from({ length: 84 }, () => ({ level: 0 }));
+  // activity is a date→focus-minutes object ({ "2026-06-01": 120 }), the same
+  // shape /user/profile/stats and /social/users/{uid}/profile return. Render the
+  // last 12 weeks (84 days) ending today, mapping minutes → an intensity band
+  // (thresholds match the Dashboard year heatmap).
+  const map = activity && typeof activity === "object" ? activity : {};
+  const keyOf = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const levelOf = (mins) => (!mins ? 0 : mins < 30 ? 1 : mins < 60 ? 2 : mins < 120 ? 3 : 4);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cells = Array.from({ length: 84 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (83 - i));
+    const mins = map[keyOf(d)] || 0;
+    return { date: keyOf(d), level: levelOf(mins), mins };
+  });
+
   return (
     <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(12, 1fr)", gridAutoFlow: "column", gridTemplateRows: "repeat(7, 1fr)" }}>
-      {cells.slice(0, 84).map((c, i) => {
-        const shade = ["bg-muted", "bg-primary/20", "bg-primary/40", "bg-primary/70", "bg-primary"][c.level || 0] || "bg-muted";
-        return <div key={i} className={`aspect-square rounded-sm ${shade}`} title={c.date} />;
+      {cells.map((c, i) => {
+        const shade = ["bg-muted", "bg-primary/20", "bg-primary/40", "bg-primary/70", "bg-primary"][c.level] || "bg-muted";
+        return <div key={i} className={`aspect-square rounded-sm ${shade}`} title={`${c.date}: ${c.mins} min focused`} />;
       })}
     </div>
   );
@@ -1044,7 +1058,8 @@ export function ProfilePage({ uid }) {
 
   const profile = isSelf ? myProfile : otherProfile;
   const stats = isSelf ? myStats : otherProfile?.stats;
-  const activity = isSelf ? myStats?.activity : otherProfile?.activity;
+  // Activity lives inside the stats payload for both self and other users.
+  const activity = isSelf ? myStats?.activity : otherProfile?.stats?.activity;
   const profileUid = String(profile?.uid || profile?.firebase_uid || uid || "");
 
   const { data: achievements = [] } = useQuery({
