@@ -75,7 +75,10 @@ function ProfileCard() {
   const university = profile?.university || "";
   const bio = profile?.bio || "";
   const avatar = profile?.avatar_url || profile?.avatar || "";
-  const uid = profile?.id || profile?.uid;
+  const uid = profile?.uid || profile?.firebase_uid || profile?.id;
+  const currentStreak = stats?.current_streak ?? stats?.streak;
+  const totalFocusMinutes = Number(stats?.total_focus_minutes ?? 0);
+  const totalFocusHours = totalFocusMinutes / 60;
 
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
@@ -101,15 +104,15 @@ function ProfileCard() {
         </div>
         {stats && (
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {stats.streak != null && (
+            {currentStreak != null && (
               <div className="rounded-lg bg-muted/60 p-2 text-center">
-                <div className="text-base font-bold">{stats.streak}</div>
+                <div className="text-base font-bold">{currentStreak}</div>
                 <div className="text-[10px] text-muted-foreground">Day streak</div>
               </div>
             )}
-            {stats.total_focus_hours != null && (
+            {stats.total_focus_minutes != null && (
               <div className="rounded-lg bg-muted/60 p-2 text-center">
-                <div className="text-base font-bold">{Math.round(stats.total_focus_hours)}h</div>
+                <div className="text-base font-bold">{Math.round(totalFocusHours)}h</div>
                 <div className="text-[10px] text-muted-foreground">Total focus</div>
               </div>
             )}
@@ -168,7 +171,7 @@ function StudyingNowBar() {
         {list.map((f) => {
           const name = f.name || f.display_name || "User";
           const avatar = f.avatar_url || f.avatar || "";
-          const uid = String(f.id || f.uid);
+          const uid = String(f.uid || f.firebase_uid || f.id);
           const status = f.study_status || "studying";
           return (
             <Link
@@ -516,7 +519,7 @@ function CommentsSection({ postId }) {
           const author = c.author || c.user || {};
           const name = author.name || author.display_name || "User";
           const avatar = author.avatar_url || author.avatar || "";
-          const uid = String(author.id || author.uid || "");
+          const uid = String(author.uid || author.firebase_uid || author.id || "");
           return (
             <div key={c.id} className="flex items-start gap-2">
               {uid ? (
@@ -680,7 +683,7 @@ function PostCard({ post, currentUserId }) {
   const avatar =
     author.avatar_url || author.avatar || author.profile_photo_url ||
     author.photo_url || author.picture || post.author_avatar || "";
-  const authorUid = String(author.id || author.uid || post.author_id || post.user_id || "");
+  const authorUid = String(author.uid || author.firebase_uid || post.author_id || author.id || post.user_id || "");
   const isMine = currentUserId && (authorUid === String(currentUserId));
 
   return (
@@ -821,7 +824,7 @@ function PostCard({ post, currentUserId }) {
 
 function FeedList({ tag }) {
   const { data: profile } = useProfile();
-  const currentUserId = profile?.id || profile?.uid;
+  const currentUserId = profile?.uid || profile?.firebase_uid || profile?.id;
 
   const { data: feed = [], isLoading, error } = useQuery({
     queryKey: qk.social.feed({ tag }),
@@ -996,7 +999,7 @@ function DiscoverCard() {
     const name = u.name || u.display_name || "User";
     const avatar = u.avatar_url || u.avatar || "";
     const university = u.university || "";
-    const uid = String(u.id || u.uid || "");
+    const uid = String(u.uid || u.firebase_uid || u.id || "");
     const sent = sentUids.has(uid) || u.has_sent_request;
     return (
       <div className="flex items-center gap-2">
@@ -1064,7 +1067,7 @@ function DiscoverCard() {
       {list.length > 0 && (
         <div className="space-y-2.5">
           {list.slice(0, 5).map((u) => (
-            <UserRow key={String(u.id || u.uid || u.name)} u={u} />
+            <UserRow key={String(u.uid || u.firebase_uid || u.id || u.name)} u={u} />
           ))}
         </div>
       )}

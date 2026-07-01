@@ -1016,7 +1016,8 @@ export function ProfilePage({ uid }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: myProfile } = useProfile();
-  const myUid = String(myProfile?.id || myProfile?.uid || "");
+  const [achievementDraft, setAchievementDraft] = useState({ title: "", description: "", category: "", evidence_url: "" });
+  const myUid = String(myProfile?.uid || myProfile?.firebase_uid || myProfile?.id || "");
   const isSelf = !uid || String(uid) === myUid;
 
   // Self uses /user/profile + /user/profile/stats; others use /social/users/{uid}/profile
@@ -1043,6 +1044,14 @@ export function ProfilePage({ uid }) {
   const profile = isSelf ? myProfile : otherProfile;
   const stats = isSelf ? myStats : otherProfile?.stats;
   const activity = isSelf ? myStats?.activity : otherProfile?.activity;
+  const profileUid = String(profile?.uid || profile?.firebase_uid || uid || "");
+
+  const { data: achievements = [] } = useQuery({
+    queryKey: ["social", "achievements", profileUid || "me"],
+    queryFn: () => isSelf ? socialApi.achievements.list() : socialApi.achievements.forUser(profileUid),
+    enabled: isSelf || !!profileUid,
+    retry: 1,
+  });
 
   const name = profile?.name || profile?.display_name || "User";
   const avatar = profile?.avatar_url || profile?.avatar || "";
@@ -1051,10 +1060,13 @@ export function ProfilePage({ uid }) {
   const gradYear = profile?.graduation_year;
   const status = profile?.study_status || "idle";
   const badge = statusBadge(status);
+  const focusHours = Math.round(Number(stats?.total_focus_minutes ?? 0) / 60);
+  const currentStreak = stats?.current_streak ?? stats?.streak ?? 0;
+  const longestStreak = stats?.longest_streak ?? stats?.max_streak ?? 0;
 
   // Connection state for non-self
   const friends = Array.isArray(friendsList) ? friendsList : friendsList?.data || [];
-  const friendIds = new Set(friends.map((f) => String(f.id || f.uid)));
+  const friendIds = new Set(friends.map((f) => String(f.uid || f.firebase_uid || f.id)));
   const isFriend = !isSelf && friendIds.has(String(uid));
   const isPending = !isSelf && (otherProfile?.has_sent_request === true);
 
@@ -1066,6 +1078,31 @@ export function ProfilePage({ uid }) {
     },
     onError: () => toast.error("Could not send request"),
   });
+
+  const { mutate: createAchievement, isPending: creatingAchievement } = useMutation({
+    mutationFn: (body) => socialApi.achievements.create(body),
+    onSuccess: () => {
+      setAchievementDraft({ title: "", description: "", category: "", evidence_url: "" });
+      qc.invalidateQueries({ queryKey: ["social", "achievements", profileUid || "me"] });
+      qc.invalidateQueries({ queryKey: ["social", "feed"] });
+      toast.success("Achievement added");
+    },
+    onError: () => toast.error("Could not add achievement"),
+  });
+
+  function submitAchievement(e) {
+    e.preventDefault();
+    const title = achievementDraft.title.trim();
+    if (!title) return;
+    createAchievement({
+      title,
+      description: achievementDraft.description.trim() || undefined,
+      category: achievementDraft.category.trim() || undefined,
+      evidence_url: achievementDraft.evidence_url.trim() || undefined,
+      visibility: "public",
+      share_to_feed: true,
+    });
+  }
 
   const { mutate: removeFriend, isPending: removing } = useMutation({
     mutationFn: () => socialApi.friends.remove(uid),
@@ -1163,11 +1200,11 @@ export function ProfilePage({ uid }) {
           <div className="text-xs text-muted-foreground mt-1">Sessions</div>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
-          <div className="text-2xl font-bold">{Math.round(stats?.total_focus_hours ?? 0)}h</div>
+          <div className="text-2xl font-bold">{focusHours}h</div>
           <div className="text-xs text-muted-foreground mt-1">Focus hours</div>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
-          <div className="text-2xl font-bold">{stats?.streak ?? stats?.current_streak ?? 0}</div>
+          <div className="text-2xl font-bold">{currentStreak}</div>
           <div className="text-xs text-muted-foreground mt-1">Day streak</div>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
@@ -1184,7 +1221,7 @@ export function ProfilePage({ uid }) {
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Current streak</div>
-            <div className="text-lg font-bold">{stats?.streak ?? stats?.current_streak ?? 0} days</div>
+            <div className="text-lg font-bold">{currentStreak} days</div>
           </div>
         </div>
         <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
@@ -1193,9 +1230,72 @@ export function ProfilePage({ uid }) {
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Longest streak</div>
-            <div className="text-lg font-bold">{stats?.longest_streak ?? stats?.max_streak ?? 0} days</div>
+            <div className="text-lg font-bold">{longestStreak} days</div>
           </div>
         </div>
+      </div>
+
+      {/* Achievements */}
+      <div className="rounded-xl border bg-card p-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h3 className="font-semibold text-sm">Achievements</h3>
+          <span className="text-xs text-muted-foreground">{achievements.length}</span>
+        </div>
+
+        {isSelf && (
+          <form onSubmit={submitAchievement} className="mb-4 grid gap-2">
+            <Input
+              value={achievementDraft.title}
+              onChange={(e) => setAchievementDraft((d) => ({ ...d, title: e.target.value }))}
+              placeholder="Achievement title"
+            />
+            <div className="grid sm:grid-cols-2 gap-2">
+              <Input
+                value={achievementDraft.category}
+                onChange={(e) => setAchievementDraft((d) => ({ ...d, category: e.target.value }))}
+                placeholder="Category or subject"
+              />
+              <Input
+                value={achievementDraft.evidence_url}
+                onChange={(e) => setAchievementDraft((d) => ({ ...d, evidence_url: e.target.value }))}
+                placeholder="Evidence link"
+              />
+            </div>
+            <Textarea
+              value={achievementDraft.description}
+              onChange={(e) => setAchievementDraft((d) => ({ ...d, description: e.target.value }))}
+              placeholder="What did you achieve?"
+              rows={3}
+            />
+            <Button type="submit" size="sm" className="w-fit" disabled={!achievementDraft.title.trim() || creatingAchievement}>
+              {creatingAchievement ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+              Add achievement
+            </Button>
+          </form>
+        )}
+
+        {achievements.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No achievements shared yet.</div>
+        ) : (
+          <div className="grid gap-2">
+            {achievements.map((a) => (
+              <div key={a.id} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium text-sm">{a.title}</div>
+                    {a.category && <div className="text-xs text-muted-foreground mt-0.5">{a.category}</div>}
+                  </div>
+                  {a.evidence_url && (
+                    <a href={a.evidence_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                      Evidence
+                    </a>
+                  )}
+                </div>
+                {a.description && <p className="text-sm mt-2 text-muted-foreground">{a.description}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Activity heatmap */}

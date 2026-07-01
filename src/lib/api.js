@@ -117,6 +117,13 @@ export const socialApi = {
     comments: (id) => apiRequest(`/social/posts/${id}/comments`).then((p) => unwrapData(p, [])),
     addComment: (id, content) => apiRequest(`/social/posts/${id}/comments`, { method: "POST", body: { content } }).then(unwrapData),
   },
+  achievements: {
+    list: () => apiRequest("/social/achievements").then((p) => unwrapData(p, [])),
+    forUser: (uid) => apiRequest(`/social/users/${uid}/achievements`).then((p) => unwrapData(p, [])),
+    create: (body) => apiRequest("/social/achievements", { method: "POST", body }).then(unwrapData),
+    update: (id, body) => apiRequest(`/social/achievements/${id}`, { method: "PATCH", body }).then(unwrapData),
+    remove: (id) => apiRequest(`/social/achievements/${id}`, { method: "DELETE" }),
+  },
   friends: {
     list: () => apiRequest("/social/friends").then((p) => unwrapData(p, [])),
     requests: () => apiRequest("/social/friends/requests").then((p) => unwrapData(p, [])),
