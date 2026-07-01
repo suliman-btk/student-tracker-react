@@ -35,7 +35,7 @@ export default function SettingsPage() {
   });
 
   const globalLimit = usages[0]?.daily_limit_minutes ?? usages[0]?.dailyLimitMinutes ?? 60;
-  const resetHour = daySettings?.reset_hour ?? daySettings?.resetHour ?? 0;
+  const resetHour = daySettings?.day_reset_hour ?? daySettings?.dayResetHour ?? 0;
 
   // ── Mutations ────────────────────────────────────────────────────────────
   const tzMut = useMutation({
@@ -49,12 +49,22 @@ export default function SettingsPage() {
     onError: (e) => toast.error(e?.message || "Could not update privacy"),
   });
   const limitMut = useMutation({
-    mutationFn: (minutes) => socialApi.platforms.updateDaySettings({ daily_limit_minutes: minutes }),
+    // The server stores the limit per-platform (PATCH settings/{platform}); the
+    // "one global limit" is applied by writing the same value to every platform,
+    // mirroring the Flutter app. The usage query always returns all platforms.
+    mutationFn: (minutes) => {
+      if (!usages.length) throw new Error("Platforms not loaded yet — try again");
+      return Promise.all(
+        usages.map((u) =>
+          socialApi.platforms.updateSetting(u.platform, { daily_limit_minutes: minutes })
+        )
+      );
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: qk.social.platforms({}) }); toast.success("Social media daily limit updated"); },
     onError: (e) => toast.error(e?.message || "Could not update limit"),
   });
   const resetMut = useMutation({
-    mutationFn: (hour) => socialApi.platforms.updateDaySettings({ reset_hour: hour }),
+    mutationFn: (hour) => socialApi.platforms.updateDaySettings({ day_reset_hour: hour }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["social", "day-settings"] }); toast.success("Daily reset time updated"); },
     onError: (e) => toast.error(e?.message || "Could not update reset time"),
   });

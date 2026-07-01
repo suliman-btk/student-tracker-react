@@ -1374,8 +1374,17 @@ function SocialUsageGuard({ children }) {
     retry: false,
   });
 
-  const resetHour = daySettings?.reset_hour ?? daySettings?.resetHour ?? 0;
-  const limitMinutes = daySettings?.daily_limit_minutes ?? daySettings?.dailyLimitMinutes ?? 0;
+  // The day-settings endpoint only returns day_reset_hour. The daily limit lives
+  // per-platform on the usage endpoint; since it's applied globally, any platform
+  // carries the same value — read the first one (mirrors the Flutter app).
+  const { data: usages = [] } = useQuery({
+    queryKey: qk.social.platforms({}),
+    queryFn: () => socialApi.platforms.usage({}),
+    retry: false,
+  });
+
+  const resetHour = daySettings?.day_reset_hour ?? daySettings?.dayResetHour ?? 0;
+  const limitMinutes = usages[0]?.daily_limit_minutes ?? usages[0]?.dailyLimitMinutes ?? 0;
   const limitSecs = limitMinutes * 60;
 
   const usedSecsRef = useRef(loadUsedSeconds(resetHour));
