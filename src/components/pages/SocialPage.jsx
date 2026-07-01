@@ -28,6 +28,9 @@ import {
   Settings,
   Clock,
   Users,
+  Award,
+  GraduationCap,
+  Sparkles,
 } from "lucide-react";
 import { socialApi, focusApi, userApi } from "@/lib/api";
 import { useProfile, usePomodoroSessions, qk } from "@/lib/query-hooks";
@@ -79,6 +82,8 @@ function ProfileCard() {
   const currentStreak = stats?.current_streak ?? stats?.streak;
   const totalFocusMinutes = Number(stats?.total_focus_minutes ?? 0);
   const totalFocusHours = totalFocusMinutes / 60;
+  const profileComplete = profile?.profile_completed !== false;
+  const missingFields = profile?.missing_profile_fields || [];
 
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
@@ -102,6 +107,17 @@ function ProfileCard() {
           {university && <div className="text-xs text-muted-foreground">{university}</div>}
           {bio && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{bio}</div>}
         </div>
+        {!profileComplete && (
+          <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-orange-900 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-100">
+            <div className="text-xs font-semibold">Complete your student profile</div>
+            <div className="mt-1 text-[11px] leading-4">
+              Add {missingFields.join(", ") || "your academic details"} so classmates know who they are connecting with.
+            </div>
+            <Button asChild size="sm" variant="outline" className="mt-2 h-7 text-xs bg-background">
+              <Link to="/profile/edit">Edit profile</Link>
+            </Button>
+          </div>
+        )}
         {stats && (
           <div className="mt-3 grid grid-cols-2 gap-2">
             {currentStreak != null && (
@@ -118,6 +134,46 @@ function ProfileCard() {
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function StudentNetworkSummary() {
+  const { data: friends = [] } = useQuery({
+    queryKey: ["social", "friends"],
+    queryFn: socialApi.friends.list,
+    retry: 1,
+  });
+  const { data: achievements = [] } = useQuery({
+    queryKey: ["social", "achievements", "me"],
+    queryFn: socialApi.achievements.list,
+    retry: 1,
+  });
+
+  const connections = Array.isArray(friends) ? friends : friends?.data || [];
+  const achievementList = Array.isArray(achievements) ? achievements : achievements?.data || [];
+
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        Network
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg bg-muted/60 p-3">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Users className="h-3.5 w-3.5" />
+            <span className="text-[11px]">Connections</span>
+          </div>
+          <div className="mt-1 text-xl font-bold">{connections.length}</div>
+        </div>
+        <div className="rounded-lg bg-muted/60 p-3">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Award className="h-3.5 w-3.5" />
+            <span className="text-[11px]">Achievements</span>
+          </div>
+          <div className="mt-1 text-xl font-bold">{achievementList.length}</div>
+        </div>
       </div>
     </div>
   );
@@ -482,6 +538,105 @@ function CreatePostBox() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function AchievementShareBox() {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState({ title: "", description: "", category: "", evidence_url: "" });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (body) => socialApi.achievements.create(body),
+    onSuccess: () => {
+      setDraft({ title: "", description: "", category: "", evidence_url: "" });
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["social", "achievements"] });
+      qc.invalidateQueries({ queryKey: ["social", "feed"] });
+      toast.success("Achievement shared");
+    },
+    onError: () => toast.error("Could not share achievement"),
+  });
+
+  function submit(e) {
+    e.preventDefault();
+    const title = draft.title.trim();
+    if (!title) return;
+    mutate({
+      title,
+      description: draft.description.trim() || undefined,
+      category: draft.category.trim() || undefined,
+      evidence_url: draft.evidence_url.trim() || undefined,
+      visibility: "public",
+      share_to_feed: true,
+    });
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full rounded-xl border bg-card p-4 text-left hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-amber-500/10 grid place-items-center">
+            <Award className="h-5 w-5 text-amber-600" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold">Share an achievement</div>
+            <div className="text-xs text-muted-foreground">
+              Projects, certificates, milestones, competition wins, or study goals.
+            </div>
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="rounded-xl border bg-card p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Award className="h-4 w-4 text-amber-600" />
+          <div className="text-sm font-semibold">New achievement</div>
+        </div>
+        <button type="button" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <Input
+        value={draft.title}
+        onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+        placeholder="Achievement title"
+      />
+      <div className="grid sm:grid-cols-2 gap-2">
+        <Input
+          value={draft.category}
+          onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+          placeholder="Category or subject"
+        />
+        <Input
+          value={draft.evidence_url}
+          onChange={(e) => setDraft((d) => ({ ...d, evidence_url: e.target.value }))}
+          placeholder="Evidence link"
+        />
+      </div>
+      <Textarea
+        value={draft.description}
+        onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+        placeholder="What happened, and why does it matter?"
+        rows={3}
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+        <Button type="submit" size="sm" disabled={!draft.title.trim() || isPending}>
+          {isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+          Share
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -883,7 +1038,7 @@ function FeedList({ tag }) {
   );
 }
 
-// ─── Right: Friend Requests ───────────────────────────────────────────────────
+// ─── Right / Network: Connection Requests ─────────────────────────────────────
 
 function FriendRequestsCard() {
   const qc = useQueryClient();
@@ -897,7 +1052,8 @@ function FriendRequestsCard() {
     mutationFn: (uid) => socialApi.friends.accept(uid),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "friends"] });
-      toast.success("Friend request accepted");
+      qc.invalidateQueries({ queryKey: ["social", "friends", "requests"] });
+      toast.success("Connection accepted");
     },
   });
 
@@ -912,7 +1068,7 @@ function FriendRequestsCard() {
   return (
     <div className="rounded-xl border bg-card p-4">
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        Friend Requests
+        Connection Requests
       </div>
       <div className="space-y-2.5">
         {list.map((req) => {
@@ -1000,7 +1156,10 @@ function DiscoverCard() {
     const avatar = u.avatar_url || u.avatar || "";
     const university = u.university || "";
     const uid = String(u.uid || u.firebase_uid || u.id || "");
-    const sent = sentUids.has(uid) || u.has_sent_request;
+    const connectionState = sentUids.has(uid) ? "pending_sent" : (u.connection_state || "");
+    const sent = connectionState === "pending_sent" || u.has_sent_request;
+    const connected = connectionState === "connected" || u.is_friend;
+    const pendingReceived = connectionState === "pending_received";
     return (
       <div className="flex items-center gap-2">
         {uid ? (
@@ -1024,14 +1183,17 @@ function DiscoverCard() {
           ) : (
             <div className="text-sm font-medium truncate">{name}</div>
           )}
-          {university && (
-            <div className="text-[11px] text-muted-foreground truncate">{university}</div>
-          )}
+          <div className="text-[11px] text-muted-foreground truncate">
+            {university || "Student profile"}
+            {u.graduation_year ? ` · Class of ${u.graduation_year}` : ""}
+          </div>
         </div>
         {sent ? (
           <span className="text-[11px] text-muted-foreground">Pending</span>
-        ) : u.is_friend ? (
+        ) : connected ? (
           <span className="text-[11px] text-muted-foreground">Connected</span>
+        ) : pendingReceived ? (
+          <span className="text-[11px] text-muted-foreground">Requested</span>
         ) : (
           <button onClick={() => sendRequest(uid)} className="text-primary hover:text-primary/80">
             <UserPlus className="h-4 w-4" />
@@ -1071,6 +1233,88 @@ function DiscoverCard() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function AchievementsPanel() {
+  const { data: achievements = [], isLoading } = useQuery({
+    queryKey: ["social", "achievements", "me"],
+    queryFn: socialApi.achievements.list,
+    retry: 1,
+  });
+  const list = Array.isArray(achievements) ? achievements : achievements?.data || [];
+
+  return (
+    <div className="space-y-3">
+      <AchievementShareBox />
+      <div className="rounded-xl border bg-card p-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <div className="text-sm font-semibold">Your achievement portfolio</div>
+            <div className="text-xs text-muted-foreground">A lightweight record you can show to classmates and collaborators.</div>
+          </div>
+          <Award className="h-5 w-5 text-amber-600" />
+        </div>
+
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Loading achievements…</div>
+        ) : list.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+            No achievements yet. Share your first project, certificate, milestone, or competition result.
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {list.map((achievement) => (
+              <div key={achievement.id} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm">{achievement.title}</div>
+                    <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                      {achievement.category && (
+                        <span className="rounded-full bg-muted px-2 py-0.5">{achievement.category}</span>
+                      )}
+                      <span className="rounded-full bg-muted px-2 py-0.5">{achievement.visibility}</span>
+                    </div>
+                  </div>
+                  {achievement.evidence_url && (
+                    <a href={achievement.evidence_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                      Evidence
+                    </a>
+                  )}
+                </div>
+                {achievement.description && (
+                  <p className="mt-2 text-sm text-muted-foreground">{achievement.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NetworkPanel() {
+  return (
+    <div className="grid gap-3">
+      <div className="rounded-xl border bg-card p-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 grid place-items-center">
+            <GraduationCap className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">University student network</div>
+            <div className="text-xs text-muted-foreground">
+              Find classmates, connect with study partners, and discover students with shared academic interests.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="grid xl:grid-cols-2 gap-3">
+        <FriendRequestsCard />
+        <DiscoverCard />
+      </div>
     </div>
   );
 }
@@ -1221,6 +1465,13 @@ function SocialUsageGuard({ children }) {
 
 export function SocialPage() {
   const [tag, setTag] = useState("");
+  const [view, setView] = useState("feed");
+
+  const views = [
+    { id: "feed", label: "Feed", icon: Globe },
+    { id: "network", label: "Network", icon: Users },
+    { id: "achievements", label: "Achievements", icon: Award },
+  ];
 
   return (
     <SocialUsageGuard>
@@ -1228,20 +1479,60 @@ export function SocialPage() {
         {/* Left panel */}
         <div className="hidden lg:flex flex-col w-64 shrink-0 gap-3 overflow-y-auto">
           <ProfileCard />
+          <StudentNetworkSummary />
+          <TodayFocusWidget />
         </div>
 
         {/* Center feed */}
         <div className="flex-1 min-w-0 overflow-y-auto space-y-3">
-          <StudyingNowBar />
-          <CreatePostBox />
-          <TagFilterChips value={tag} onChange={setTag} />
-          <FeedList tag={tag} />
+          <div className="rounded-xl border bg-card p-2">
+            <div className="grid grid-cols-3 gap-1">
+              {views.map((item) => {
+                const Icon = item.icon;
+                const active = view === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setView(item.id)}
+                    className={`h-9 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                      active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {view === "feed" && (
+            <>
+              <StudyingNowBar />
+              <CreatePostBox />
+              <AchievementShareBox />
+              <TagFilterChips value={tag} onChange={setTag} />
+              <FeedList tag={tag} />
+            </>
+          )}
+
+          {view === "network" && <NetworkPanel />}
+          {view === "achievements" && <AchievementsPanel />}
         </div>
 
         {/* Right panel */}
         <div className="hidden xl:flex flex-col w-72 shrink-0 gap-3 overflow-y-auto">
           <FriendRequestsCard />
           <DiscoverCard />
+          <div className="rounded-xl border bg-card p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Sparkles className="h-4 w-4 text-amber-600" />
+              Social is for academic progress
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground leading-5">
+              Share achievements, live study sessions, useful resources, and project updates so your network has context beyond casual posts.
+            </div>
+          </div>
         </div>
       </div>
     </SocialUsageGuard>
