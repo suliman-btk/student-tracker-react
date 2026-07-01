@@ -555,8 +555,14 @@ function AchievementShareBox() {
       qc.invalidateQueries({ queryKey: ["social", "feed"] });
       toast.success("Achievement shared");
     },
-    onError: () => toast.error("Could not share achievement"),
+    onError: (error) => toast.error(error?.message || "Could not share achievement"),
   });
+
+  function normalizeUrl(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  }
 
   function submit(e) {
     e.preventDefault();
@@ -566,7 +572,7 @@ function AchievementShareBox() {
       title,
       description: draft.description.trim() || undefined,
       category: draft.category.trim() || undefined,
-      evidence_url: draft.evidence_url.trim() || undefined,
+      evidence_url: normalizeUrl(draft.evidence_url),
       visibility: "public",
       share_to_feed: true,
     });

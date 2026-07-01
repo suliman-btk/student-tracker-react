@@ -1083,7 +1083,7 @@ export function ProfilePage({ uid }) {
       qc.invalidateQueries({ queryKey: ["social", "users", String(uid), "profile"] });
       toast.success("Connection request sent");
     },
-    onError: () => toast.error("Could not send request"),
+    onError: (error) => toast.error(error?.message || "Could not send request"),
   });
 
   const { mutate: createAchievement, isPending: creatingAchievement } = useMutation({
@@ -1094,7 +1094,7 @@ export function ProfilePage({ uid }) {
       qc.invalidateQueries({ queryKey: ["social", "feed"] });
       toast.success("Achievement added");
     },
-    onError: () => toast.error("Could not add achievement"),
+    onError: (error) => toast.error(error?.message || "Could not add achievement"),
   });
 
   const { mutate: createProject, isPending: creatingProject } = useMutation({
@@ -1105,8 +1105,14 @@ export function ProfilePage({ uid }) {
       qc.invalidateQueries({ queryKey: ["social", "feed"] });
       toast.success("Project added");
     },
-    onError: () => toast.error("Could not add project"),
+    onError: (error) => toast.error(error?.message || "Could not add project"),
   });
+
+  function normalizeUrl(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  }
 
   function submitAchievement(e) {
     e.preventDefault();
@@ -1116,7 +1122,7 @@ export function ProfilePage({ uid }) {
       title,
       description: achievementDraft.description.trim() || undefined,
       category: achievementDraft.category.trim() || undefined,
-      evidence_url: achievementDraft.evidence_url.trim() || undefined,
+      evidence_url: normalizeUrl(achievementDraft.evidence_url),
       visibility: "public",
       share_to_feed: true,
     });
@@ -1130,8 +1136,8 @@ export function ProfilePage({ uid }) {
       title,
       description: projectDraft.description.trim() || undefined,
       category: projectDraft.category.trim() || undefined,
-      project_url: projectDraft.project_url.trim() || undefined,
-      repository_url: projectDraft.repository_url.trim() || undefined,
+      project_url: normalizeUrl(projectDraft.project_url),
+      repository_url: normalizeUrl(projectDraft.repository_url),
       status: projectDraft.status,
       visibility: "public",
       share_to_feed: true,
@@ -1165,11 +1171,9 @@ export function ProfilePage({ uid }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      {!isSelf && (
-        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/social" })}>
-          <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
-        </Button>
-      )}
+      <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/social" })}>
+        <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to social
+      </Button>
 
       {/* Header */}
       <div className="rounded-2xl border bg-card overflow-hidden">
