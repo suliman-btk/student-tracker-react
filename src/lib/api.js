@@ -124,6 +124,13 @@ export const socialApi = {
     update: (id, body) => apiRequest(`/social/achievements/${id}`, { method: "PATCH", body }).then(unwrapData),
     remove: (id) => apiRequest(`/social/achievements/${id}`, { method: "DELETE" }),
   },
+  projects: {
+    list: () => apiRequest("/social/projects").then((p) => unwrapData(p, [])),
+    forUser: (uid) => apiRequest(`/social/users/${uid}/projects`).then((p) => unwrapData(p, [])),
+    create: (body) => apiRequest("/social/projects", { method: "POST", body }).then(unwrapData),
+    update: (id, body) => apiRequest(`/social/projects/${id}`, { method: "PATCH", body }).then(unwrapData),
+    remove: (id) => apiRequest(`/social/projects/${id}`, { method: "DELETE" }),
+  },
   friends: {
     list: () => apiRequest("/social/friends").then((p) => unwrapData(p, [])),
     requests: () => apiRequest("/social/friends/requests").then((p) => unwrapData(p, [])),

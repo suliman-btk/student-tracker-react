@@ -1017,6 +1017,7 @@ export function ProfilePage({ uid }) {
   const qc = useQueryClient();
   const { data: myProfile } = useProfile();
   const [achievementDraft, setAchievementDraft] = useState({ title: "", description: "", category: "", evidence_url: "" });
+  const [projectDraft, setProjectDraft] = useState({ title: "", description: "", category: "", project_url: "", repository_url: "", status: "in_progress" });
   const myUid = String(myProfile?.uid || myProfile?.firebase_uid || myProfile?.id || "");
   const isSelf = !uid || String(uid) === myUid;
 
@@ -1049,6 +1050,12 @@ export function ProfilePage({ uid }) {
   const { data: achievements = [] } = useQuery({
     queryKey: ["social", "achievements", profileUid || "me"],
     queryFn: () => isSelf ? socialApi.achievements.list() : socialApi.achievements.forUser(profileUid),
+    enabled: isSelf || !!profileUid,
+    retry: 1,
+  });
+  const { data: projects = [] } = useQuery({
+    queryKey: ["social", "projects", profileUid || "me"],
+    queryFn: () => isSelf ? socialApi.projects.list() : socialApi.projects.forUser(profileUid),
     enabled: isSelf || !!profileUid,
     retry: 1,
   });
@@ -1090,6 +1097,17 @@ export function ProfilePage({ uid }) {
     onError: () => toast.error("Could not add achievement"),
   });
 
+  const { mutate: createProject, isPending: creatingProject } = useMutation({
+    mutationFn: (body) => socialApi.projects.create(body),
+    onSuccess: () => {
+      setProjectDraft({ title: "", description: "", category: "", project_url: "", repository_url: "", status: "in_progress" });
+      qc.invalidateQueries({ queryKey: ["social", "projects", profileUid || "me"] });
+      qc.invalidateQueries({ queryKey: ["social", "feed"] });
+      toast.success("Project added");
+    },
+    onError: () => toast.error("Could not add project"),
+  });
+
   function submitAchievement(e) {
     e.preventDefault();
     const title = achievementDraft.title.trim();
@@ -1099,6 +1117,22 @@ export function ProfilePage({ uid }) {
       description: achievementDraft.description.trim() || undefined,
       category: achievementDraft.category.trim() || undefined,
       evidence_url: achievementDraft.evidence_url.trim() || undefined,
+      visibility: "public",
+      share_to_feed: true,
+    });
+  }
+
+  function submitProject(e) {
+    e.preventDefault();
+    const title = projectDraft.title.trim();
+    if (!title) return;
+    createProject({
+      title,
+      description: projectDraft.description.trim() || undefined,
+      category: projectDraft.category.trim() || undefined,
+      project_url: projectDraft.project_url.trim() || undefined,
+      repository_url: projectDraft.repository_url.trim() || undefined,
+      status: projectDraft.status,
       visibility: "public",
       share_to_feed: true,
     });
@@ -1292,6 +1326,94 @@ export function ProfilePage({ uid }) {
                   )}
                 </div>
                 {a.description && <p className="text-sm mt-2 text-muted-foreground">{a.description}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Projects */}
+      <div className="rounded-xl border bg-card p-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h3 className="font-semibold text-sm">Projects</h3>
+          <span className="text-xs text-muted-foreground">{projects.length}</span>
+        </div>
+
+        {isSelf && (
+          <form onSubmit={submitProject} className="mb-4 grid gap-2">
+            <Input
+              value={projectDraft.title}
+              onChange={(e) => setProjectDraft((d) => ({ ...d, title: e.target.value }))}
+              placeholder="Project title"
+            />
+            <div className="grid sm:grid-cols-3 gap-2">
+              <Input
+                value={projectDraft.category}
+                onChange={(e) => setProjectDraft((d) => ({ ...d, category: e.target.value }))}
+                placeholder="Category"
+              />
+              <Input
+                value={projectDraft.project_url}
+                onChange={(e) => setProjectDraft((d) => ({ ...d, project_url: e.target.value }))}
+                placeholder="Project link"
+              />
+              <Input
+                value={projectDraft.repository_url}
+                onChange={(e) => setProjectDraft((d) => ({ ...d, repository_url: e.target.value }))}
+                placeholder="Repository link"
+              />
+            </div>
+            <Select value={projectDraft.status} onValueChange={(status) => setProjectDraft((d) => ({ ...d, status }))}>
+              <SelectTrigger className="w-full sm:w-52">
+                <SelectValue placeholder="Project status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="planning">Planning</SelectItem>
+                <SelectItem value="in_progress">In progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea
+              value={projectDraft.description}
+              onChange={(e) => setProjectDraft((d) => ({ ...d, description: e.target.value }))}
+              placeholder="What are you building?"
+              rows={3}
+            />
+            <Button type="submit" size="sm" className="w-fit" disabled={!projectDraft.title.trim() || creatingProject}>
+              {creatingProject ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+              Add project
+            </Button>
+          </form>
+        )}
+
+        {projects.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No projects shared yet.</div>
+        ) : (
+          <div className="grid gap-2">
+            {projects.map((project) => (
+              <div key={project.id} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium text-sm">{project.title}</div>
+                    <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                      {project.category && <span className="rounded-full bg-muted px-2 py-0.5">{project.category}</span>}
+                      <span className="rounded-full bg-muted px-2 py-0.5">{project.status?.replace("_", " ")}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    {project.project_url && (
+                      <a href={project.project_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        Live
+                      </a>
+                    )}
+                    {project.repository_url && (
+                      <a href={project.repository_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        Code
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {project.description && <p className="text-sm mt-2 text-muted-foreground">{project.description}</p>}
               </div>
             ))}
           </div>
