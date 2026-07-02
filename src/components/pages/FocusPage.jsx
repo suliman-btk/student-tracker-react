@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useBlocker } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Play, Pause, RotateCcw, Settings, Square, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Header } from "./SpacesPage";
 import { focusApi, studyApi } from "@/lib/api";
 import { usePomodoroSessions, qk } from "@/lib/query-hooks";
@@ -100,6 +111,8 @@ export default function FocusPage() {
   const [running, setRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const sessionIdRef = useRef(null);
+  const leavingFocusRef = useRef(false);
+  const leaveWarningText = "Leaving this screen will close your current focus session.";
 
   // ── Transition banner ─────────────────────────────────────────────────────
   const [banner, setBanner] = useState(null);
@@ -126,7 +139,16 @@ export default function FocusPage() {
   // ── Session mutations ─────────────────────────────────────────────────────
   const startMut = useMutation({
     mutationFn: () => focusApi.pomodoro.start({ focus_duration: focusMins, break_duration: breakMins }),
-    onSuccess: (data) => setSession(data?.id ?? data?.session_id ?? null),
+    onSuccess: (data) => {
+      const id = data?.id ?? data?.session_id ?? null;
+      if (leavingFocusRef.current && id) {
+        focusApi.pomodoro.end(id, { status: "abandoned" })
+          .then(() => qc.invalidateQueries({ queryKey: qk.focus.pomodoro }))
+          .catch(() => {});
+        return;
+      }
+      setSession(id);
+    },
     onError: (e) => toast.error(e?.message || "Could not start session"),
   });
   const endMut = useMutation({
@@ -148,6 +170,22 @@ export default function FocusPage() {
     setSessionId(null);
     endMut.mutate({ id, status });
   }, [endMut]);
+
+  const { status: blockStatus, proceed: blockProceed, reset: blockReset } = useBlocker({
+    shouldBlockFn: () => Boolean(running || sessionIdRef.current || startMut.isPending),
+    withResolver: true,
+  });
+
+  useEffect(() => {
+    if (!running && !sessionId && !startMut.isPending) return;
+    const warnBeforeLeaving = (event) => {
+      event.preventDefault();
+      event.returnValue = leaveWarningText;
+      return leaveWarningText;
+    };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [running, sessionId, startMut.isPending]);
 
   // ── Tick: count down only (no side effects inside the state updater) ────────
   useEffect(() => {
@@ -175,6 +213,7 @@ export default function FocusPage() {
   // ── Controls ──────────────────────────────────────────────────────────────
   const handleStart = () => {
     if (!running) {
+      leavingFocusRef.current = false;
       if (!sessionIdRef.current) startMut.mutate();
       setRunning(true);
       if (mode === "focus") {
@@ -203,6 +242,13 @@ export default function FocusPage() {
     setRunning(false);
     endSession("abandoned");
     if (sprintTasks.length > 0) setStopOpen(true);
+  };
+
+  const closeSessionAndLeave = () => {
+    leavingFocusRef.current = true;
+    setRunning(false);
+    endSession("abandoned");
+    blockProceed();
   };
 
   // ── Mode switch ───────────────────────────────────────────────────────────
@@ -356,6 +402,21 @@ export default function FocusPage() {
 
       {/* ── Post-session task progress dialog ── */}
       <TaskProgressDialog open={stopOpen} onOpenChange={setStopOpen} tasks={sprintTasks} />
+
+      <AlertDialog open={blockStatus === "blocked"}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave focus session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {leaveWarningText} Your current timer will stop and the session will be marked as abandoned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blockReset?.()}>Stay here</AlertDialogCancel>
+            <AlertDialogAction onClick={closeSessionAndLeave}>Leave and close session</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
