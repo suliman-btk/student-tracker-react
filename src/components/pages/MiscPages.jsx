@@ -35,6 +35,7 @@ import { focusApi, studyApi } from "@/lib/api";
 import { createFirestoreRoom, joinRoomByCode, watchPublicRooms, joinRoom, leaveRoom, sendRoomMessage, uploadRoomFile, updateAgoraUid, updateRoomPhase, updateMutedState, endRoom, incrementRound, uploadUserAvatar, uploadUserBanner, setRoomMemberCount } from "@/lib/realtime";
 import { createAgoraRoomClient } from "@/lib/agora";
 import { auth } from "@/lib/firebase";
+import { useAuthStore } from "@/store/auth-store";
 import { useRoomLiveState } from "@/lib/useRoomLiveState";
 
 function generateRoomCode() {
@@ -998,11 +999,26 @@ function statusBadge(status) {
 }
 
 function ActivityHeatmap({ activity }) {
-  // activity is a date→focus-minutes object ({ "2026-06-01": 120 }), the same
-  // shape /user/profile/stats and /social/users/{uid}/profile return. Render the
-  // last 12 weeks (84 days) ending today, mapping minutes → an intensity band
-  // (thresholds match the Dashboard year heatmap).
-  const map = activity && typeof activity === "object" ? activity : {};
+  // Accept both backend shapes:
+  // - stats.activity: { "2026-06-01": 120 }
+  // - profile/activity: [{ date: "2026-06-01", focus_minutes: 120 }]
+  const source = Array.isArray(activity?.activity) ? activity.activity : activity;
+  const map = {};
+  if (Array.isArray(source)) {
+    source.forEach((item) => {
+      const date = item?.date;
+      if (!date) return;
+      map[date] = Number(item.focus_minutes ?? item.focusMinutes ?? item.minutes ?? item.mins ?? 0);
+    });
+  } else if (source && typeof source === "object") {
+    Object.entries(source).forEach(([date, value]) => {
+      map[date] = Number(
+        typeof value === "object"
+          ? value.focus_minutes ?? value.focusMinutes ?? value.minutes ?? value.mins ?? 0
+          : value
+      );
+    });
+  }
   const keyOf = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const levelOf = (mins) => (!mins ? 0 : mins < 30 ? 1 : mins < 60 ? 2 : mins < 120 ? 3 : 4);
@@ -1015,13 +1031,53 @@ function ActivityHeatmap({ activity }) {
     const mins = map[keyOf(d)] || 0;
     return { date: keyOf(d), level: levelOf(mins), mins };
   });
+  const totalMinutes = cells.reduce((sum, c) => sum + c.mins, 0);
+  const activeDays = cells.filter((c) => c.mins > 0).length;
 
   return (
-    <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(12, 1fr)", gridAutoFlow: "column", gridTemplateRows: "repeat(7, 1fr)" }}>
-      {cells.map((c, i) => {
-        const shade = ["bg-muted", "bg-primary/20", "bg-primary/40", "bg-primary/70", "bg-primary"][c.level] || "bg-muted";
-        return <div key={i} className={`aspect-square rounded-sm ${shade}`} title={`${c.date}: ${c.mins} min focused`} />;
-      })}
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs text-muted-foreground">
+          {activeDays > 0
+            ? `${activeDays} active days · ${Math.round(totalMinutes / 60)}h ${totalMinutes % 60}m focused`
+            : "No focus activity recorded in the last 12 weeks."}
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span>Less</span>
+          {["bg-muted", "bg-primary/20", "bg-primary/40", "bg-primary/70", "bg-primary"].map((shade) => (
+            <span key={shade} className={`h-3 w-3 rounded-sm ${shade}`} />
+          ))}
+          <span>More</span>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <div
+          className="grid w-max gap-1"
+          style={{ gridTemplateColumns: "repeat(12, 16px)", gridTemplateRows: "repeat(7, 16px)", gridAutoFlow: "column" }}
+        >
+          {cells.map((c, i) => {
+            const shade = ["bg-muted", "bg-primary/20", "bg-primary/40", "bg-primary/70", "bg-primary"][c.level] || "bg-muted";
+            return <div key={i} className={`h-4 w-4 rounded-sm ${shade}`} title={`${c.date}: ${c.mins} min focused`} />;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StreakDefinition() {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border bg-orange-500/5 p-4 text-sm text-muted-foreground">
+      <div className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-orange-500/10 grid place-items-center">
+        <Flame className="h-4 w-4 text-orange-500" />
+      </div>
+      <div>
+        <div className="font-semibold text-foreground">How streaks are counted</div>
+        <p className="mt-1">
+          A streak day means you completed a Pomodoro, submitted a daily standup, or marked a sprint task as Done.
+          Yesterday still keeps the streak active until today ends.
+        </p>
+      </div>
     </div>
   );
 }
@@ -1029,11 +1085,16 @@ function ActivityHeatmap({ activity }) {
 export function ProfilePage({ uid }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const authUser = useAuthStore((s) => s.user);
+  const authProfile = useAuthStore((s) => s.profile);
   const { data: myProfile } = useProfile();
   const [achievementDraft, setAchievementDraft] = useState({ title: "", description: "", category: "", evidence_url: "" });
   const [projectDraft, setProjectDraft] = useState({ title: "", description: "", category: "", project_url: "", repository_url: "", status: "in_progress" });
-  const myUid = String(myProfile?.uid || myProfile?.firebase_uid || myProfile?.id || "");
-  const isSelf = !uid || String(uid) === myUid;
+  const effectiveMyProfile = myProfile || authProfile;
+  const authUid = authUser?.uid || "";
+  const myUid = String(effectiveMyProfile?.uid || effectiveMyProfile?.firebase_uid || authUid || effectiveMyProfile?.id || "");
+  const requestedUid = String(uid || "");
+  const isSelf = !requestedUid || requestedUid === myUid || (!!authUid && requestedUid === authUid);
 
   // Self uses /user/profile + /user/profile/stats; others use /social/users/{uid}/profile
   const { data: otherProfile, isLoading: loadingOther } = useQuery({
@@ -1049,6 +1110,12 @@ export function ProfilePage({ uid }) {
     enabled: isSelf,
     retry: false,
   });
+  const { data: myActivity } = useQuery({
+    queryKey: ["user", "activity"],
+    queryFn: userApi.activity,
+    enabled: isSelf,
+    retry: false,
+  });
 
   const { data: friendsList = [] } = useQuery({
     queryKey: ["social", "friends"],
@@ -1056,10 +1123,10 @@ export function ProfilePage({ uid }) {
     retry: 1,
   });
 
-  const profile = isSelf ? myProfile : otherProfile;
+  const profile = isSelf ? effectiveMyProfile : otherProfile;
   const stats = isSelf ? myStats : otherProfile?.stats;
   // Activity lives inside the stats payload for both self and other users.
-  const activity = isSelf ? myStats?.activity : otherProfile?.stats?.activity;
+  const activity = isSelf ? (myActivity?.activity ?? myStats?.activity) : otherProfile?.stats?.activity;
   const profileUid = String(profile?.uid || profile?.firebase_uid || uid || "");
 
   const { data: achievements = [] } = useQuery({
@@ -1167,8 +1234,20 @@ export function ProfilePage({ uid }) {
     },
   });
 
-  if (!isSelf && loadingOther) {
-    return <div className="text-sm text-muted-foreground">Loading profile…</div>;
+  if ((isSelf && !profile) || (!isSelf && loadingOther)) {
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-4 px-1 sm:px-0">
+        <div className="h-9 w-32 rounded-lg bg-muted animate-pulse" />
+        <div className="rounded-2xl border bg-card overflow-hidden">
+          <div className="h-28 sm:h-32 bg-muted animate-pulse" />
+          <div className="p-4 sm:p-6 space-y-3">
+            <div className="h-20 w-20 rounded-full bg-muted animate-pulse" />
+            <div className="h-5 w-40 rounded bg-muted animate-pulse" />
+            <div className="h-4 w-56 rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!isSelf && !otherProfile) {
@@ -1185,14 +1264,14 @@ export function ProfilePage({ uid }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
+    <div className="w-full max-w-4xl mx-auto space-y-4 px-1 pb-8 sm:px-0">
       <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/social" })}>
         <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to social
       </Button>
 
       {/* Header */}
       <div className="rounded-2xl border bg-card overflow-hidden">
-        <div className="relative h-32 bg-gradient-to-br from-primary to-primary/60">
+        <div className="relative h-28 bg-gradient-to-br from-primary to-primary/60 sm:h-32">
           {profile?.banner_url && (
             <img
               src={profile.banner_url}
@@ -1202,13 +1281,13 @@ export function ProfilePage({ uid }) {
             />
           )}
         </div>
-        <div className="px-6 pb-6 -mt-12">
-          <div className="flex items-end justify-between gap-4">
-            <Avatar className="h-24 w-24 border-4 border-card">
+        <div className="px-4 pb-5 -mt-10 sm:px-6 sm:pb-6 sm:-mt-12">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <Avatar className="h-20 w-20 border-4 border-card sm:h-24 sm:w-24">
               <AvatarImage src={avatar} />
-              <AvatarFallback className="text-xl">{initialsOf(name)}</AvatarFallback>
+              <AvatarFallback className="text-lg sm:text-xl">{initialsOf(name)}</AvatarFallback>
             </Avatar>
-            <div className="flex gap-2 pb-1">
+            <div className="flex flex-wrap gap-2 sm:pb-1">
               {isSelf ? (
                 <Button size="sm" onClick={() => navigate({ to: "/profile/edit" })}>
                   <PencilIcon className="h-3.5 w-3.5 mr-1.5" /> Edit profile
@@ -1228,9 +1307,9 @@ export function ProfilePage({ uid }) {
               )}
             </div>
           </div>
-          <div className="mt-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">{name}</h2>
+          <div className="mt-3 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="min-w-0 break-words text-lg font-semibold sm:text-xl">{name}</h2>
               <span className={`inline-flex items-center gap-1 text-xs ${badge.text}`}>
                 <span className={`h-2 w-2 rounded-full ${badge.dot}`} />
                 {badge.label}
@@ -1241,7 +1320,7 @@ export function ProfilePage({ uid }) {
                 {university}{university && gradYear && " · "}{gradYear && `Class of ${gradYear}`}
               </div>
             )}
-            {bio && <p className="text-sm mt-2">{bio}</p>}
+            {bio && <p className="mt-2 break-words text-sm">{bio}</p>}
           </div>
         </div>
       </div>
@@ -1287,6 +1366,8 @@ export function ProfilePage({ uid }) {
           </div>
         </div>
       </div>
+
+      <StreakDefinition />
 
       {/* Achievements */}
       <div className="rounded-xl border bg-card p-4">
@@ -2159,7 +2240,7 @@ export function EditProfilePage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.user.profile });
       toast.success("Profile updated");
-      navigate({ to: "/profile/$uid", params: { uid: String(profile?.id || profile?.uid || "") } });
+      navigate({ to: "/profile/$uid", params: { uid: String(profile?.uid || profile?.firebase_uid || profile?.id || "") } });
     },
     // Surface the real server error (status + message) instead of a generic
     // toast — a 500 here is almost always a missing column/migration in the

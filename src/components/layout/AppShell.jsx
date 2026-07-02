@@ -8,11 +8,11 @@ export default function AppShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-dvh overflow-hidden bg-background text-foreground">
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar onMobileMenu={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto w-full px-4 lg:px-8 py-6">
+        <main className="flex-1 overflow-y-auto w-full px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
           {children}
         </main>
       </div>

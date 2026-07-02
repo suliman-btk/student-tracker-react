@@ -1122,7 +1122,7 @@ function FriendRequestsCard() {
 
 // ─── Right: Discover / Search ─────────────────────────────────────────────────
 
-function DiscoverCard() {
+function DiscoverCard({ className = "", limit = 5, wide = false }) {
   const [q, setQ] = useState("");
   const qc = useQueryClient();
 
@@ -1167,16 +1167,16 @@ function DiscoverCard() {
     const connected = connectionState === "connected" || u.is_friend;
     const pendingReceived = connectionState === "pending_received";
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 min-w-0">
         {uid ? (
           <Link to="/profile/$uid" params={{ uid }}>
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-9 w-9">
               <AvatarImage src={avatar} />
               <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
             </Avatar>
           </Link>
         ) : (
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-9 w-9">
             <AvatarImage src={avatar} />
             <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
           </Avatar>
@@ -1201,7 +1201,7 @@ function DiscoverCard() {
         ) : pendingReceived ? (
           <span className="text-[11px] text-muted-foreground">Requested</span>
         ) : (
-          <button onClick={() => sendRequest(uid)} className="text-primary hover:text-primary/80">
+          <button onClick={() => sendRequest(uid)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-primary hover:bg-primary/10 hover:text-primary/80" title="Add connection">
             <UserPlus className="h-4 w-4" />
           </button>
         )}
@@ -1210,11 +1210,28 @@ function DiscoverCard() {
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        {isSearching ? "Search results" : "People you may know"}
+    <div className={`rounded-xl border bg-card p-4 ${className}`}>
+      <div className={`mb-4 flex flex-col gap-3 ${wide ? "sm:flex-row sm:items-center sm:justify-between" : ""}`}>
+        <div>
+          <div className="text-sm font-semibold">
+            {isSearching ? "Search results" : "People you may know"}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Search classmates and send connection requests.
+          </div>
+        </div>
+        <div className={`relative ${wide ? "sm:w-72" : ""}`}>
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            className="pl-8 h-9 text-sm"
+            placeholder="Search by name…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
       </div>
-      <div className="relative mb-3">
+      {!wide && (
+        <div className="relative mb-3 sm:hidden">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           className="pl-8 h-8 text-sm"
@@ -1223,6 +1240,7 @@ function DiscoverCard() {
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
+      )}
       {(isFetching || (!isSearching && loadingSuggestions)) && (
         <div className="text-xs text-muted-foreground">Loading…</div>
       )}
@@ -1233,8 +1251,8 @@ function DiscoverCard() {
         <div className="text-xs text-muted-foreground">No suggestions yet — connect with more people first.</div>
       )}
       {list.length > 0 && (
-        <div className="space-y-2.5">
-          {list.slice(0, 5).map((u) => (
+        <div className={wide ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
+          {list.slice(0, limit).map((u) => (
             <UserRow key={String(u.uid || u.firebase_uid || u.id || u.name)} u={u} />
           ))}
         </div>
@@ -1317,9 +1335,27 @@ function NetworkPanel() {
           </div>
         </div>
       </div>
-      <div className="grid xl:grid-cols-2 gap-3">
-        <FriendRequestsCard />
-        <DiscoverCard />
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
+        <DiscoverCard className="xl:order-1" limit={12} wide />
+        <div className="xl:order-2">
+          <FriendRequestsCard />
+        </div>
+      </div>
+      <div className="rounded-xl border bg-card p-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Find</div>
+            <p className="mt-1 text-sm text-muted-foreground">Search by name and discover classmates already using RAQIP.</p>
+          </div>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connect</div>
+            <p className="mt-1 text-sm text-muted-foreground">Send requests to students you know or want to study with.</p>
+          </div>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Collaborate</div>
+            <p className="mt-1 text-sm text-muted-foreground">Use rooms, posts, and achievements to keep study work visible.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1536,19 +1572,21 @@ export function SocialPage() {
         </div>
 
         {/* Right panel */}
-        <div className="hidden xl:flex flex-col w-72 shrink-0 gap-3 overflow-y-auto">
-          <FriendRequestsCard />
-          <DiscoverCard />
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Sparkles className="h-4 w-4 text-amber-600" />
-              Social is for academic progress
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground leading-5">
-              Share achievements, live study sessions, useful resources, and project updates so your network has context beyond casual posts.
+        {view !== "network" && (
+          <div className="hidden xl:flex flex-col w-72 shrink-0 gap-3 overflow-y-auto">
+            <FriendRequestsCard />
+            <DiscoverCard />
+            <div className="rounded-xl border bg-card p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                Social is for academic progress
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground leading-5">
+                Share achievements, live study sessions, useful resources, and project updates so your network has context beyond casual posts.
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </SocialUsageGuard>
   );
