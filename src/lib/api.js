@@ -1,4 +1,4 @@
-import { apiRequest, apiUpload, crud, unwrapData } from "./api-client";
+import { ApiError, apiRequest, apiUpload, crud, unwrapData } from "./api-client";
 
 export const userApi = {
   profile: () => apiRequest("/user/profile").then(unwrapData),
@@ -164,7 +164,15 @@ export const aiApi = {
   generateSuggestions: (body = {}) => apiRequest("/ai/suggest-tasks", { method: "POST", body }).then((p) => unwrapData(p, [])),
   acceptSuggestion: (id) => apiRequest(`/ai/suggest-tasks/${id}/accept`, { method: "POST" }).then(unwrapData),
   ignoreSuggestion: (id) => apiRequest(`/ai/suggest-tasks/${id}`, { method: "DELETE" }),
-  sprintReview: (id) => apiRequest(`/ai/sprint/${id}/review`).then(unwrapData),
+  sprintReview: async (id) => {
+    try {
+      const payload = await apiRequest(`/ai/sprint/${id}/review`);
+      return payload?.data ?? null;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null;
+      throw error;
+    }
+  },
   generateSprintReview: (id) => apiRequest(`/ai/sprint/${id}/review`, { method: "POST" }).then(unwrapData),
   sprintPlan: (body) => apiRequest("/ai/sprint-plan", { method: "POST", body }).then(unwrapData),
   multiSprintPlan: (body) => apiRequest("/ai/multi-sprint-plan", { method: "POST", body }).then(unwrapData),
