@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1122,8 +1123,66 @@ function FriendRequestsCard() {
 
 // ─── Right: Discover / Search ─────────────────────────────────────────────────
 
+// Hoisted out of DiscoverCard: a component type defined inside another
+// component's body gets a new identity every render, so React unmounts and
+// remounts every row's DOM on each keystroke.
+function DiscoverUserRow({ u, sentUids, sendRequest }) {
+  const name = u.name || u.display_name || "User";
+  const avatar = u.avatar_url || u.avatar || "";
+  const university = u.university || "";
+  const uid = String(u.uid || u.firebase_uid || u.id || "");
+  const connectionState = sentUids.has(uid) ? "pending_sent" : (u.connection_state || "");
+  const sent = connectionState === "pending_sent" || u.has_sent_request;
+  const connected = connectionState === "connected" || u.is_friend;
+  const pendingReceived = connectionState === "pending_received";
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      {uid ? (
+        <Link to="/profile/$uid" params={{ uid }}>
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={avatar} />
+            <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+          </Avatar>
+        </Link>
+      ) : (
+        <Avatar className="h-9 w-9">
+          <AvatarImage src={avatar} />
+          <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+        </Avatar>
+      )}
+      <div className="flex-1 min-w-0">
+        {uid ? (
+          <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium truncate hover:underline block">
+            {name}
+          </Link>
+        ) : (
+          <div className="text-sm font-medium truncate">{name}</div>
+        )}
+        <div className="text-[11px] text-muted-foreground truncate">
+          {university || "Student profile"}
+          {u.graduation_year ? ` · Class of ${u.graduation_year}` : ""}
+        </div>
+      </div>
+      {sent ? (
+        <span className="text-[11px] text-muted-foreground">Pending</span>
+      ) : connected ? (
+        <span className="text-[11px] text-muted-foreground">Connected</span>
+      ) : pendingReceived ? (
+        <span className="text-[11px] text-muted-foreground">Requested</span>
+      ) : (
+        <button onClick={() => sendRequest(uid)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-primary hover:bg-primary/10 hover:text-primary/80" title="Add connection">
+          <UserPlus className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function DiscoverCard({ className = "", limit = 5, wide = false }) {
   const [q, setQ] = useState("");
+  // Query on the settled value so typing "hello" sends one request, not five;
+  // keepPreviousData keeps the old results on screen between terms.
+  const dq = useDebouncedValue(q, 300);
   const qc = useQueryClient();
 
   const { data: suggestions = [], isLoading: loadingSuggestions } = useQuery({
@@ -1134,9 +1193,10 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
   });
 
   const { data: results = [], isFetching } = useQuery({
-    queryKey: ["social", "discover", q],
-    queryFn: () => socialApi.discovery.search(q),
-    enabled: q.trim().length >= 2,
+    queryKey: ["social", "discover", dq],
+    queryFn: () => socialApi.discovery.search(dq),
+    enabled: dq.trim().length >= 2,
+    placeholderData: keepPreviousData,
     retry: false,
   });
 
@@ -1152,62 +1212,12 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
     onError: () => toast.error("Could not send request"),
   });
 
-  const isSearching = q.trim().length >= 2;
+  // Keyed on the debounced value so the card doesn't flash "No users found"
+  // in the window between typing and the search actually firing.
+  const isSearching = dq.trim().length >= 2;
   const list = isSearching
     ? (Array.isArray(results) ? results : results?.data || [])
     : (Array.isArray(suggestions) ? suggestions : suggestions?.data || []);
-
-  function UserRow({ u }) {
-    const name = u.name || u.display_name || "User";
-    const avatar = u.avatar_url || u.avatar || "";
-    const university = u.university || "";
-    const uid = String(u.uid || u.firebase_uid || u.id || "");
-    const connectionState = sentUids.has(uid) ? "pending_sent" : (u.connection_state || "");
-    const sent = connectionState === "pending_sent" || u.has_sent_request;
-    const connected = connectionState === "connected" || u.is_friend;
-    const pendingReceived = connectionState === "pending_received";
-    return (
-      <div className="flex items-center gap-3 min-w-0">
-        {uid ? (
-          <Link to="/profile/$uid" params={{ uid }}>
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={avatar} />
-              <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
-            </Avatar>
-          </Link>
-        ) : (
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={avatar} />
-            <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
-          </Avatar>
-        )}
-        <div className="flex-1 min-w-0">
-          {uid ? (
-            <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium truncate hover:underline block">
-              {name}
-            </Link>
-          ) : (
-            <div className="text-sm font-medium truncate">{name}</div>
-          )}
-          <div className="text-[11px] text-muted-foreground truncate">
-            {university || "Student profile"}
-            {u.graduation_year ? ` · Class of ${u.graduation_year}` : ""}
-          </div>
-        </div>
-        {sent ? (
-          <span className="text-[11px] text-muted-foreground">Pending</span>
-        ) : connected ? (
-          <span className="text-[11px] text-muted-foreground">Connected</span>
-        ) : pendingReceived ? (
-          <span className="text-[11px] text-muted-foreground">Requested</span>
-        ) : (
-          <button onClick={() => sendRequest(uid)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-primary hover:bg-primary/10 hover:text-primary/80" title="Add connection">
-            <UserPlus className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className={`rounded-xl border bg-card p-4 ${className}`}>
@@ -1253,7 +1263,7 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
       {list.length > 0 && (
         <div className={wide ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
           {list.slice(0, limit).map((u) => (
-            <UserRow key={String(u.uid || u.firebase_uid || u.id || u.name)} u={u} />
+            <DiscoverUserRow key={String(u.uid || u.firebase_uid || u.id || u.name)} u={u} sentUids={sentUids} sendRequest={sendRequest} />
           ))}
         </div>
       )}
@@ -1445,14 +1455,19 @@ function SocialUsageGuard({ children }) {
     if (limitSecs <= 0 || blocked) return;
     const id = setInterval(() => {
       usedSecsRef.current += 1;
-      saveUsedSeconds(usedSecsRef.current, resetHour);
+      // Persist every 5th tick instead of every second; the cleanup flush
+      // below bounds any loss to <5s on abrupt exit.
+      if (usedSecsRef.current % 5 === 0) saveUsedSeconds(usedSecsRef.current, resetHour);
       setRemaining((r) => {
         const next = r - 1;
         if (next <= 0) { setBlocked(true); return 0; }
         return next;
       });
     }, 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      saveUsedSeconds(usedSecsRef.current, resetHour);
+    };
   }, [limitSecs, resetHour, blocked]);
 
   if (blocked) {

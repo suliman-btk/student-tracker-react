@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Users, MessageCircle, BellRing, Check, Mic, MicOff, LogOut, Send, Lock, Globe, Hash, Copy, Play, Pause, SkipForward, Square, ChevronRight } from "lucide-react";
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 import { Link, useNavigate, useBlocker } from "@tanstack/react-router";
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense, memo } from "react";
 import { ArrowLeft, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { useTask, useTaskComments, useStudyMutations, useActiveSprint, useProfile } from "@/lib/query-hooks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -354,6 +354,140 @@ function useCountdown(room) {
   return { timer: `${mm}:${ss}`, secs };
 }
 
+// Owns the 1-second countdown so the tick re-renders only this ring subtree,
+// not the whole 3-panel room page.
+function TimerRing({ room, phase }) {
+  const { timer, secs: timerSecs } = useCountdown(room);
+  const phaseLabel = phase === "focus" ? "FOCUSING" : phase === "breakTime" ? "ON BREAK" : "WAITING TO START";
+  const ringColor = phase === "focus" ? "#6366f1" : phase === "breakTime" ? "#f59e0b" : "var(--muted-foreground)";
+  const ringTrack = phase === "focus" ? "rgba(99,102,241,0.12)" : phase === "breakTime" ? "rgba(245,158,11,0.12)" : "rgba(0,0,0,0.06)";
+  const totalSecs = (phase === "focus" ? (room.focusDuration || 25) : (room.breakDuration || 5)) * 60;
+  const timerPct = totalSecs > 0 ? Math.max(0, Math.min(1, timerSecs / totalSecs)) : 0;
+  const circumference = 2 * Math.PI * 44;
+
+  return (
+    <div className="relative w-64 h-64 shrink-0">
+      <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
+        {/* Track — phase-tinted neutral */}
+        <circle cx="50" cy="50" r="44" fill="none" stroke={ringTrack} strokeWidth="4" />
+        {/* Progress — arc length = timerPct × circumference, starts full and depletes.
+            Uses ringColor (a real hex); hsl(var(--primary)) was invalid here because
+            --primary is a hex value, not an HSL triple, so the arc never rendered. */}
+        <circle cx="50" cy="50" r="44" fill="none"
+          stroke={ringColor} strokeWidth="4"
+          strokeDasharray={`${circumference * timerPct} ${circumference}`}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 1s linear" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+        <span className="text-5xl font-bold tabular-nums tracking-tight text-foreground">
+          {timer}
+        </span>
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          {phaseLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// memo + primitive props: only rows whose speaking/mute state actually flips
+// re-render when a volume snapshot arrives.
+const MemberRow = memo(function MemberRow({ name, isMuted, speaking, isStudying, voiceLocked }) {
+  return (
+    <div
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-300
+        ${speaking ? "border-indigo-300/60 bg-indigo-50/80 dark:bg-indigo-950/30 shadow-sm"
+        : isStudying ? "border-border/50 bg-card/60"
+        : "border-border/50 bg-card/60"}`}>
+      <div className="relative shrink-0">
+        {speaking && <span className="absolute inset-0 rounded-full animate-ping bg-primary/20" />}
+        <Avatar className={`h-9 w-9 relative ${speaking ? "ring-2 ring-primary ring-offset-1" : ""}`}>
+          <AvatarFallback className={`text-sm font-bold ${speaking ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
+            {(name || "?")[0].toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        {isMuted && (
+          <span className="absolute -bottom-0.5 -right-0.5 bg-red-500 rounded-full p-0.5 shadow">
+            <MicOff className="h-2 w-2 text-white" />
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold truncate">{name || "Member"}</p>
+        <p className={`text-[10px] font-medium ${speaking ? "text-indigo-600" : voiceLocked ? "text-red-400" : "text-muted-foreground"}`}>
+          {voiceLocked ? "🔇 Blocked" : speaking ? "Speaking…" : isMuted ? "Muted" : isStudying ? "Focusing" : "Listening"}
+        </p>
+      </div>
+      {speaking && (
+        <div className="flex items-end gap-[2px] shrink-0" style={{ height: 14 }}>
+          {[0.4, 1, 0.6, 0.9, 0.5].map((h, i) => (
+            <span key={i} className="w-0.5 rounded-full animate-bounce bg-primary"
+              style={{ height: `${h * 12}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// Owns the Agora volumes state so volume snapshots re-render only this panel.
+// The parent hands us a ref; we register our state setter into it on mount and
+// the parent's onVolume callback writes through it.
+function VoicePanel({ members, phase, voiceLocked, isMuted, toggleMute, onVolumeRef }) {
+  const [volumes, setVolumes] = useState({});
+
+  useEffect(() => {
+    onVolumeRef.current = setVolumes;
+    return () => { onVolumeRef.current = null; };
+  }, [onVolumeRef]);
+
+  const moodPanelBg = phase === "focus"
+    ? "bg-indigo-950/[0.08] border-indigo-200/30"
+    : phase === "breakTime"
+    ? "bg-amber-50 dark:bg-amber-900/20"
+    : "bg-background";
+
+  return (
+    <div className={`w-60 shrink-0 border-r flex flex-col transition-colors duration-700 ${moodPanelBg}`}>
+      <div className="px-4 py-3 border-b flex items-center justify-between">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Participants</p>
+        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{members.length}</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+        {members.map((m) => {
+          const vol = volumes[m.agoraUid] || 0;
+          const speaking = vol > 5;
+          const isStudying = phase === "focus" && !speaking;
+          return (
+            <MemberRow key={m.uid}
+              name={m.displayName}
+              isMuted={!!m.isMuted}
+              speaking={speaking}
+              isStudying={isStudying}
+              voiceLocked={voiceLocked}
+            />
+          );
+        })}
+      </div>
+      {/* Mic control */}
+      <div className="p-3 border-t">
+        <button
+          onClick={toggleMute}
+          disabled={voiceLocked}
+          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all
+            ${voiceLocked ? "opacity-40 cursor-not-allowed bg-muted text-muted-foreground"
+            : isMuted ? "bg-muted hover:bg-muted/70 text-foreground"
+            : "bg-primary hover:bg-primary/90 text-primary-foreground"}`}>
+          {voiceLocked ? <MicOff className="h-4 w-4" /> : isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          {voiceLocked ? "Voice blocked" : isMuted ? "Unmute" : "Mute"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TaskSkeleton() {
   return (
     <div className="space-y-2 animate-pulse">
@@ -437,12 +571,14 @@ export function RoomDetailPage({ id }) {
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [volumes, setVolumes] = useState({});
   const [chatInput, setChatInput] = useState("");
   const [showLeaveSheet, setShowLeaveSheet] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [uploading, setUploading] = useState(false);
   const agoraRef = useRef(null);
+  // VoicePanel registers its volumes setter here; Agora's onVolume writes
+  // through it so volume snapshots re-render only that panel.
+  const onVolumeRef = useRef(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const autoJoinedRef = useRef(false);
@@ -452,8 +588,6 @@ export function RoomDetailPage({ id }) {
   // Mirror isHost into a ref so the unmount/unload cleanup (which closes over a
   // fixed [id]) can read the current value and end the room when the host exits.
   const isHostRef = useRef(false);
-
-  const { timer, secs: timerSecs } = useCountdown(room);
 
   // Confirm before leaving when navigating away via the sidebar/back button.
   // withResolver lets us render our own dialog; proceed()/reset() resolve it.
@@ -540,7 +674,7 @@ export function RoomDetailPage({ id }) {
   const initAgora = async () => {
     const client = await createAgoraRoomClient({
       roomId: id, uid: null,
-      onVolume: (vols) => { const m = {}; vols.forEach(({ uid, volume }) => { m[uid] = volume; }); setVolumes(m); },
+      onVolume: (vols) => { const m = {}; vols.forEach(({ uid, volume }) => { m[uid] = volume; }); onVolumeRef.current?.(m); },
       onUserJoined: () => {}, onUserLeft: () => {},
     });
     agoraRef.current = client;
@@ -608,7 +742,7 @@ export function RoomDetailPage({ id }) {
   };
 
   const copyCode = () => {
-    if (room?.roomCode) { navigator.clipboard.writeText(room.roomCode); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); }
+    if (room?.roomCode) { navigator.clipboard.writeText(room.roomCode).catch(() => {}); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); }
   };
 
   const handleStart = async () => { if (!isHost) return; await updateRoomPhase(id, "focus", room.focusDuration || 25); };
@@ -650,23 +784,6 @@ export function RoomDetailPage({ id }) {
   const phaseDot = phase === "focus" ? "bg-red-500" : phase === "breakTime" ? "bg-emerald-500" : "bg-muted-foreground";
   const phaseLabel = phase === "focus" ? "FOCUSING" : phase === "breakTime" ? "ON BREAK" : "WAITING TO START";
   const roundNum = (room.roundsCompleted || 0) + (phase === "focus" ? 1 : 0);
-
-  // Mood palette — shifts with phase
-  const moodPanelBg = phase === "focus"
-    ? "bg-indigo-950/[0.08] border-indigo-200/30"
-    : phase === "breakTime"
-    ? "bg-amber-50 dark:bg-amber-900/20"
-    : "bg-background";
-  const moodCenterBg = phase === "focus"
-    ? "bg-indigo-950/[0.06]"
-    : phase === "breakTime"
-    ? "bg-amber-50/60 dark:bg-amber-900/20"
-    : "bg-background";
-  const ringColor = phase === "focus" ? "#6366f1" : phase === "breakTime" ? "#f59e0b" : "var(--muted-foreground)";
-  const ringTrack = phase === "focus" ? "rgba(99,102,241,0.12)" : phase === "breakTime" ? "rgba(245,158,11,0.12)" : "rgba(0,0,0,0.06)";
-  const totalSecs = (phase === "focus" ? (room.focusDuration || 25) : (room.breakDuration || 5)) * 60;
-  const timerPct = totalSecs > 0 ? Math.max(0, Math.min(1, timerSecs / totalSecs)) : 0;
-  const circumference = 2 * Math.PI * 44;
 
   // ── LOBBY ─────────────────────────────────────────────────────────────────
   if (phase === "idle") {
@@ -802,96 +919,21 @@ export function RoomDetailPage({ id }) {
       {/* 3-panel body */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Left: Voice panel */}
-        <div className={`w-60 shrink-0 border-r flex flex-col transition-colors duration-700 ${moodPanelBg}`}>
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Participants</p>
-            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{members.length}</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-            {members.map((m) => {
-              const vol = volumes[m.agoraUid] || 0;
-              const speaking = vol > 5;
-              const isStudying = phase === "focus" && !speaking;
-              return (
-                <div key={m.uid}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-300
-                    ${speaking ? "border-indigo-300/60 bg-indigo-50/80 dark:bg-indigo-950/30 shadow-sm"
-                    : isStudying ? "border-border/50 bg-card/60"
-                    : "border-border/50 bg-card/60"}`}>
-                  <div className="relative shrink-0">
-                    {speaking && <span className="absolute inset-0 rounded-full animate-ping bg-primary/20" />}
-                    <Avatar className={`h-9 w-9 relative ${speaking ? "ring-2 ring-primary ring-offset-1" : ""}`}>
-                      <AvatarFallback className={`text-sm font-bold ${speaking ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
-                        {(m.displayName || "?")[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    {m.isMuted && (
-                      <span className="absolute -bottom-0.5 -right-0.5 bg-red-500 rounded-full p-0.5 shadow">
-                        <MicOff className="h-2 w-2 text-white" />
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{m.displayName || "Member"}</p>
-                    <p className={`text-[10px] font-medium ${speaking ? "text-indigo-600" : voiceLocked ? "text-red-400" : "text-muted-foreground"}`}>
-                      {voiceLocked ? "🔇 Blocked" : speaking ? "Speaking…" : m.isMuted ? "Muted" : isStudying ? "Focusing" : "Listening"}
-                    </p>
-                  </div>
-                  {speaking && (
-                    <div className="flex items-end gap-[2px] shrink-0" style={{ height: 14 }}>
-                      {[0.4, 1, 0.6, 0.9, 0.5].map((h, i) => (
-                        <span key={i} className="w-0.5 rounded-full animate-bounce bg-primary"
-                          style={{ height: `${h * 12}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {/* Mic control */}
-          <div className="p-3 border-t">
-            <button
-              onClick={toggleMute}
-              disabled={voiceLocked}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all
-                ${voiceLocked ? "opacity-40 cursor-not-allowed bg-muted text-muted-foreground"
-                : isMuted ? "bg-muted hover:bg-muted/70 text-foreground"
-                : "bg-primary hover:bg-primary/90 text-primary-foreground"}`}>
-              {voiceLocked ? <MicOff className="h-4 w-4" /> : isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              {voiceLocked ? "Voice blocked" : isMuted ? "Unmute" : "Mute"}
-            </button>
-          </div>
-        </div>
+        {/* Left: Voice panel — owns volumes state; volume snapshots re-render only this */}
+        <VoicePanel
+          members={members}
+          phase={phase}
+          voiceLocked={voiceLocked}
+          isMuted={isMuted}
+          toggleMute={toggleMute}
+          onVolumeRef={onVolumeRef}
+        />
 
         {/* Center: Timer */}
         <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-background">
 
-          {/* SVG ring + timer — clean, simple */}
-          <div className="relative w-64 h-64 shrink-0">
-            <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
-              {/* Track — phase-tinted neutral */}
-              <circle cx="50" cy="50" r="44" fill="none" stroke={ringTrack} strokeWidth="4" />
-              {/* Progress — arc length = timerPct × circumference, starts full and depletes.
-                  Uses ringColor (a real hex); hsl(var(--primary)) was invalid here because
-                  --primary is a hex value, not an HSL triple, so the arc never rendered. */}
-              <circle cx="50" cy="50" r="44" fill="none"
-                stroke={ringColor} strokeWidth="4"
-                strokeDasharray={`${circumference * timerPct} ${circumference}`}
-                strokeLinecap="round"
-                style={{ transition: "stroke-dasharray 1s linear" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
-              <span className="text-5xl font-bold tabular-nums tracking-tight text-foreground">
-                {timer}
-              </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {phaseLabel}
-              </span>
-            </div>
-          </div>
+          {/* SVG ring + timer — owns the 1s countdown; ticks re-render only the ring */}
+          <TimerRing room={room} phase={phase} />
 
           {/* Round counter — simple text */}
           <p className="text-sm text-muted-foreground font-medium">Round {roundNum}</p>
@@ -2286,7 +2328,7 @@ export function EditProfilePage() {
     <div className="max-w-xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: -1 })}>
+        <Button variant="ghost" size="icon" onClick={() => window.history.length > 1 ? window.history.back() : navigate({ to: "/" })}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-lg font-bold flex-1">Edit profile</h1>

@@ -1,8 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import {
-  ArrowRight, CalendarDays, CheckCircle2, ListChecks, Sparkles, Timer, Trophy, Wand2, Zap,
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  Download,
+  ListChecks,
+  QrCode,
+  ShieldCheck,
+  Sparkles,
+  Timer,
+  Trophy,
+  Wand2,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const APK_DOWNLOAD_URL =
+  import.meta.env.VITE_ANDROID_APK_URL ||
+  "https://github.com/suliman-btk/student-tracker-react/releases/latest/download/RAQIP-v1.0.0.apk";
+const APK_VERSION = import.meta.env.VITE_ANDROID_APK_VERSION || "1.0.0";
+const APK_QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=224x224&margin=12&data=${encodeURIComponent(APK_DOWNLOAD_URL)}`;
 
 const FEATURES = [
   {
@@ -62,7 +79,11 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 lg:px-10 h-20 border-b bg-background/70 backdrop-blur">
         <div className="flex items-center">
-          <img src="/logo.png" alt="RAQIP — Smart Study Companion" className="h-14 w-auto object-contain" />
+          <img
+            src="/logo.png"
+            alt="RAQIP — Smart Study Companion"
+            className="h-14 w-auto object-contain"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" className="h-9">
@@ -87,25 +108,36 @@ export default function LandingPage() {
             </div>
             <h1 className="mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.05]">
               Your messy semester,{" "}
-              <span className="bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">finally sorted.</span>
+              <span className="bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">
+                finally sorted.
+              </span>
             </h1>
             <p className="mt-5 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Juggling classes, your FYP, and a dozen deadlines? RAQIP turns the overwhelm into clear
-              weekly sprints, focused study sessions, and an AI coach that tells you exactly what to
-              tackle next.
+              Juggling classes, your FYP, and a dozen deadlines? RAQIP turns the overwhelm into
+              clear weekly sprints, focused study sessions, and an AI coach that tells you exactly
+              what to tackle next.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="gap-1.5">
-                <Link to="/register">Start your first sprint <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/register">
+                  Start your first sprint <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/login">I already have an account</Link>
               </Button>
             </div>
+            <ApkDownloadQr />
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Free for students</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Works offline</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Set up in 2 minutes</span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Free for students
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Works offline
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Set up in 2 minutes
+              </span>
             </div>
           </div>
 
@@ -121,7 +153,9 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto px-6 lg:px-10 py-7 grid grid-cols-3 divide-x divide-border/70">
             {STATS.map((s) => (
               <div key={s.label} className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">{s.value}</div>
+                <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">
+                  {s.value}
+                </div>
                 <div className="text-xs sm:text-sm text-muted-foreground mt-1">{s.label}</div>
               </div>
             ))}
@@ -132,14 +166,23 @@ export default function LandingPage() {
       {/* How it works — new-user onboarding flow */}
       <section className="max-w-6xl mx-auto w-full px-6 lg:px-10 pt-20 pb-4">
         <div className="text-center max-w-2xl mx-auto">
-          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">How it works</span>
-          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Up and running in three steps</h2>
-          <p className="mt-3 text-muted-foreground">No setup headaches. Go from "where do I even start?" to a plan you can act on today.</p>
+          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">
+            How it works
+          </span>
+          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">
+            Up and running in three steps
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            No setup headaches. Go from "where do I even start?" to a plan you can act on today.
+          </p>
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
-            <div key={title} className="group relative rounded-3xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-0.5">
+            <div
+              key={title}
+              className="group relative rounded-3xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-0.5"
+            >
               <span className="absolute right-5 top-5 text-5xl font-bold leading-none text-muted-foreground/10 transition-colors group-hover:text-primary/15">
                 {i + 1}
               </span>
@@ -156,9 +199,15 @@ export default function LandingPage() {
       {/* Features — bento layout */}
       <section className="max-w-6xl mx-auto w-full px-6 lg:px-10 py-20">
         <div className="text-center max-w-2xl mx-auto">
-          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">Why students stick with it</span>
-          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Built for how you actually study</h2>
-          <p className="mt-3 text-muted-foreground">From the first scary task to the final demo day — one calm place that has your back.</p>
+          <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">
+            Why students stick with it
+          </span>
+          <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">
+            Built for how you actually study
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            From the first scary task to the final demo day — one calm place that has your back.
+          </p>
         </div>
 
         <div className="mt-12 grid gap-4 lg:grid-cols-3 lg:auto-rows-fr">
@@ -171,10 +220,15 @@ export default function LandingPage() {
             <h3 className="relative mt-5 text-xl font-bold">Meet Azzam, your AI Scrum Coach</h3>
             <p className="relative mt-2 text-sm text-primary-foreground/85 leading-relaxed">
               Think of it as the friend who's great at planning. It maps out your sprints, grooms
-              your backlog, reminds you before things blow up, and checks in to keep your FYP on track.
+              your backlog, reminds you before things blow up, and checks in to keep your FYP on
+              track.
             </p>
             <ul className="relative mt-6 space-y-2.5 text-sm">
-              {["Plans your week for you", "Reminds you before deadlines", "Cheers on your progress"].map((t) => (
+              {[
+                "Plans your week for you",
+                "Reminds you before deadlines",
+                "Cheers on your progress",
+              ].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 shrink-0" /> {t}
                 </li>
@@ -183,15 +237,20 @@ export default function LandingPage() {
           </div>
 
           {/* Other feature cards */}
-          {FEATURES.filter((f) => f.title !== "An AI coach in your corner").map(({ icon: Icon, title, desc, tint }) => (
-            <div key={title} className="group rounded-3xl border bg-card p-6 text-left transition-all hover:shadow-lg hover:-translate-y-0.5">
-              <div className={`h-12 w-12 rounded-2xl grid place-items-center ${tint}`}>
-                <Icon className="h-5 w-5" />
+          {FEATURES.filter((f) => f.title !== "An AI coach in your corner").map(
+            ({ icon: Icon, title, desc, tint }) => (
+              <div
+                key={title}
+                className="group rounded-3xl border bg-card p-6 text-left transition-all hover:shadow-lg hover:-translate-y-0.5"
+              >
+                <div className={`h-12 w-12 rounded-2xl grid place-items-center ${tint}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 font-semibold text-lg">{title}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{desc}</p>
               </div>
-              <h3 className="mt-4 font-semibold text-lg">{title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{desc}</p>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </section>
 
@@ -199,9 +258,16 @@ export default function LandingPage() {
       <section className="border-y bg-muted/30">
         <div className="max-w-6xl mx-auto w-full px-6 lg:px-10 py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">See it in action</span>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">Plan the sprint. Focus the hour.</h2>
-            <p className="mt-3 text-muted-foreground">Two tools that do the heavy lifting — turn a big week into a clear board, then lock in with a focus timer that counts.</p>
+            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">
+              See it in action
+            </span>
+            <h2 className="mt-3 text-2xl sm:text-4xl font-bold tracking-tight">
+              Plan the sprint. Focus the hour.
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Two tools that do the heavy lifting — turn a big week into a clear board, then lock in
+              with a focus timer that counts.
+            </p>
           </div>
 
           {/* Sprint spotlight */}
@@ -210,14 +276,22 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-500/10 px-3 py-1 rounded-full">
                 <Zap className="h-3.5 w-3.5" /> Sprints &amp; backlog
               </div>
-              <h3 className="mt-4 text-2xl font-bold tracking-tight">Watch a heavy week shrink into a board.</h3>
+              <h3 className="mt-4 text-2xl font-bold tracking-tight">
+                Watch a heavy week shrink into a board.
+              </h3>
               <p className="mt-3 text-muted-foreground leading-relaxed">
                 Drag tasks across To&nbsp;Do → Doing → Done, track velocity, and actually see the
                 finish line. Each sprint is a small, winnable game instead of a scary deadline.
               </p>
               <ul className="mt-5 space-y-2.5 text-sm">
-                {["Kanban + backlog in one view", "Live sprint progress & burndown", "Auto-rolls unfinished tasks forward"].map((t) => (
-                  <li key={t} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {t}</li>
+                {[
+                  "Kanban + backlog in one view",
+                  "Live sprint progress & burndown",
+                  "Auto-rolls unfinished tasks forward",
+                ].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {t}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -230,14 +304,22 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 bg-rose-500/10 px-3 py-1 rounded-full">
                 <Timer className="h-3.5 w-3.5" /> Focus &amp; Pomodoro
               </div>
-              <h3 className="mt-4 text-2xl font-bold tracking-tight">Hit start. Silence the noise. Get it done.</h3>
+              <h3 className="mt-4 text-2xl font-bold tracking-tight">
+                Hit start. Silence the noise. Get it done.
+              </h3>
               <p className="mt-3 text-muted-foreground leading-relaxed">
                 A simple 25-minute focus timer that logs every session into your streak and stats —
                 so deep work finally shows up on your progress, not just in your memory.
               </p>
               <ul className="mt-5 space-y-2.5 text-sm">
-                {["25 / 5 Pomodoro cycles", "Every session feeds your streak", "Solo or together in Group Rooms"].map((t) => (
-                  <li key={t} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {t}</li>
+                {[
+                  "25 / 5 Pomodoro cycles",
+                  "Every session feeds your streak",
+                  "Solo or together in Group Rooms",
+                ].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" /> {t}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -253,13 +335,18 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto relative overflow-hidden rounded-3xl bg-primary text-primary-foreground px-8 py-12 lg:py-16 text-center">
           <div className="absolute -top-16 -right-10 h-64 w-64 rounded-full bg-primary-foreground/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-[color:var(--ai)]/30 blur-3xl" />
-          <h2 className="relative text-2xl sm:text-3xl font-bold tracking-tight">Your future self will thank you.</h2>
+          <h2 className="relative text-2xl sm:text-3xl font-bold tracking-tight">
+            Your future self will thank you.
+          </h2>
           <p className="relative mt-3 text-primary-foreground/80 max-w-lg mx-auto">
-            Start today and turn this chaotic semester into a series of calm, finishable sprints. It's free, and your first plan is minutes away.
+            Start today and turn this chaotic semester into a series of calm, finishable sprints.
+            It's free, and your first plan is minutes away.
           </p>
           <div className="relative mt-7">
             <Button asChild size="lg" variant="secondary" className="gap-1.5">
-              <Link to="/register">Create my free account <ArrowRight className="h-4 w-4" /></Link>
+              <Link to="/register">
+                Create my free account <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -268,6 +355,44 @@ export default function LandingPage() {
       <footer className="mt-auto border-t py-6 text-center text-xs text-muted-foreground">
         © 2026 RAQIP — Smart Study Companion
       </footer>
+    </div>
+  );
+}
+
+function ApkDownloadQr() {
+  return (
+    <div className="mt-7 flex max-w-xl flex-col gap-4 rounded-2xl border bg-card/85 p-4 shadow-sm sm:flex-row sm:items-center">
+      <a
+        href={APK_DOWNLOAD_URL}
+        className="mx-auto grid h-36 w-36 shrink-0 place-items-center rounded-xl border bg-white p-2 sm:mx-0"
+        aria-label="Download RAQIP Android APK"
+      >
+        <img
+          src={APK_QR_URL}
+          alt="QR code to download the RAQIP Android APK"
+          className="h-full w-full"
+        />
+      </a>
+      <div className="min-w-0 text-center sm:text-left">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+          <QrCode className="h-3.5 w-3.5" /> Android APK
+        </div>
+        <h2 className="mt-3 text-lg font-semibold tracking-tight">Scan to download RAQIP</h2>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          Version {APK_VERSION}. Scanning the QR opens the public APK download from GitHub Releases.
+        </p>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Button asChild className="gap-1.5">
+            <a href={APK_DOWNLOAD_URL}>
+              Download APK <Download className="h-4 w-4" />
+            </a>
+          </Button>
+          <span className="inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Android may ask to allow
+            installation.
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -288,7 +413,10 @@ function AppPreview() {
         <div className="hidden sm:flex w-32 shrink-0 flex-col gap-2 border-r bg-muted/20 p-3">
           <div className="h-6 rounded-md bg-primary/15" />
           {["w-full", "w-4/5", "w-3/4", "w-5/6"].map((w, i) => (
-            <div key={i} className={`h-3 rounded ${w} ${i === 0 ? "bg-primary/40" : "bg-muted-foreground/20"}`} />
+            <div
+              key={i}
+              className={`h-3 rounded ${w} ${i === 0 ? "bg-primary/40" : "bg-muted-foreground/20"}`}
+            />
           ))}
           <div className="mt-auto h-12 rounded-lg bg-[color:var(--ai)]/10 border border-[color:var(--ai)]/20" />
         </div>
@@ -344,18 +472,29 @@ function SprintBoardMock() {
           </div>
           <div className="text-right">
             <div className="text-xl font-bold text-primary leading-none">68%</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">complete</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              complete
+            </div>
           </div>
         </div>
         {/* progress bar */}
         <div className="px-4 pt-3">
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-primary to-[color:var(--ai)]" style={{ width: "68%" }} />
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-[color:var(--ai)]"
+              style={{ width: "68%" }}
+            />
           </div>
           <div className="mt-2 flex items-center gap-4 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Done 5</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" /> Doing 2</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-400" /> To Do 3</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Done 5
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-amber-400" /> Doing 2
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-slate-400" /> To Do 3
+            </span>
           </div>
         </div>
         {/* board */}
@@ -368,10 +507,14 @@ function SprintBoardMock() {
               </div>
               {Array.from({ length: col.cards }).map((_, i) => (
                 <div key={i} className="rounded-md border bg-card p-2 space-y-1.5 shadow-sm">
-                  <div className={`h-2 w-full rounded ${col.done ? "bg-emerald-500/30" : "bg-muted-foreground/25"}`} />
+                  <div
+                    className={`h-2 w-full rounded ${col.done ? "bg-emerald-500/30" : "bg-muted-foreground/25"}`}
+                  />
                   <div className="h-2 w-2/3 rounded bg-muted-foreground/15" />
                   <div className="flex items-center gap-1">
-                    <span className={`h-3 w-3 rounded-full ${col.done ? "bg-emerald-500/40" : "bg-primary/25"}`} />
+                    <span
+                      className={`h-3 w-3 rounded-full ${col.done ? "bg-emerald-500/40" : "bg-primary/25"}`}
+                    />
                     <div className="h-2 w-6 rounded bg-muted-foreground/15" />
                   </div>
                 </div>
@@ -399,11 +542,24 @@ function PomodoroMock() {
 
         <div className="relative mt-6 h-52 w-52">
           <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
-            <circle cx="100" cy="100" r={r} fill="none" stroke="var(--color-muted)" strokeWidth="12" />
             <circle
-              cx="100" cy="100" r={r} fill="none"
-              stroke="var(--color-primary)" strokeWidth="12" strokeLinecap="round"
-              strokeDasharray={c} strokeDashoffset={c * (1 - progress)}
+              cx="100"
+              cy="100"
+              r={r}
+              fill="none"
+              stroke="var(--color-muted)"
+              strokeWidth="12"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r={r}
+              fill="none"
+              stroke="var(--color-primary)"
+              strokeWidth="12"
+              strokeLinecap="round"
+              strokeDasharray={c}
+              strokeDashoffset={c * (1 - progress)}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -415,7 +571,10 @@ function PomodoroMock() {
         {/* session dots */}
         <div className="mt-6 flex items-center gap-2">
           {[true, true, false, false].map((filled, i) => (
-            <span key={i} className={`h-2.5 w-2.5 rounded-full ${filled ? "bg-primary" : "bg-muted-foreground/25"}`} />
+            <span
+              key={i}
+              className={`h-2.5 w-2.5 rounded-full ${filled ? "bg-primary" : "bg-muted-foreground/25"}`}
+            />
           ))}
           <span className="ml-2 text-xs text-muted-foreground">session 3 of 4</span>
         </div>

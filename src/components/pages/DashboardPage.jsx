@@ -334,15 +334,15 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sessions — last 7 days</div>
             <div className="mt-2 flex items-end gap-1.5 h-16">
-              {focus.days.map((c, i) => {
+              {(() => {
                 const max = Math.max(1, ...focus.days);
-                return (
+                return focus.days.map((c, i) => (
                   <div key={i} className="flex flex-1 flex-col items-center gap-1">
                     <div className="w-full rounded-sm bg-primary" style={{ height: `${c ? (c / max) * 48 : 3}px`, opacity: c ? 1 : 0.25 }} />
                     <span className="text-[10px] text-muted-foreground">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
                   </div>
-                );
-              })}
+                ));
+              })()}
             </div>
           </div>
         </section>

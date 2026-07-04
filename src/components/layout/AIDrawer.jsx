@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Send, Sparkles, X } from "lucide-react";
+import { Bot, CheckCircle2, Loader2, MessageSquareText, Send, Sparkles, X } from "lucide-react";
 import { useUI } from "@/store/ui";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,18 +47,31 @@ export default function AIDrawer() {
     const seed = [];
 
     if (!submitted) {
-      seed.push(bubble("ai", "Good to see you! You haven't done your daily check-in yet. Tap below to check in and get today's coaching."));
+      seed.push(
+        bubble(
+          "ai",
+          "Good to see you! You haven't done your daily check-in yet. Tap below to check in and get today's coaching.",
+        ),
+      );
     } else if (coaching) {
       seed.push(bubble("ai", coaching));
     }
 
     if (suggestions.length > 0) {
-      const list = suggestions.slice(0, 3).map((s) => `• ${s.title || s.task?.title}`).join("\n");
+      const list = suggestions
+        .slice(0, 3)
+        .map((s) => `• ${s.title || s.task?.title}`)
+        .join("\n");
       seed.push(bubble("ai", `Here are some task suggestions based on your backlog:\n${list}`));
     }
 
     if (seed.length === 0) {
-      seed.push(bubble("ai", "Hey! I'm Azzam, your AI Scrum Coach. Ask me anything — \"am I on track?\", \"what should I focus on today?\", or \"is my sprint realistic?\""));
+      seed.push(
+        bubble(
+          "ai",
+          'Hey! I\'m Azzam, your AI Scrum Coach. Ask me anything — "am I on track?", "what should I focus on today?", or "is my sprint realistic?"',
+        ),
+      );
     }
 
     setMessages(seed);
@@ -91,16 +104,25 @@ export default function AIDrawer() {
     setLoading(true);
     try {
       const data = await aiApi.chat(text);
-      setMessages((prev) => [...prev, bubble("ai", data?.reply || "I'm not sure how to answer that. Try rephrasing.")]);
+      setMessages((prev) => [
+        ...prev,
+        bubble("ai", data?.reply || "I'm not sure how to answer that. Try rephrasing."),
+      ]);
     } catch {
-      setMessages((prev) => [...prev, bubble("ai", "Sorry, I couldn't reach the AI right now. Try again in a moment.")]);
+      setMessages((prev) => [
+        ...prev,
+        bubble("ai", "Sorry, I couldn't reach the AI right now. Try again in a moment."),
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   };
 
   return (
@@ -114,45 +136,75 @@ export default function AIDrawer() {
       />
       <aside
         className={cn(
-          "fixed top-0 right-0 z-50 h-full w-full sm:w-[420px] bg-card border-l shadow-2xl flex flex-col transition-transform",
+          "fixed right-0 top-0 z-50 flex h-full w-full flex-col border-l bg-background shadow-2xl transition-transform sm:w-[460px]",
           aiOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
-        {/* Header */}
-        <div className="h-14 px-4 border-b flex items-center gap-2 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-[color:var(--ai-soft)] text-[color:var(--ai)] grid place-items-center">
-            <Sparkles className="h-4 w-4" />
+        <div className="shrink-0 border-b bg-white px-4 py-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
+              <Bot className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="text-base font-semibold leading-tight">Azzam</div>
+                <span className="rounded bg-ai-soft px-2 py-0.5 text-[11px] font-medium text-ai">
+                  Coach
+                </span>
+              </div>
+              <div className="mt-1 truncate text-xs text-muted-foreground">
+                Sprint planning, focus advice, and task triage
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md" onClick={closeAI}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <div className="flex-1">
-            <div className="text-sm font-semibold">Azzam</div>
-            <div className="text-[11px] text-muted-foreground">Ask me anything about your work</div>
-          </div>
+
           {!submitted && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setStandupOpen(true)}>
-              Check in
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-4 h-10 w-full justify-start rounded-md bg-background text-sm"
+              onClick={() => setStandupOpen(true)}
+            >
+              <CheckCircle2 className="h-4 w-4 text-ai" />
+              Complete daily check-in
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={closeAI}><X className="h-4 w-4" /></Button>
         </div>
 
-        {/* Message thread */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 scrollbar-thin">
+          {messages.length === 0 && !loading && (
+            <div className="rounded-md border bg-white p-4 text-sm text-muted-foreground shadow-sm">
+              <div className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                <MessageSquareText className="h-4 w-4 text-ai" />
+                Ask your coach
+              </div>
+              Try asking what to focus on today, whether your sprint is realistic, or how to recover
+              after a slow day.
+            </div>
+          )}
+
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}
+              className={cn(
+                "flex items-end gap-2",
+                msg.role === "user" ? "justify-end" : "justify-start",
+              )}
             >
               {msg.role === "ai" && (
-                <div className="h-6 w-6 rounded-full bg-[color:var(--ai-soft)] grid place-items-center shrink-0 mr-2 mt-0.5">
-                  <Sparkles className="h-3 w-3 text-[color:var(--ai)]" />
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-ai-soft text-ai">
+                  <Sparkles className="h-4 w-4" />
                 </div>
               )}
               <div
                 className={cn(
-                  "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-line",
+                  "max-w-[82%] whitespace-pre-line rounded-md px-3.5 py-3 text-sm leading-6 shadow-sm",
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-sm"
-                    : "bg-muted text-foreground rounded-bl-sm",
+                    ? "bg-primary text-primary-foreground"
+                    : "border bg-white text-foreground",
                 )}
               >
                 {msg.text}
@@ -161,22 +213,30 @@ export default function AIDrawer() {
           ))}
 
           {loading && (
-            <div className="flex justify-start">
-              <div className="h-6 w-6 rounded-full bg-[color:var(--ai-soft)] grid place-items-center shrink-0 mr-2 mt-0.5">
-                <Sparkles className="h-3 w-3 text-[color:var(--ai)]" />
+            <div className="flex justify-start gap-2">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-ai-soft text-ai">
+                <Sparkles className="h-4 w-4" />
               </div>
-              <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
+              <div className="flex items-center gap-1.5 rounded-md border bg-white px-4 py-3 shadow-sm">
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
               </div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
-        <div className="shrink-0 border-t p-3 flex items-end gap-2">
+        <div className="flex shrink-0 items-end gap-2 border-t bg-white p-3">
           <textarea
             ref={inputRef}
             value={input}
@@ -184,14 +244,14 @@ export default function AIDrawer() {
             onKeyDown={handleKey}
             placeholder="Ask your coach anything…"
             rows={1}
-            className="flex-1 resize-none rounded-xl border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-32 scrollbar-thin"
+            className="max-h-32 flex-1 resize-none rounded-md border bg-background px-3.5 py-3 text-sm shadow-sm scrollbar-thin focus:outline-none focus:ring-2 focus:ring-primary/10"
             style={{ fieldSizing: "content" }}
           />
           <Button
             size="icon"
             disabled={!input.trim() || loading}
             onClick={send}
-            className="h-10 w-10 shrink-0 rounded-xl"
+            className="h-11 w-11 shrink-0 rounded-md"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
