@@ -7,6 +7,7 @@ import {
   ListChecks,
   QrCode,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Timer,
   Trophy,
@@ -20,6 +21,7 @@ const APK_DOWNLOAD_URL =
   "https://github.com/suliman-btk/student-tracker-react/releases/latest/download/RAQIP-v1.0.0.apk";
 const APK_VERSION = import.meta.env.VITE_ANDROID_APK_VERSION || "1.0.0";
 const APK_QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=224x224&margin=12&data=${encodeURIComponent(APK_DOWNLOAD_URL)}`;
+const IOS_TESTFLIGHT_URL = import.meta.env.VITE_IOS_TESTFLIGHT_URL;
 
 const FEATURES = [
   {
@@ -373,19 +375,29 @@ function ApkDownloadQr() {
         </div>
         <h2 className="mt-3 text-lg font-semibold tracking-tight">Scan to download RAQIP</h2>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Version {APK_VERSION}. Scanning the QR opens the public APK download from GitHub Releases.
+          Version {APK_VERSION}. Scanning the QR opens the Android APK download from GitHub
+          Releases.
         </p>
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <Button asChild className="gap-1.5">
             <a href={APK_DOWNLOAD_URL}>
-              Download APK <Download className="h-4 w-4" />
+              Android APK <Download className="h-4 w-4" />
             </a>
           </Button>
-          <span className="inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Android may ask to allow
-            installation.
-          </span>
+          {IOS_TESTFLIGHT_URL ? (
+            <Button asChild variant="outline" className="gap-1.5">
+              <a href={IOS_TESTFLIGHT_URL}>iOS TestFlight</a>
+            </Button>
+          ) : (
+            <Button disabled variant="outline" className="gap-1.5">
+              iOS Coming soon <Smartphone className="h-4 w-4" />
+            </Button>
+          )}
         </div>
+        <span className="mt-3 inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground sm:justify-start">
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Android may ask to allow
+          installation.
+        </span>
       </div>
     </div>
   );
