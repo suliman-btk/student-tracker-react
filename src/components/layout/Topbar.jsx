@@ -39,7 +39,9 @@ export default function Topbar({ onMobileMenu }) {
       </Button>
 
       {/* RAQIP wordmark — mobile only (desktop has it in sidebar) */}
-      <span className="lg:hidden font-semibold tracking-tight text-sm truncate">RAQIP</span>
+      <Link to="/landing" className="lg:hidden truncate text-sm font-semibold tracking-tight">
+        RAQIP
+      </Link>
 
       <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
         <Button

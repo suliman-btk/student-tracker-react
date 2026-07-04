@@ -21,9 +21,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 const groups = [
   {
     label: "Overview",
-    items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    ],
+    items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true }],
   },
   {
     label: "Work",
@@ -57,7 +55,9 @@ function SidebarContent({ onNavigate }) {
 
   const renderGroup = (g) => (
     <div key={g.label} className="mt-4">
-      <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">{g.label}</div>
+      <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">
+        {g.label}
+      </div>
       <ul className="space-y-0.5">
         {g.items.map(({ to, label, icon: Icon, exact }) => {
           const active = exact ? path === to : path === to || path.startsWith(to + "/");
@@ -89,12 +89,20 @@ function SidebarContent({ onNavigate }) {
   return (
     <>
       <div className="px-5 py-5 shrink-0">
-        <img src="/logo.png" alt="RAQIP — Smart Study Companion" className="h-12 w-auto object-contain" />
+        <Link to="/landing" onClick={onNavigate} aria-label="Go to RAQIP landing page">
+          <img
+            src="/logo.png"
+            alt="RAQIP — Smart Study Companion"
+            className="h-12 w-auto object-contain"
+          />
+        </Link>
       </div>
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-6">
         {overviewGroup && renderGroup(overviewGroup)}
         <div className="mt-4">
-          <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">Spaces</div>
+          <div className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">
+            Spaces
+          </div>
           <div className="space-y-0.5">
             <Link
               to="/spaces"
@@ -127,14 +135,19 @@ function SidebarContent({ onNavigate }) {
               )}
               <ul className="space-y-0.5 border-l border-sidebar-border pl-2">
                 {spaces.map((space) => {
-                  const active = path.startsWith(`/spaces/${space.id}`) || String(activeSpaceId) === String(space.id);
+                  const active =
+                    path.startsWith(`/spaces/${space.id}`) ||
+                    String(activeSpaceId) === String(space.id);
                   const color = space.color_hex || space.color || "var(--primary)";
                   return (
                     <li key={space.id}>
                       <Link
                         to="/spaces/$spaceId/summary"
                         params={{ spaceId: String(space.id) }}
-                        onClick={() => { setActiveSpace(space.id); onNavigate?.(); }}
+                        onClick={() => {
+                          setActiveSpace(space.id);
+                          onNavigate?.();
+                        }}
                         className={cn(
                           "flex min-w-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                           active
@@ -142,7 +155,10 @@ function SidebarContent({ onNavigate }) {
                             : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                         )}
                       >
-                        <span className="h-5 w-5 shrink-0 rounded-md grid place-items-center text-[11px] font-bold text-white" style={{ background: color }}>
+                        <span
+                          className="h-5 w-5 shrink-0 rounded-md grid place-items-center text-[11px] font-bold text-white"
+                          style={{ background: color }}
+                        >
                           {(space.name || "S")[0]}
                         </span>
                         <span className="truncate">{space.name || `Space ${space.id}`}</span>
@@ -170,7 +186,10 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
 
       {/* Mobile sidebar (Sheet) */}
       <Sheet open={mobileOpen} onOpenChange={(open) => !open && onMobileClose?.()}>
-        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground flex flex-col [&>button]:hidden">
+        <SheetContent
+          side="left"
+          className="w-64 p-0 bg-sidebar text-sidebar-foreground flex flex-col [&>button]:hidden"
+        >
           <button
             onClick={onMobileClose}
             className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"

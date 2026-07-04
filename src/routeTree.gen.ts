@@ -17,6 +17,7 @@ import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as FocusRouteImport } from './routes/focus'
 import { Route as DomainsRouteImport } from './routes/domains'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -75,6 +76,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FocusRoute = FocusRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/domains': typeof DomainsRouteWithChildren
   '/focus': typeof FocusRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/domains': typeof DomainsRouteWithChildren
   '/focus': typeof FocusRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/domains': typeof DomainsRouteWithChildren
   '/focus': typeof FocusRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/domains'
     | '/focus'
+    | '/landing'
     | '/login'
     | '/notifications'
     | '/register'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/domains'
     | '/focus'
+    | '/landing'
     | '/login'
     | '/notifications'
     | '/register'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/domains'
     | '/focus'
+    | '/landing'
     | '/login'
     | '/notifications'
     | '/register'
@@ -359,6 +371,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   DomainsRoute: typeof DomainsRouteWithChildren
   FocusRoute: typeof FocusRoute
+  LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   RegisterRoute: typeof RegisterRoute
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/focus': {
@@ -637,6 +657,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   DomainsRoute: DomainsRouteWithChildren,
   FocusRoute: FocusRoute,
+  LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   RegisterRoute: RegisterRoute,
