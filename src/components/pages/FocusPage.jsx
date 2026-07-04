@@ -122,6 +122,7 @@ export default function FocusPage() {
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
     bannerTimer.current = setTimeout(() => setBanner(null), 2500);
   }, []);
+  useEffect(() => () => { if (bannerTimer.current) clearTimeout(bannerTimer.current); }, []);
   // Mirror the id in a ref so we can read/clear it synchronously — guarantees a
   // session is never ended twice (a 2nd /end 404s as "Active session not found").
   const setSession = useCallback((id) => { sessionIdRef.current = id; setSessionId(id); }, []);

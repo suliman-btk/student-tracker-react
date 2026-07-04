@@ -1,7 +1,7 @@
 import AgoraRTC from "agora-rtc-sdk-ng";
 import { focusApi } from "@/lib/api";
 
-export const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID || "df3f0dced8aa45848a067feb0661daeb";
+export const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID;
 
 export async function createAgoraRoomClient({ roomId, uid, useServerToken = true, onUserJoined, onUserLeft, onVolume }) {
   const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
@@ -25,12 +25,23 @@ export async function createAgoraRoomClient({ roomId, uid, useServerToken = true
   client.on("user-unpublished", (user) => onUserLeft?.(user));
   client.on("volume-indicator", (volumes) => onVolume?.(volumes));
 
-  const joinedUid = await client.join(AGORA_APP_ID, String(roomId), token, uid || null);
-  await client.publish([localAudioTrack]);
-  // Must be enabled AFTER join + publish — the SDK needs an active channel to
-  // attach the volume-reporting interval to, otherwise volume-indicator never fires.
-  client.enableAudioVolumeIndicator();
-  await localAudioTrack.setMuted(true);
+  let joinedUid;
+  try {
+    joinedUid = await client.join(AGORA_APP_ID, String(roomId), token, uid || null);
+    await client.publish([localAudioTrack]);
+    // Must be enabled AFTER join + publish — the SDK needs an active channel to
+    // attach the volume-reporting interval to, otherwise volume-indicator never fires.
+    client.enableAudioVolumeIndicator();
+    await localAudioTrack.setMuted(true);
+  } catch (err) {
+    // The mic track was already created above; without this cleanup a failed
+    // join leaves the microphone captured (browser recording indicator on).
+    try { localAudioTrack.stop(); } catch {}
+    try { localAudioTrack.close(); } catch {}
+    try { client.removeAllListeners(); } catch {}
+    try { await client.leave(); } catch {}
+    throw err;
+  }
 
   return {
     client,
@@ -41,6 +52,7 @@ export async function createAgoraRoomClient({ roomId, uid, useServerToken = true
       try { localAudioTrack.stop(); } catch {}
       try { localAudioTrack.close(); } catch {}
       try { await client.leave(); } catch {}
+      try { client.removeAllListeners(); } catch {}
     },
   };
 }

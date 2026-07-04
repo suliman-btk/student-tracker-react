@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Bot, CheckCircle2, Layers, ListChecks, Sparkles, Timer, Users, Zap } from "lucide-react";
+import { ArrowRight, Bot, Layers, ListChecks, Sparkles, Timer, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -16,7 +16,7 @@ const STEPS = [
   {
     icon: Layers,
     title: "Spaces & Sprints",
-    body: "Create a Space for each subject or project (e.g. \"FYP\", \"Database Systems\"). Then plan a Sprint — a focused week of tasks you commit to finishing.",
+    body: 'Create a Space for each subject or project (e.g. "FYP", "Database Systems"). Then plan a Sprint — a focused week of tasks you commit to finishing.',
     action: { label: "Create my first Space", to: "/spaces" },
     actionSkippable: true,
   },
@@ -43,7 +43,7 @@ const STEPS = [
   {
     icon: Zap,
     title: "Social Feed",
-    body: "Post study updates and react to peers' progress with 👍 Like, 🔥 Motivated me, or 💪 Keep going. Build streaks and share live study sessions.",
+    body: "Post study updates, react to peers' progress, build streaks, and share live study sessions.",
     action: { label: "See the feed", to: "/social" },
     actionSkippable: true,
   },
@@ -56,7 +56,11 @@ const STEPS = [
 ];
 
 export default function WelcomeModal() {
-  const [open, setOpen] = useState(() => !localStorage.getItem(STORAGE_KEY));
+  // typeof-window guard: this initializer would throw during SSR if the modal
+  // ever renders on the server (today it's behind the client-only auth gate).
+  const [open, setOpen] = useState(
+    () => typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY),
+  );
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
 
@@ -75,45 +79,92 @@ export default function WelcomeModal() {
   const isLast = step === STEPS.length - 1;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) dismiss(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 px-8 pt-10 pb-6 text-center">
-          <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-primary/15 text-primary">
-            <Icon className="h-8 w-8" />
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) dismiss();
+      }}
+    >
+      <DialogContent className="max-w-[520px] overflow-hidden p-0 sm:rounded-lg">
+        <div className="border-b bg-white px-7 pb-6 pt-8">
+          <div className="mb-6 flex items-center justify-between">
+            <img
+              src="/logo.png"
+              alt="RAQIP - Smart Study Companion"
+              className="h-9 w-auto object-contain"
+            />
+            <span className="rounded bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+              {step + 1} of {STEPS.length}
+            </span>
           </div>
-          <h2 className="text-xl font-bold tracking-tight">{current.title}</h2>
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{current.body}</p>
+
+          <div className="flex items-start gap-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
+              <Icon className="h-7 w-7" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">{current.title}</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{current.body}</p>
+            </div>
+          </div>
         </div>
 
-        <div className="px-8 py-6 space-y-3">
+        <div className="space-y-4 px-7 py-6">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: ListChecks, label: "Plan" },
+              { icon: Timer, label: "Focus" },
+              { icon: Bot, label: "Coach" },
+            ].map(({ icon: StepIcon, label }) => (
+              <div key={label} className="rounded-md border bg-background p-3 text-center">
+                <StepIcon className="mx-auto h-4 w-4 text-primary" />
+                <p className="mt-2 text-xs font-medium text-muted-foreground">{label}</p>
+              </div>
+            ))}
+          </div>
+
           {isLast ? (
-            <Button className="w-full gap-1.5" onClick={() => handleAction(current.action?.to ?? null)}>
+            <Button
+              className="h-11 w-full rounded-md"
+              onClick={() => handleAction(current.action?.to ?? null)}
+            >
               {current.action?.label ?? "Get started"} <ArrowRight className="h-4 w-4" />
             </Button>
           ) : current.action ? (
             <>
-              <Button className="w-full gap-1.5" onClick={() => handleAction(current.action.to)}>
+              <Button
+                className="h-11 w-full rounded-md"
+                onClick={() => handleAction(current.action.to)}
+              >
                 {current.action.label} {current.action.to && <ArrowRight className="h-4 w-4" />}
               </Button>
               {current.actionSkippable && (
-                <Button variant="outline" className="w-full" onClick={() => setStep((s) => s + 1)}>
+                <Button
+                  variant="outline"
+                  className="h-11 w-full rounded-md"
+                  onClick={() => setStep((s) => s + 1)}
+                >
                   Next <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               )}
             </>
           ) : (
-            <Button className="w-full gap-1.5" onClick={() => setStep((s) => s + 1)}>
+            <Button className="h-11 w-full rounded-md" onClick={() => setStep((s) => s + 1)}>
               Next <ArrowRight className="h-4 w-4" />
             </Button>
           )}
 
           {!isLast && (
-            <Button variant="ghost" className="w-full text-muted-foreground" onClick={dismiss}>
+            <Button
+              variant="ghost"
+              className="h-10 w-full rounded-md text-muted-foreground"
+              onClick={dismiss}
+            >
               Skip for now
             </Button>
           )}
 
-          <div className="flex justify-center gap-1.5 pt-1">
+          <div className="flex justify-center gap-1.5 pt-1" aria-hidden="true">
             {STEPS.map((_, i) => (
               <span
                 key={i}

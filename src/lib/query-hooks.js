@@ -554,7 +554,10 @@ export function useStudyMutations() {
       mutationFn: aiApi.acceptSuggestion,
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: qk.ai.suggestions });
-        qc.invalidateQueries({ queryKey: ["study"] });
+        // The bare ["study"] prefix also nuked calendar and every cached
+        // task-detail/comment query; the workspace helper covers what an
+        // accepted suggestion can actually change.
+        invalidateWorkspace(qc);
       },
       onError: toastError,
     }),
