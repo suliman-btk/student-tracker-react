@@ -222,148 +222,187 @@ export function RoomsPage() {
   };
 
   return (
-    <div
-      className="flex flex-col -mx-2 -my-3 sm:-mx-4 sm:-my-6 lg:-mx-8"
-      style={{ height: "calc(100% + 1.5rem)" }}
-    >
-      {/* Hero header */}
-      <div className="px-6 lg:px-8 pt-6 pb-6 border-b">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Group Study Rooms</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Study together in real-time Pomodoro sessions
-            </p>
-          </div>
-          <Button onClick={() => setShowCreate(true)} className="gap-1.5 shrink-0">
-            <Plus className="h-4 w-4" /> New room
-          </Button>
-        </div>
-
-        {/* Join by code — inline */}
-        <div className="mt-5 flex gap-2 max-w-xs">
-          <div className="relative flex-1">
-            <Input
-              value={codeInput}
-              onChange={(e) => {
-                setCodeInput(
-                  e.target.value
-                    .toUpperCase()
-                    .replace(/[^A-Z0-9]/g, "")
-                    .slice(0, 6),
-                );
-                setCodeError("");
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleJoinByCode()}
-              placeholder="Have a code? Enter it…"
-              className="font-mono tracking-[0.2em] h-10 text-sm pl-4 bg-card border-border/80"
-              maxLength={6}
-            />
-            {codeError && (
-              <p className="absolute -bottom-5 left-0 text-[11px] text-red-500">{codeError}</p>
-            )}
-          </div>
-          <Button
-            onClick={handleJoinByCode}
-            disabled={codeLoading || codeInput.length !== 6}
-            className="h-10 px-4 gap-1 shrink-0"
-          >
-            {codeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Room grid */}
-      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-6">
-        {rooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4 text-center pb-16">
-            <div className="h-20 w-20 rounded-2xl bg-card border-2 border-dashed border-border flex items-center justify-center text-3xl">
-              🏠
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">No rooms active right now</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Create one and invite friends to study together
+    <div className="space-y-5">
+      <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="rounded-xl border bg-card p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                <Users className="h-3.5 w-3.5" />
+                Live study
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight">Group Study Rooms</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Run a shared Pomodoro session with classmates, keep voice/chat under control, and
+                make focused work visible.
               </p>
             </div>
-            <Button onClick={() => setShowCreate(true)} className="gap-1.5 mt-1">
-              <Plus className="h-4 w-4" /> Create a room
+            <Button onClick={() => setShowCreate(true)} className="h-11 gap-1.5 sm:shrink-0">
+              <Plus className="h-4 w-4" /> New room
             </Button>
           </div>
-        ) : (
-          <>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              {rooms.length} active {rooms.length === 1 ? "room" : "rooms"}
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-md border bg-background p-3">
+              <div className="text-2xl font-semibold">{rooms.length}</div>
+              <div className="text-xs text-muted-foreground">Active rooms</div>
+            </div>
+            <div className="rounded-md border bg-background p-3">
+              <div className="text-2xl font-semibold">
+                {rooms.reduce((sum, room) => sum + Math.max(0, room.memberCount || 0), 0)}
+              </div>
+              <div className="text-xs text-muted-foreground">Students online</div>
+            </div>
+            <div className="rounded-md border bg-background p-3">
+              <div className="text-2xl font-semibold">25/5</div>
+              <div className="text-xs text-muted-foreground">Default focus block</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-md bg-secondary text-primary">
+              <Hash className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-sm font-semibold">Join with code</h2>
+              <p className="text-xs text-muted-foreground">Enter the 6-character room code.</p>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                value={codeInput}
+                onChange={(e) => {
+                  setCodeInput(
+                    e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9]/g, "")
+                      .slice(0, 6),
+                  );
+                  setCodeError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleJoinByCode()}
+                placeholder="ABC123"
+                className="h-11 bg-background pl-4 font-mono text-sm tracking-[0.2em]"
+                maxLength={6}
+              />
+              {codeError && (
+                <p className="absolute -bottom-5 left-0 text-[11px] text-red-500">{codeError}</p>
+              )}
+            </div>
+            <Button
+              onClick={handleJoinByCode}
+              disabled={codeLoading || codeInput.length !== 6}
+              className="h-11 shrink-0 px-4"
+            >
+              {codeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border bg-card">
+        <div className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold">Available rooms</h2>
+            <p className="text-xs text-muted-foreground">
+              Join an active session or create a new room for your group.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {rooms.map((r) => {
-                const { label, cls } = phaseLabel(r);
-                const isFocusing = r.phase === "focus";
-                const isBreak = r.phase === "breakTime";
-                return (
-                  <div
-                    key={r.id}
-                    className={`rounded-2xl border bg-card flex flex-col gap-0 overflow-hidden hover:shadow-lg transition-all duration-200 group
-                      ${isFocusing ? "border-indigo-200/60" : isBreak ? "border-amber-200/60" : ""}`}
-                  >
-                    {/* Colored top stripe */}
+          </div>
+          <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+            {rooms.length} active
+          </span>
+        </div>
+        <div className="p-4">
+          {rooms.length === 0 ? (
+            <div className="flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed bg-background px-4 py-10 text-center">
+              <div className="grid h-14 w-14 place-items-center rounded-md bg-secondary text-primary">
+                <Users className="h-7 w-7" />
+              </div>
+              <div>
+                <p className="mt-4 font-semibold text-foreground">No rooms active right now</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Create one and invite friends to study together
+                </p>
+              </div>
+              <Button onClick={() => setShowCreate(true)} className="gap-1.5 mt-5">
+                <Plus className="h-4 w-4" /> Create a room
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {rooms.map((r) => {
+                  const { label, cls } = phaseLabel(r);
+                  const isFocusing = r.phase === "focus";
+                  const isBreak = r.phase === "breakTime";
+                  return (
                     <div
-                      className={`h-1 w-full ${isFocusing ? "bg-indigo-500" : isBreak ? "bg-amber-400" : "bg-muted"}`}
-                    />
+                      key={r.id}
+                      className={`rounded-2xl border bg-card flex flex-col gap-0 overflow-hidden hover:shadow-lg transition-all duration-200 group
+                      ${isFocusing ? "border-indigo-200/60" : isBreak ? "border-amber-200/60" : ""}`}
+                    >
+                      {/* Colored top stripe */}
+                      <div
+                        className={`h-1 w-full ${isFocusing ? "bg-indigo-500" : isBreak ? "bg-amber-400" : "bg-muted"}`}
+                      />
 
-                    <div className="p-5 flex flex-col gap-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-base truncate">
-                              {r.roomName || r.name}
-                            </span>
-                            {r.isPrivate && (
-                              <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            )}
+                      <div className="p-5 flex flex-col gap-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-base truncate">
+                                {r.roomName || r.name}
+                              </span>
+                              {r.isPrivate && (
+                                <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{r.hostName}</p>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{r.hostName}</p>
-                        </div>
-                        <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${cls}`}
-                        >
-                          {label}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {(r.subjectTag || r.subject_tag) && (
-                          <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-semibold">
-                            {r.subjectTag || r.subject_tag}
-                          </span>
-                        )}
-                        <span className="text-xs text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full">
-                          ⏱ {r.focusDuration || 25}m / {r.breakDuration || 5}m
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Users className="h-3.5 w-3.5" />
-                          <span>
-                            {Math.max(0, r.memberCount || 0)}{" "}
-                            {Math.max(0, r.memberCount || 0) === 1 ? "person" : "people"}
+                          <span
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${cls}`}
+                          >
+                            {label}
                           </span>
                         </div>
-                        <Link to="/rooms/$id" params={{ id: r.id }}>
-                          <Button size="sm" className="h-8 px-4 text-xs font-semibold gap-1">
-                            Join <ChevronRight className="h-3 w-3" />
-                          </Button>
-                        </Link>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {(r.subjectTag || r.subject_tag) && (
+                            <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-semibold">
+                              {r.subjectTag || r.subject_tag}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full">
+                            ⏱ {r.focusDuration || 25}m / {r.breakDuration || 5}m
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Users className="h-3.5 w-3.5" />
+                            <span>
+                              {Math.max(0, r.memberCount || 0)}{" "}
+                              {Math.max(0, r.memberCount || 0) === 1 ? "person" : "people"}
+                            </span>
+                          </div>
+                          <Link to="/rooms/$id" params={{ id: r.id }}>
+                            <Button size="sm" className="h-8 px-4 text-xs font-semibold gap-1">
+                              Join <ChevronRight className="h-3 w-3" />
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
 
       {/* Create dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
