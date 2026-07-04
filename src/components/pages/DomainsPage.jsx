@@ -43,16 +43,28 @@ export default function DomainsPage() {
   const [deleteError, setDeleteError] = useState(null);
   const [pausedOpen, setPausedOpen] = useState(false);
 
-  const openCreate = () => { setEditing(null); setModalOpen(true); };
-  const openEdit = (domain) => { setEditing(domain); setModalOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+  const openEdit = (domain) => {
+    setEditing(domain);
+    setModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
       <Header title="Study Domains" subtitle="Subjects, exams, FYP, and other tracks you manage.">
-        <Button variant="outline" onClick={() => setPausedOpen(true)}>
+        <Button
+          variant="outline"
+          className="flex-1 sm:flex-none"
+          onClick={() => setPausedOpen(true)}
+        >
           <Power className="h-4 w-4 mr-1.5" /> Paused domains
         </Button>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1.5" /> New domain</Button>
+        <Button className="flex-1 sm:flex-none" onClick={openCreate}>
+          <Plus className="h-4 w-4 mr-1.5" /> New domain
+        </Button>
       </Header>
       {isLoading && (
         <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground flex items-center gap-2">
@@ -64,7 +76,61 @@ export default function DomainsPage() {
           {error.message}
         </div>
       )}
-      <div className="rounded-xl border bg-card overflow-hidden">
+      <div className="space-y-2 md:hidden">
+        {domains.map((d) => (
+          <div key={d.id} className="rounded-xl border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <Link
+                  to="/domains/$id"
+                  params={{ id: String(d.id) }}
+                  className="font-semibold leading-5 hover:text-primary"
+                >
+                  {d.domain_name || d.name || `Domain ${d.id}`}
+                </Link>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground">
+                    {d.area_type || d.area || "General"}
+                  </span>
+                  <span
+                    className={`rounded-md px-2 py-0.5 ${priorityColor[d.priority] || "bg-muted"}`}
+                  >
+                    {d.priority || "Normal"}
+                  </span>
+                  <span className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground">
+                    {d.weekly_target_hours ?? d.weekly_hours ?? 0}h/week
+                  </span>
+                  <span
+                    className={`rounded-md px-2 py-0.5 ${d.is_active ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}
+                  >
+                    {d.is_active ? "Active" : "Paused"}
+                  </span>
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => openEdit(d)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleDomain.mutate({ id: d.id })}>
+                    <Power className="mr-2 h-4 w-4" /> {d.is_active ? "Pause" : "Activate"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive" onClick={() => setDeleting(d)}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-xl border bg-card overflow-hidden md:block">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
             <tr>
@@ -80,22 +146,38 @@ export default function DomainsPage() {
             {domains.map((d) => (
               <tr key={d.id} className="hover:bg-muted/30">
                 <td className="px-4 py-3 font-medium">
-                  <Link to="/domains/$id" params={{ id: String(d.id) }} className="hover:text-primary">
+                  <Link
+                    to="/domains/$id"
+                    params={{ id: String(d.id) }}
+                    className="hover:text-primary"
+                  >
                     {d.domain_name || d.name || `Domain ${d.id}`}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{d.area_type || d.area || "General"}</td>
-                <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-md ${priorityColor[d.priority] || "bg-muted"}`}>{d.priority || "Normal"}</span></td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {d.area_type || d.area || "General"}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-md ${priorityColor[d.priority] || "bg-muted"}`}
+                  >
+                    {d.priority || "Normal"}
+                  </span>
+                </td>
                 <td className="px-4 py-3">{d.weekly_target_hours ?? d.weekly_hours ?? 0}h</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-md ${d.is_active ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-md ${d.is_active ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}
+                  >
                     {d.is_active ? "Active" : "Paused"}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEdit(d)}>
@@ -114,10 +196,12 @@ export default function DomainsPage() {
             ))}
           </tbody>
         </table>
-        {!isLoading && !error && domains.length === 0 && (
-          <div className="p-8 text-center text-sm text-muted-foreground">No domains found.</div>
-        )}
       </div>
+      {!isLoading && !error && domains.length === 0 && (
+        <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
+          No domains found.
+        </div>
+      )}
 
       <CreateDomainModal open={modalOpen} onOpenChange={setModalOpen} domain={editing} />
 
@@ -129,17 +213,29 @@ export default function DomainsPage() {
           <PausedDomainsPanel
             domains={domains}
             toggleDomain={toggleDomain}
-            onDelete={(d) => { setPausedOpen(false); setDeleting(d); }}
+            onDelete={(d) => {
+              setPausedOpen(false);
+              setDeleting(d);
+            }}
           />
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={Boolean(deleting)} onOpenChange={(o) => { if (!o) { setDeleting(null); setDeleteError(null); } }}>
+      <AlertDialog
+        open={Boolean(deleting)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setDeleting(null);
+            setDeleteError(null);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete domain?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleting?.domain_name || "This domain"} will be permanently removed. Domains with tasks cannot be deleted.
+              {deleting?.domain_name || "This domain"} will be permanently removed. Domains with
+              tasks cannot be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
@@ -170,15 +266,23 @@ export default function DomainsPage() {
 function PausedDomainsPanel({ domains, toggleDomain, onDelete }) {
   const paused = domains.filter((d) => !d.is_active);
   if (paused.length === 0) {
-    return <p className="py-6 text-center text-sm text-muted-foreground">No paused domains. All domains are active.</p>;
+    return (
+      <p className="py-6 text-center text-sm text-muted-foreground">
+        No paused domains. All domains are active.
+      </p>
+    );
   }
   return (
     <div className="space-y-2 py-2">
       {paused.map((d) => (
         <div key={d.id} className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{d.domain_name || d.name || `Domain ${d.id}`}</p>
-            <p className="text-xs text-muted-foreground">{d.area_type || "General"} · {d.priority || "Normal"}</p>
+            <p className="truncate text-sm font-medium">
+              {d.domain_name || d.name || `Domain ${d.id}`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {d.area_type || "General"} · {d.priority || "Normal"}
+            </p>
           </div>
           <Button
             size="sm"

@@ -3,7 +3,12 @@ import { useAuthStore } from "@/store/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@tanstack/react-router";
 import { Menu, Plus, Bell } from "lucide-react";
@@ -21,7 +26,7 @@ export default function Topbar({ onMobileMenu }) {
   const unread = unreadData?.unread_count ?? 0;
 
   return (
-    <header className="sticky top-0 z-30 h-14 border-b bg-background/80 backdrop-blur flex items-center px-4 lg:px-6 gap-2">
+    <header className="sticky top-0 z-30 h-14 border-b bg-background/80 backdrop-blur flex items-center px-2 sm:px-4 lg:px-6 gap-1.5 sm:gap-2">
       {/* Hamburger — mobile only */}
       <Button
         variant="ghost"
@@ -34,11 +39,15 @@ export default function Topbar({ onMobileMenu }) {
       </Button>
 
       {/* RAQIP wordmark — mobile only (desktop has it in sidebar) */}
-      <span className="lg:hidden font-semibold tracking-tight text-sm">RAQIP</span>
+      <span className="lg:hidden font-semibold tracking-tight text-sm truncate">RAQIP</span>
 
-      <div className="ml-auto flex items-center gap-2">
-        <Button size="sm" className="gap-1.5" onClick={() => setTaskModalOpen(true)}>
-          <Plus className="h-4 w-4" /> New task
+      <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
+        <Button
+          size="sm"
+          className="h-9 gap-1.5 px-2.5 sm:px-3"
+          onClick={() => setTaskModalOpen(true)}
+        >
+          <Plus className="h-4 w-4" /> <span className="hidden min-[360px]:inline">New task</span>
         </Button>
         <CreateTaskModal open={taskModalOpen} onOpenChange={setTaskModalOpen} />
 
@@ -56,7 +65,7 @@ export default function Topbar({ onMobileMenu }) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-9 px-1.5 gap-2">
+            <Button variant="ghost" className="h-9 px-1 gap-2">
               <Avatar className="h-7 w-7">
                 <AvatarImage src={avatar} />
                 <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -73,7 +82,9 @@ export default function Topbar({ onMobileMenu }) {
               <Link to="/settings">Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive">Sign out</DropdownMenuItem>
+            <DropdownMenuItem onClick={logout} className="text-destructive">
+              Sign out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

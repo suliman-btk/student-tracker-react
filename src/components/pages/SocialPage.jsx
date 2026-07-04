@@ -112,7 +112,8 @@ function ProfileCard() {
           <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-orange-900 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-100">
             <div className="text-xs font-semibold">Complete your student profile</div>
             <div className="mt-1 text-[11px] leading-4">
-              Add {missingFields.join(", ") || "your academic details"} so classmates know who they are connecting with.
+              Add {missingFields.join(", ") || "your academic details"} so classmates know who they
+              are connecting with.
             </div>
             <Button asChild size="sm" variant="outline" className="mt-2 h-7 text-xs bg-background">
               <Link to="/profile/edit">Edit profile</Link>
@@ -242,7 +243,9 @@ function StudyingNowBar() {
                   <AvatarImage src={avatar} />
                   <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
                 </Avatar>
-                <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full ${statusColor(status)} border-2 border-card`} />
+                <span
+                  className={`absolute bottom-0 right-0 h-3 w-3 rounded-full ${statusColor(status)} border-2 border-card`}
+                />
               </div>
               <span className="text-[10px] truncate max-w-[60px]">{name.split(" ")[0]}</span>
             </Link>
@@ -364,28 +367,47 @@ function CreatePostBox() {
             Start a post…
           </button>
         </div>
-        <div className="flex items-center gap-1 mt-3 pt-2 border-t">
-          <input ref={fileImgRef} type="file" accept="image/*" onChange={(e) => handleFile(e, "image")} className="hidden" />
-          <input ref={filePdfRef} type="file" accept="application/pdf" onChange={(e) => handleFile(e, "pdf")} className="hidden" />
+        <div className="flex flex-wrap items-center gap-1 mt-3 pt-2 border-t">
+          <input
+            ref={fileImgRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFile(e, "image")}
+            className="hidden"
+          />
+          <input
+            ref={filePdfRef}
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => handleFile(e, "pdf")}
+            className="hidden"
+          />
           <button
             disabled={uploading}
             onClick={() => fileImgRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-muted text-muted-foreground text-xs font-medium transition-colors"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:flex-none sm:px-3"
           >
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4 text-blue-500" />}
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="h-4 w-4 text-blue-500" />
+            )}
             Photo
           </button>
           <button
             disabled={uploading}
             onClick={() => filePdfRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-muted text-muted-foreground text-xs font-medium transition-colors"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:flex-none sm:px-3"
           >
             <FileText className="h-4 w-4 text-orange-500" />
             Document
           </button>
           <button
-            onClick={() => { openExpanded(); setLinkOpen(true); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-muted text-muted-foreground text-xs font-medium transition-colors"
+            onClick={() => {
+              openExpanded();
+              setLinkOpen(true);
+            }}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:flex-none sm:px-3"
           >
             <LinkIcon className="h-4 w-4 text-green-500" />
             Link
@@ -411,9 +433,13 @@ function CreatePostBox() {
               className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 mt-0.5 transition-colors"
             >
               {visibility === "friends" ? (
-                <><Lock className="h-2.5 w-2.5" /> Friends</>
+                <>
+                  <Lock className="h-2.5 w-2.5" /> Friends
+                </>
               ) : (
-                <><Globe className="h-2.5 w-2.5" /> Public</>
+                <>
+                  <Globe className="h-2.5 w-2.5" /> Public
+                </>
               )}
             </button>
           </div>
@@ -439,7 +465,11 @@ function CreatePostBox() {
         {/* Image preview — full width like LinkedIn */}
         {attachment && attachment.type === "image" && (
           <div className="mt-3 relative rounded-lg overflow-hidden border">
-            <img src={attachment.url} alt={attachment.name} className="w-full max-h-80 object-cover" />
+            <img
+              src={attachment.url}
+              alt={attachment.name}
+              className="w-full max-h-80 object-cover"
+            />
             <button
               onClick={() => setAttachment(null)}
               className="absolute top-2 right-2 h-7 w-7 grid place-items-center rounded-full bg-black/60 text-white hover:bg-black/80"
@@ -459,7 +489,10 @@ function CreatePostBox() {
               <div className="text-sm font-medium truncate">{attachment.name}</div>
               <div className="text-xs text-muted-foreground capitalize">{attachment.type}</div>
             </div>
-            <button onClick={() => setAttachment(null)} className="text-muted-foreground hover:text-destructive shrink-0">
+            <button
+              onClick={() => setAttachment(null)}
+              className="text-muted-foreground hover:text-destructive shrink-0"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -475,7 +508,13 @@ function CreatePostBox() {
               placeholder="https://…"
               className="h-8 text-sm"
             />
-            <button onClick={() => { setLinkOpen(false); setLink(""); }} className="text-muted-foreground hover:text-destructive">
+            <button
+              onClick={() => {
+                setLinkOpen(false);
+                setLink("");
+              }}
+              className="text-muted-foreground hover:text-destructive"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -503,15 +542,31 @@ function CreatePostBox() {
       {/* Footer toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <div className="flex items-center gap-1">
-          <input ref={fileImgRef} type="file" accept="image/*" onChange={(e) => handleFile(e, "image")} className="hidden" />
-          <input ref={filePdfRef} type="file" accept="application/pdf" onChange={(e) => handleFile(e, "pdf")} className="hidden" />
+          <input
+            ref={fileImgRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFile(e, "image")}
+            className="hidden"
+          />
+          <input
+            ref={filePdfRef}
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => handleFile(e, "pdf")}
+            className="hidden"
+          />
           <button
             disabled={uploading}
             onClick={() => fileImgRef.current?.click()}
             title="Add photo"
             className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted text-muted-foreground"
           >
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4 text-blue-500" />}
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="h-4 w-4 text-blue-500" />
+            )}
           </button>
           <button
             disabled={uploading}
@@ -534,7 +589,11 @@ function CreatePostBox() {
           onClick={submit}
           className="rounded-full px-5"
         >
-          {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Send className="h-3.5 w-3.5 mr-1" />}
+          {isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+          ) : (
+            <Send className="h-3.5 w-3.5 mr-1" />
+          )}
           Post
         </Button>
       </div>
@@ -545,7 +604,12 @@ function CreatePostBox() {
 function AchievementShareBox() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState({ title: "", description: "", category: "", evidence_url: "" });
+  const [draft, setDraft] = useState({
+    title: "",
+    description: "",
+    category: "",
+    evidence_url: "",
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (body) => socialApi.achievements.create(body),
@@ -607,7 +671,11 @@ function AchievementShareBox() {
           <Award className="h-4 w-4 text-amber-600" />
           <div className="text-sm font-semibold">New achievement</div>
         </div>
-        <button type="button" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-muted-foreground hover:text-foreground"
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -639,7 +707,11 @@ function AchievementShareBox() {
           Cancel
         </Button>
         <Button type="submit" size="sm" disabled={!draft.title.trim() || isPending}>
-          {isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+          {isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4 mr-2" />
+          )}
           Share
         </Button>
       </div>
@@ -731,12 +803,21 @@ function LiveSessionCard({ post }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!post.room_id) { setLoaded(true); return; }
+    if (!post.room_id) {
+      setLoaded(true);
+      return;
+    }
     setLoaded(false);
     return watchRoom(
       post.room_id,
-      (data) => { setRoom(data); setLoaded(true); },
-      () => { setRoom(null); setLoaded(true); },
+      (data) => {
+        setRoom(data);
+        setLoaded(true);
+      },
+      () => {
+        setRoom(null);
+        setLoaded(true);
+      },
     );
   }, [post.room_id]);
 
@@ -745,20 +826,27 @@ function LiveSessionCard({ post }) {
   // "completed" phase, which is why the old check never detected ended rooms.
   const isEnded = loaded && (room === null || room.isEnded === true);
 
-  const phaseLabel = room?.phase === "focus"
-    ? { label: "Focusing 🔴", cls: "text-red-600 bg-red-50" }
-    : room?.phase === "breakTime"
-    ? { label: "On Break 🟢", cls: "text-emerald-700 bg-emerald-50" }
-    : { label: "Waiting ⚪", cls: "text-muted-foreground bg-muted" };
+  const phaseLabel =
+    room?.phase === "focus"
+      ? { label: "Focusing 🔴", cls: "text-red-600 bg-red-50" }
+      : room?.phase === "breakTime"
+        ? { label: "On Break 🟢", cls: "text-emerald-700 bg-emerald-50" }
+        : { label: "Waiting ⚪", cls: "text-muted-foreground bg-muted" };
 
   return (
-    <div className={`rounded-xl border p-4 flex flex-col gap-3 ${isEnded ? "opacity-60" : "bg-card"}`}>
+    <div
+      className={`rounded-xl border p-3 flex flex-col gap-3 sm:p-4 ${isEnded ? "opacity-60" : "bg-card"}`}
+    >
       <div className="flex items-center gap-2">
-        <span className="text-base">📚</span>
+        <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{post.author_name} started a study session</p>
+          <p className="text-sm font-semibold truncate">
+            {post.author_name} started a study session
+          </p>
           {post.subject_tag && (
-            <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{post.subject_tag}</span>
+            <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+              {post.subject_tag}
+            </span>
           )}
         </div>
       </div>
@@ -770,16 +858,24 @@ function LiveSessionCard({ post }) {
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         </div>
       ) : isEnded ? (
-        <div className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground text-center">Session ended</div>
+        <div className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground text-center">
+          Session ended
+        </div>
       ) : (
-        <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
+        <div className="flex flex-col gap-2 rounded-lg border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${phaseLabel.cls}`}>{phaseLabel.label}</span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${phaseLabel.cls}`}>
+              {phaseLabel.label}
+            </span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Users className="h-3.5 w-3.5" /> {Math.max(0, room?.memberCount ?? 0)}
             </div>
           </div>
-          <Button size="sm" className="h-7 text-xs px-3" onClick={() => navigate({ to: "/rooms/$id", params: { id: post.room_id } })}>
+          <Button
+            size="sm"
+            className="h-7 text-xs px-3"
+            onClick={() => navigate({ to: "/rooms/$id", params: { id: post.room_id } })}
+          >
             Join Session
           </Button>
         </div>
@@ -792,7 +888,9 @@ function LiveSessionCard({ post }) {
 
 function PostCard({ post, currentUserId }) {
   const qc = useQueryClient();
-  const [myReaction, setMyReaction] = useState(post.my_reaction_type ?? (post.liked_by_me || post.is_liked_by_me ? "like" : null));
+  const [myReaction, setMyReaction] = useState(
+    post.my_reaction_type ?? (post.liked_by_me || post.is_liked_by_me ? "like" : null),
+  );
   const [counts, setCounts] = useState({
     like: post.likes_count ?? post.likes ?? 0,
     motivated: post.motivated_count ?? 0,
@@ -819,7 +917,11 @@ function PostCard({ post, currentUserId }) {
     },
     onError: (_e, _type, ctx) => {
       setMyReaction(ctx.prev);
-      setCounts({ like: post.likes_count ?? 0, motivated: post.motivated_count ?? 0, keep_going: post.keep_going_count ?? 0 });
+      setCounts({
+        like: post.likes_count ?? 0,
+        motivated: post.motivated_count ?? 0,
+        keep_going: post.keep_going_count ?? 0,
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["social", "feed"] }),
   });
@@ -834,22 +936,33 @@ function PostCard({ post, currentUserId }) {
   });
 
   const author = post.author || post.user || {};
-  if (import.meta.env.DEV && (author.name === undefined && author.display_name === undefined)) {
+  if (import.meta.env.DEV && author.name === undefined && author.display_name === undefined) {
     console.log("[PostCard] unknown author shape:", JSON.stringify(post).slice(0, 400));
   }
   const name =
-    author.name || author.display_name || author.full_name || author.username ||
-    post.author_name || post.user_name ||
+    author.name ||
+    author.display_name ||
+    author.full_name ||
+    author.username ||
+    post.author_name ||
+    post.user_name ||
     (author.email ? author.email.split("@")[0] : null) ||
     "Unknown";
   const avatar =
-    author.avatar_url || author.avatar || author.profile_photo_url ||
-    author.photo_url || author.picture || post.author_avatar || "";
-  const authorUid = String(author.uid || author.firebase_uid || post.author_id || author.id || post.user_id || "");
-  const isMine = currentUserId && (authorUid === String(currentUserId));
+    author.avatar_url ||
+    author.avatar ||
+    author.profile_photo_url ||
+    author.photo_url ||
+    author.picture ||
+    post.author_avatar ||
+    "";
+  const authorUid = String(
+    author.uid || author.firebase_uid || post.author_id || author.id || post.user_id || "",
+  );
+  const isMine = currentUserId && authorUid === String(currentUserId);
 
   return (
-    <article className="rounded-xl border bg-card p-4">
+    <article className="rounded-xl border bg-card p-3 sm:p-4">
       <div className="flex items-start gap-2.5">
         {authorUid ? (
           <Link to="/profile/$uid" params={{ uid: authorUid }}>
@@ -866,7 +979,11 @@ function PostCard({ post, currentUserId }) {
         )}
         <div className="flex-1 min-w-0">
           {authorUid ? (
-            <Link to="/profile/$uid" params={{ uid: authorUid }} className="text-sm font-medium hover:underline">
+            <Link
+              to="/profile/$uid"
+              params={{ uid: authorUid }}
+              className="text-sm font-medium hover:underline"
+            >
               {name}
             </Link>
           ) : (
@@ -875,7 +992,7 @@ function PostCard({ post, currentUserId }) {
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
             {(post.author_streak ?? 0) >= 2 && (
               <span className="inline-flex items-center gap-0.5 text-orange-500 font-semibold">
-                🔥 Day {post.author_streak}
+                Day {post.author_streak}
               </span>
             )}
             <span>{timeAgo(post.created_at)}</span>
@@ -903,7 +1020,10 @@ function PostCard({ post, currentUserId }) {
             {menuOpen && (
               <div className="absolute right-0 top-8 z-10 rounded-md border bg-card shadow-md py-1 min-w-[120px]">
                 <button
-                  onClick={() => { setMenuOpen(false); deletePost(); }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    deletePost();
+                  }}
                   className="w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-muted flex items-center gap-2"
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -916,11 +1036,23 @@ function PostCard({ post, currentUserId }) {
 
       <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
-      {post.attachment_url && (post.attachment_type === "image" || (!post.attachment_type && /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(post.attachment_url))) && (
-        <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-3 block rounded-lg overflow-hidden border">
-          <img src={post.attachment_url} alt={post.attachment_name || ""} className="w-full max-h-96 object-cover" />
-        </a>
-      )}
+      {post.attachment_url &&
+        (post.attachment_type === "image" ||
+          (!post.attachment_type &&
+            /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(post.attachment_url))) && (
+          <a
+            href={post.attachment_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block rounded-lg overflow-hidden border"
+          >
+            <img
+              src={post.attachment_url}
+              alt={post.attachment_name || ""}
+              className="w-full max-h-96 object-cover"
+            />
+          </a>
+        )}
       {post.attachment_url && post.attachment_type && post.attachment_type !== "image" && (
         <a
           href={post.attachment_url}
@@ -988,7 +1120,11 @@ function FeedList({ tag }) {
   const { data: profile } = useProfile();
   const currentUserId = profile?.uid || profile?.firebase_uid || profile?.id;
 
-  const { data: feed = [], isLoading, error } = useQuery({
+  const {
+    data: feed = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: qk.social.feed({ tag }),
     queryFn: () => socialApi.feed(tag ? { tag } : undefined),
     retry: 1,
@@ -1036,11 +1172,13 @@ function FeedList({ tag }) {
 
   return (
     <div className="space-y-3">
-      {posts.map((post) => (
-        post.type === "live_session"
-          ? <LiveSessionCard key={post.id} post={post} />
-          : <PostCard key={post.id} post={post} currentUserId={currentUserId} />
-      ))}
+      {posts.map((post) =>
+        post.type === "live_session" ? (
+          <LiveSessionCard key={post.id} post={post} />
+        ) : (
+          <PostCard key={post.id} post={post} currentUserId={currentUserId} />
+        ),
+      )}
     </div>
   );
 }
@@ -1082,7 +1220,15 @@ function FriendRequestsCard() {
           const user = req.sender || req.user || req;
           const name = user.name || user.display_name || "User";
           const avatar = user.avatar_url || user.avatar || "";
-          const uid = String(user.uid || user.firebase_uid || req.uid || req.firebase_uid || user.id || req.sender_id || "");
+          const uid = String(
+            user.uid ||
+              user.firebase_uid ||
+              req.uid ||
+              req.firebase_uid ||
+              user.id ||
+              req.sender_id ||
+              "",
+          );
           return (
             <div key={uid} className="flex items-center gap-2">
               {uid ? (
@@ -1100,17 +1246,27 @@ function FriendRequestsCard() {
               )}
               <div className="flex-1 min-w-0">
                 {uid ? (
-                  <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium truncate hover:underline">
+                  <Link
+                    to="/profile/$uid"
+                    params={{ uid }}
+                    className="text-sm font-medium truncate hover:underline"
+                  >
                     {name}
                   </Link>
                 ) : (
                   <div className="text-sm font-medium truncate">{name}</div>
                 )}
               </div>
-              <button onClick={() => accept(uid)} className="text-emerald-600 hover:text-emerald-700">
+              <button
+                onClick={() => accept(uid)}
+                className="text-emerald-600 hover:text-emerald-700"
+              >
                 <Check className="h-4 w-4" />
               </button>
-              <button onClick={() => reject(uid)} className="text-muted-foreground hover:text-destructive">
+              <button
+                onClick={() => reject(uid)}
+                className="text-muted-foreground hover:text-destructive"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -1131,7 +1287,7 @@ function DiscoverUserRow({ u, sentUids, sendRequest }) {
   const avatar = u.avatar_url || u.avatar || "";
   const university = u.university || "";
   const uid = String(u.uid || u.firebase_uid || u.id || "");
-  const connectionState = sentUids.has(uid) ? "pending_sent" : (u.connection_state || "");
+  const connectionState = sentUids.has(uid) ? "pending_sent" : u.connection_state || "";
   const sent = connectionState === "pending_sent" || u.has_sent_request;
   const connected = connectionState === "connected" || u.is_friend;
   const pendingReceived = connectionState === "pending_received";
@@ -1152,7 +1308,11 @@ function DiscoverUserRow({ u, sentUids, sendRequest }) {
       )}
       <div className="flex-1 min-w-0">
         {uid ? (
-          <Link to="/profile/$uid" params={{ uid }} className="text-sm font-medium truncate hover:underline block">
+          <Link
+            to="/profile/$uid"
+            params={{ uid }}
+            className="text-sm font-medium truncate hover:underline block"
+          >
             {name}
           </Link>
         ) : (
@@ -1170,7 +1330,11 @@ function DiscoverUserRow({ u, sentUids, sendRequest }) {
       ) : pendingReceived ? (
         <span className="text-[11px] text-muted-foreground">Requested</span>
       ) : (
-        <button onClick={() => sendRequest(uid)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-primary hover:bg-primary/10 hover:text-primary/80" title="Add connection">
+        <button
+          onClick={() => sendRequest(uid)}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-primary hover:bg-primary/10 hover:text-primary/80"
+          title="Add connection"
+        >
           <UserPlus className="h-4 w-4" />
         </button>
       )}
@@ -1216,12 +1380,18 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
   // in the window between typing and the search actually firing.
   const isSearching = dq.trim().length >= 2;
   const list = isSearching
-    ? (Array.isArray(results) ? results : results?.data || [])
-    : (Array.isArray(suggestions) ? suggestions : suggestions?.data || []);
+    ? Array.isArray(results)
+      ? results
+      : results?.data || []
+    : Array.isArray(suggestions)
+      ? suggestions
+      : suggestions?.data || [];
 
   return (
     <div className={`rounded-xl border bg-card p-4 ${className}`}>
-      <div className={`mb-4 flex flex-col gap-3 ${wide ? "sm:flex-row sm:items-center sm:justify-between" : ""}`}>
+      <div
+        className={`mb-4 flex flex-col gap-3 ${wide ? "sm:flex-row sm:items-center sm:justify-between" : ""}`}
+      >
         <div>
           <div className="text-sm font-semibold">
             {isSearching ? "Search results" : "People you may know"}
@@ -1242,14 +1412,14 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
       </div>
       {!wide && (
         <div className="relative mb-3 sm:hidden">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-        <Input
-          className="pl-8 h-8 text-sm"
-          placeholder="Search by name…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            className="pl-8 h-8 text-sm"
+            placeholder="Search by name…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
       )}
       {(isFetching || (!isSearching && loadingSuggestions)) && (
         <div className="text-xs text-muted-foreground">Loading…</div>
@@ -1258,12 +1428,19 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
         <div className="text-xs text-muted-foreground">No users found.</div>
       )}
       {!loadingSuggestions && !isSearching && list.length === 0 && (
-        <div className="text-xs text-muted-foreground">No suggestions yet — connect with more people first.</div>
+        <div className="text-xs text-muted-foreground">
+          No suggestions yet — connect with more people first.
+        </div>
       )}
       {list.length > 0 && (
         <div className={wide ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
           {list.slice(0, limit).map((u) => (
-            <DiscoverUserRow key={String(u.uid || u.firebase_uid || u.id || u.name)} u={u} sentUids={sentUids} sendRequest={sendRequest} />
+            <DiscoverUserRow
+              key={String(u.uid || u.firebase_uid || u.id || u.name)}
+              u={u}
+              sentUids={sentUids}
+              sendRequest={sendRequest}
+            />
           ))}
         </div>
       )}
@@ -1286,7 +1463,9 @@ function AchievementsPanel() {
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
             <div className="text-sm font-semibold">Your achievement portfolio</div>
-            <div className="text-xs text-muted-foreground">A lightweight record you can show to classmates and collaborators.</div>
+            <div className="text-xs text-muted-foreground">
+              A lightweight record you can show to classmates and collaborators.
+            </div>
           </div>
           <Award className="h-5 w-5 text-amber-600" />
         </div>
@@ -1295,7 +1474,8 @@ function AchievementsPanel() {
           <div className="text-sm text-muted-foreground">Loading achievements…</div>
         ) : list.length === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No achievements yet. Share your first project, certificate, milestone, or competition result.
+            No achievements yet. Share your first project, certificate, milestone, or competition
+            result.
           </div>
         ) : (
           <div className="grid gap-3">
@@ -1306,13 +1486,22 @@ function AchievementsPanel() {
                     <div className="font-semibold text-sm">{achievement.title}</div>
                     <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
                       {achievement.category && (
-                        <span className="rounded-full bg-muted px-2 py-0.5">{achievement.category}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5">
+                          {achievement.category}
+                        </span>
                       )}
-                      <span className="rounded-full bg-muted px-2 py-0.5">{achievement.visibility}</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5">
+                        {achievement.visibility}
+                      </span>
                     </div>
                   </div>
                   {achievement.evidence_url && (
-                    <a href={achievement.evidence_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                    <a
+                      href={achievement.evidence_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
                       Evidence
                     </a>
                   )}
@@ -1340,7 +1529,8 @@ function NetworkPanel() {
           <div>
             <div className="text-sm font-semibold">University student network</div>
             <div className="text-xs text-muted-foreground">
-              Find classmates, connect with study partners, and discover students with shared academic interests.
+              Find classmates, connect with study partners, and discover students with shared
+              academic interests.
             </div>
           </div>
         </div>
@@ -1354,16 +1544,28 @@ function NetworkPanel() {
       <div className="rounded-xl border bg-card p-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Find</div>
-            <p className="mt-1 text-sm text-muted-foreground">Search by name and discover classmates already using RAQIP.</p>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Find
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Search by name and discover classmates already using RAQIP.
+            </p>
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connect</div>
-            <p className="mt-1 text-sm text-muted-foreground">Send requests to students you know or want to study with.</p>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Connect
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Send requests to students you know or want to study with.
+            </p>
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Collaborate</div>
-            <p className="mt-1 text-sm text-muted-foreground">Use rooms, posts, and achievements to keep study work visible.</p>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Collaborate
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Use rooms, posts, and achievements to keep study work visible.
+            </p>
           </div>
         </div>
       </div>
@@ -1398,7 +1600,10 @@ function loadUsedSeconds(resetHour = 0) {
 
 function saveUsedSeconds(seconds, resetHour = 0) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: getTodayKey(resetHour), usedSeconds: seconds }));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ date: getTodayKey(resetHour), usedSeconds: seconds }),
+    );
   } catch {}
 }
 
@@ -1460,7 +1665,10 @@ function SocialUsageGuard({ children }) {
       if (usedSecsRef.current % 5 === 0) saveUsedSeconds(usedSecsRef.current, resetHour);
       setRemaining((r) => {
         const next = r - 1;
-        if (next <= 0) { setBlocked(true); return 0; }
+        if (next <= 0) {
+          setBlocked(true);
+          return 0;
+        }
         return next;
       });
     }, 1000);
@@ -1479,8 +1687,8 @@ function SocialUsageGuard({ children }) {
         <div>
           <h2 className="text-xl font-bold mb-2">Daily limit reached</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            You've used your {limitMinutes}-minute daily social media allowance.
-            It resets at {resetHour === 0 ? "midnight" : `${resetHour}:00`} — or adjust in Settings.
+            You've used your {limitMinutes}-minute daily social media allowance. It resets at{" "}
+            {resetHour === 0 ? "midnight" : `${resetHour}:00`} — or adjust in Settings.
           </p>
         </div>
         <div className="flex gap-3">
@@ -1499,13 +1707,15 @@ function SocialUsageGuard({ children }) {
   return (
     <>
       {limitSecs > 0 && (
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium mb-1 ${
-          remaining < 300
-            ? "bg-destructive/10 text-destructive"
-            : remaining < 600
-            ? "bg-orange-500/10 text-orange-600"
-            : "bg-muted/60 text-muted-foreground"
-        }`}>
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium mb-1 ${
+            remaining < 300
+              ? "bg-destructive/10 text-destructive"
+              : remaining < 600
+                ? "bg-orange-500/10 text-orange-600"
+                : "bg-muted/60 text-muted-foreground"
+          }`}
+        >
           <Clock className="h-3.5 w-3.5 shrink-0" />
           <span>
             {remaining < 60
@@ -1551,7 +1761,7 @@ export function SocialPage() {
 
         {/* Center feed */}
         <div className="flex-1 min-w-0 overflow-y-auto space-y-3">
-          <div className="rounded-xl border bg-card p-2">
+          <div className="rounded-xl border bg-card p-1.5 sm:p-2">
             <div className="grid grid-cols-3 gap-1">
               {views.map((item) => {
                 const Icon = item.icon;
@@ -1560,8 +1770,10 @@ export function SocialPage() {
                   <button
                     key={item.id}
                     onClick={() => setView(item.id)}
-                    className={`h-9 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-                      active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                    className={`h-9 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-colors sm:text-sm sm:gap-2 ${
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -1597,7 +1809,8 @@ export function SocialPage() {
                 Social is for academic progress
               </div>
               <div className="mt-2 text-xs text-muted-foreground leading-5">
-                Share achievements, live study sessions, useful resources, and project updates so your network has context beyond casual posts.
+                Share achievements, live study sessions, useful resources, and project updates so
+                your network has context beyond casual posts.
               </div>
             </div>
           </div>

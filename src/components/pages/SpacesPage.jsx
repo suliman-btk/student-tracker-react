@@ -32,13 +32,21 @@ export default function SpacesPage() {
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
 
-  const openCreate = () => { setEditing(null); setModalOpen(true); };
-  const openEdit = (space) => { setEditing(space); setModalOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+  const openEdit = (space) => {
+    setEditing(space);
+    setModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
       <Header title="Study Spaces" subtitle="Scrum or Kanban workspaces — solo or with classmates.">
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1.5" /> New space</Button>
+        <Button onClick={openCreate}>
+          <Plus className="h-4 w-4 mr-1.5" /> New space
+        </Button>
       </Header>
       <CreateSpaceModal open={modalOpen} onOpenChange={setModalOpen} space={editing} />
       {isLoading && (
@@ -61,7 +69,10 @@ export default function SpacesPage() {
             className="rounded-xl border bg-card p-5 group hover:shadow-md transition-shadow"
           >
             <div className="flex items-start justify-between">
-              <div className="h-10 w-10 rounded-lg grid place-items-center text-white font-bold" style={{ background: s.color_hex || s.color || "var(--primary)" }}>
+              <div
+                className="h-10 w-10 rounded-lg grid place-items-center text-white font-bold"
+                style={{ background: s.color_hex || s.color || "var(--primary)" }}
+              >
                 {s.name[0]}
               </div>
               <DropdownMenu>
@@ -70,13 +81,30 @@ export default function SpacesPage() {
                     size="icon"
                     variant="ghost"
                     className="opacity-0 group-hover:opacity-100"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                  <DropdownMenuItem onClick={() => { setActiveSpace(s.id); navigate({ to: "/spaces/$spaceId/summary", params: { spaceId: String(s.id) } }); }}>
+                <DropdownMenuContent
+                  align="end"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveSpace(s.id);
+                      navigate({
+                        to: "/spaces/$spaceId/summary",
+                        params: { spaceId: String(s.id) },
+                      });
+                    }}
+                  >
                     <ArrowRight className="mr-2 h-4 w-4" /> Open
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => openEdit(s)}>
@@ -89,7 +117,9 @@ export default function SpacesPage() {
               </DropdownMenu>
             </div>
             <h3 className="mt-3 font-semibold">{s.name}</h3>
-            <div className="text-xs text-muted-foreground mt-1">{s.template} · {s.role}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {s.template} · {s.role}
+            </div>
             <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Users className="h-3.5 w-3.5" /> Personal
@@ -102,7 +132,9 @@ export default function SpacesPage() {
       {!isLoading && spaces.length === 0 && (
         <div className="rounded-xl border bg-card p-8 text-center">
           <h3 className="font-semibold">No spaces yet</h3>
-          <p className="text-sm text-muted-foreground mt-1">Create a space to organize sprints, boards, and backlog.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create a space to organize sprints, boards, and backlog.
+          </p>
         </div>
       )}
 
@@ -111,7 +143,8 @@ export default function SpacesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete space?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleting?.name || "This space"}, its sprints and board will be removed. This cannot be undone.
+              {deleting?.name || "This space"}, its sprints and board will be removed. This cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -121,7 +154,10 @@ export default function SpacesPage() {
                 deleteSpace.mutate(
                   { id: deleting.id },
                   {
-                    onSuccess: () => { toast.success("Space deleted"); setDeleting(null); },
+                    onSuccess: () => {
+                      toast.success("Space deleted");
+                      setDeleting(null);
+                    },
                     onError: () => setDeleting(null),
                   },
                 );
@@ -138,12 +174,12 @@ export default function SpacesPage() {
 
 export function Header({ title, subtitle, children }) {
   return (
-    <div className="flex items-end justify-between gap-4 flex-wrap">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
-      <div className="flex items-center gap-2">{children}</div>
+      <div className="flex flex-wrap items-center gap-2">{children}</div>
     </div>
   );
 }

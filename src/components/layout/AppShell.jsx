@@ -12,7 +12,7 @@ export default function AppShell({ children }) {
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar onMobileMenu={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto w-full px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto w-full px-2 py-3 sm:px-4 sm:py-6 lg:px-8">
           {children}
         </main>
       </div>

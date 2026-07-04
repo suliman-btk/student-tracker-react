@@ -77,19 +77,19 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Nav */}
-      <header className="sticky top-0 z-20 flex items-center justify-between px-6 lg:px-10 h-20 border-b bg-background/70 backdrop-blur">
+      <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b bg-background/70 px-4 backdrop-blur sm:px-6 lg:px-10">
         <div className="flex items-center">
           <img
             src="/logo.png"
             alt="RAQIP — Smart Study Companion"
-            className="h-14 w-auto object-contain"
+            className="h-8 w-auto object-contain sm:h-10"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" className="h-9">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Button asChild variant="ghost" className="h-9 px-2.5 sm:px-4">
             <Link to="/login">Sign in</Link>
           </Button>
-          <Button asChild className="h-9">
+          <Button asChild className="h-9 px-2.5 sm:px-4">
             <Link to="/register">Get started</Link>
           </Button>
         </div>
@@ -98,15 +98,12 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden border-b">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/[0.06] via-background to-background" />
-        <div className="absolute -top-32 right-0 -z-10 h-[28rem] w-[28rem] rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute top-40 -left-24 -z-10 h-80 w-80 rounded-full bg-[color:var(--ai)]/15 blur-3xl" />
-
-        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-10 sm:py-14 lg:py-16 grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs bg-card border px-3 py-1 rounded-full text-muted-foreground shadow-sm">
               <Sparkles className="h-3 w-3 text-[color:var(--ai)]" /> Made for final-year students
             </div>
-            <h1 className="mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.05]">
+            <h1 className="mt-5 text-3xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.08]">
               Your messy semester,{" "}
               <span className="bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">
                 finally sorted.
@@ -117,7 +114,7 @@ export default function LandingPage() {
               clear weekly sprints, focused study sessions, and an AI coach that tells you exactly
               what to tackle next.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Button asChild size="lg" className="gap-1.5">
                 <Link to="/register">
                   Start your first sprint <ArrowRight className="h-4 w-4" />
@@ -142,15 +139,15 @@ export default function LandingPage() {
           </div>
 
           {/* App preview mockup */}
-          <div className="relative">
-            <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-tr from-primary/20 to-[color:var(--ai)]/20 blur-2xl" />
+          <div className="relative lg:-mt-8">
+            <div className="absolute -inset-3 -z-10 rounded-3xl bg-primary/10 blur-2xl" />
             <AppPreview />
           </div>
         </div>
 
         {/* Stats strip */}
         <div className="border-t bg-gradient-to-r from-primary/[0.04] via-[color:var(--ai)]/[0.04] to-primary/[0.04]">
-          <div className="max-w-6xl mx-auto px-6 lg:px-10 py-7 grid grid-cols-3 divide-x divide-border/70">
+          <div className="max-w-6xl mx-auto grid gap-4 px-4 py-7 sm:grid-cols-3 sm:divide-x sm:divide-border/70 sm:px-6 lg:px-10">
             {STATS.map((s) => (
               <div key={s.label} className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-[color:var(--ai)] bg-clip-text text-transparent">
@@ -164,7 +161,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works — new-user onboarding flow */}
-      <section className="max-w-6xl mx-auto w-full px-6 lg:px-10 pt-20 pb-4">
+      <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-10 pt-14 sm:pt-20 pb-4">
         <div className="text-center max-w-2xl mx-auto">
           <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">
             How it works
@@ -181,7 +178,7 @@ export default function LandingPage() {
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
             <div
               key={title}
-              className="group relative rounded-3xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-0.5"
+              className="group relative rounded-xl border bg-card p-5 transition-all hover:shadow-lg hover:-translate-y-0.5 sm:rounded-3xl sm:p-6"
             >
               <span className="absolute right-5 top-5 text-5xl font-bold leading-none text-muted-foreground/10 transition-colors group-hover:text-primary/15">
                 {i + 1}
@@ -197,7 +194,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features — bento layout */}
-      <section className="max-w-6xl mx-auto w-full px-6 lg:px-10 py-20">
+      <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-10 py-14 sm:py-20">
         <div className="text-center max-w-2xl mx-auto">
           <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">
             Why students stick with it
@@ -212,8 +209,7 @@ export default function LandingPage() {
 
         <div className="mt-12 grid gap-4 lg:grid-cols-3 lg:auto-rows-fr">
           {/* Featured AI card */}
-          <div className="lg:row-span-2 relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary to-[color:var(--ai)] text-primary-foreground p-7 flex flex-col">
-            <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-primary-foreground/10 blur-2xl" />
+          <div className="lg:row-span-2 relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary to-[color:var(--ai)] text-primary-foreground p-5 flex flex-col sm:rounded-3xl sm:p-7">
             <div className="relative h-12 w-12 rounded-2xl bg-primary-foreground/15 grid place-items-center">
               <Sparkles className="h-6 w-6" />
             </div>
@@ -241,7 +237,7 @@ export default function LandingPage() {
             ({ icon: Icon, title, desc, tint }) => (
               <div
                 key={title}
-                className="group rounded-3xl border bg-card p-6 text-left transition-all hover:shadow-lg hover:-translate-y-0.5"
+                className="group rounded-xl border bg-card p-5 text-left transition-all hover:shadow-lg hover:-translate-y-0.5 sm:rounded-3xl sm:p-6"
               >
                 <div className={`h-12 w-12 rounded-2xl grid place-items-center ${tint}`}>
                   <Icon className="h-5 w-5" />
@@ -256,7 +252,7 @@ export default function LandingPage() {
 
       {/* See it in action — Sprint + Pomodoro spotlights */}
       <section className="border-y bg-muted/30">
-        <div className="max-w-6xl mx-auto w-full px-6 lg:px-10 py-20">
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-10 py-14 sm:py-20">
           <div className="text-center max-w-2xl mx-auto">
             <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary">
               See it in action
@@ -331,10 +327,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA band */}
-      <section className="px-6 lg:px-10 pb-20 pt-20">
-        <div className="max-w-6xl mx-auto relative overflow-hidden rounded-3xl bg-primary text-primary-foreground px-8 py-12 lg:py-16 text-center">
-          <div className="absolute -top-16 -right-10 h-64 w-64 rounded-full bg-primary-foreground/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-[color:var(--ai)]/30 blur-3xl" />
+      <section className="px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20 pt-14 sm:pt-20">
+        <div className="max-w-6xl mx-auto relative overflow-hidden rounded-xl bg-primary text-primary-foreground px-5 py-10 text-center sm:rounded-3xl sm:px-8 sm:py-12 lg:py-16">
           <h2 className="relative text-2xl sm:text-3xl font-bold tracking-tight">
             Your future self will thank you.
           </h2>
@@ -361,7 +355,7 @@ export default function LandingPage() {
 
 function ApkDownloadQr() {
   return (
-    <div className="mt-7 flex max-w-xl flex-col gap-4 rounded-2xl border bg-card/85 p-4 shadow-sm sm:flex-row sm:items-center">
+    <div className="mt-7 flex max-w-xl flex-col gap-4 rounded-xl border bg-card/85 p-4 shadow-sm sm:flex-row sm:items-center sm:rounded-2xl">
       <a
         href={APK_DOWNLOAD_URL}
         className="mx-auto grid h-36 w-36 shrink-0 place-items-center rounded-xl border bg-white p-2 sm:mx-0"
@@ -400,7 +394,7 @@ function ApkDownloadQr() {
 /* Lightweight, non-interactive app preview built from divs. */
 function AppPreview() {
   return (
-    <div className="rounded-2xl border bg-card shadow-2xl overflow-hidden">
+    <div className="mx-auto max-w-full overflow-hidden rounded-xl border bg-card shadow-2xl sm:rounded-2xl">
       {/* window bar */}
       <div className="flex items-center gap-1.5 px-3 py-2.5 border-b bg-muted/40">
         <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
@@ -408,7 +402,7 @@ function AppPreview() {
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
         <div className="ml-3 h-5 flex-1 max-w-[55%] rounded bg-background/70" />
       </div>
-      <div className="flex h-72">
+      <div className="flex h-64 sm:h-72 lg:h-[21rem]">
         {/* mini sidebar */}
         <div className="hidden sm:flex w-32 shrink-0 flex-col gap-2 border-r bg-muted/20 p-3">
           <div className="h-6 rounded-md bg-primary/15" />
@@ -426,13 +420,16 @@ function AppPreview() {
             <div className="h-4 w-24 rounded bg-muted-foreground/25" />
             <div className="h-6 w-16 rounded-md bg-primary" />
           </div>
-          <div className="grid grid-cols-3 gap-2 h-[calc(100%-1.75rem)]">
+          <div className="grid grid-cols-3 gap-1.5 h-[calc(100%-1.75rem)] sm:gap-2">
             {[
               { label: "To Do", accent: "bg-slate-400", cards: 3 },
               { label: "Doing", accent: "bg-amber-400", cards: 2 },
               { label: "Done", accent: "bg-emerald-500", cards: 2 },
             ].map((col) => (
-              <div key={col.label} className="rounded-lg bg-muted/30 p-2 space-y-2 overflow-hidden">
+              <div
+                key={col.label}
+                className="rounded-lg bg-muted/30 p-1.5 space-y-2 overflow-hidden sm:p-2"
+              >
                 <div className="flex items-center gap-1.5">
                   <span className={`h-2 w-2 rounded-full ${col.accent}`} />
                   <div className="h-2.5 w-12 rounded bg-muted-foreground/25" />
@@ -463,7 +460,7 @@ function SprintBoardMock() {
   return (
     <div className="relative">
       <div className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-tr from-primary/15 to-amber-400/15 blur-2xl" />
-      <div className="rounded-2xl border bg-card shadow-xl overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-xl overflow-hidden sm:rounded-2xl">
         {/* header */}
         <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
           <div>
@@ -498,9 +495,9 @@ function SprintBoardMock() {
           </div>
         </div>
         {/* board */}
-        <div className="grid grid-cols-3 gap-2 p-4">
+        <div className="grid grid-cols-3 gap-1.5 p-3 sm:gap-2 sm:p-4">
           {columns.map((col) => (
-            <div key={col.label} className="rounded-lg bg-muted/40 p-2 space-y-2">
+            <div key={col.label} className="rounded-lg bg-muted/40 p-1.5 space-y-2 sm:p-2">
               <div className="flex items-center gap-1.5">
                 <span className={`h-2 w-2 rounded-full ${col.accent}`} />
                 <span className="text-[11px] font-medium text-muted-foreground">{col.label}</span>
@@ -535,12 +532,12 @@ function PomodoroMock() {
   return (
     <div className="relative">
       <div className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-tr from-rose-400/15 to-primary/15 blur-2xl" />
-      <div className="rounded-2xl border bg-card shadow-xl px-6 py-8 flex flex-col items-center">
+      <div className="rounded-xl border bg-card shadow-xl px-4 py-6 flex flex-col items-center sm:rounded-2xl sm:px-6 sm:py-8">
         <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-rose-700 bg-rose-500/10 px-2.5 py-1 rounded-full">
           <Timer className="h-3 w-3" /> Focus session
         </div>
 
-        <div className="relative mt-6 h-52 w-52">
+        <div className="relative mt-6 h-44 w-44 sm:h-52 sm:w-52">
           <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
             <circle
               cx="100"

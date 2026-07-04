@@ -103,13 +103,16 @@ export default function DashboardPage() {
   const heavyWeek = useMemo(() => {
     const now = new Date();
     for (let d = 0; d < 14; d++) {
-      const ws = new Date(now); ws.setDate(ws.getDate() + d);
-      const we = new Date(ws); we.setDate(we.getDate() + 3);
+      const ws = new Date(now);
+      ws.setDate(ws.getDate() + d);
+      const we = new Date(ws);
+      we.setDate(we.getDate() + 3);
       const count = tasks.filter((t) => {
         const dl = t.deadlineDate;
         return dl && !isDone(t) && dl >= new Date(ws.getTime() - 86400000) && dl < we;
       }).length;
-      if (count >= 3) return `Heavy week: ${count} tasks due around ${monthShort(ws.getMonth())} ${ws.getDate()}–${we.getDate()}. Consider rescheduling.`;
+      if (count >= 3)
+        return `Heavy week: ${count} tasks due around ${monthShort(ws.getMonth())} ${ws.getDate()}–${we.getDate()}. Consider rescheduling.`;
     }
     return null;
   }, [tasks]);
@@ -120,8 +123,10 @@ export default function DashboardPage() {
     const now = new Date();
     const scores = [];
     for (let w = 0; w < 17; w++) {
-      const start = new Date(now); start.setDate(start.getDate() + w * 7);
-      const end = new Date(start); end.setDate(end.getDate() + 7);
+      const start = new Date(now);
+      start.setDate(start.getDate() + w * 7);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
       let score = 0;
       tasks.forEach((t) => {
         const dl = t.deadlineDate;
@@ -133,14 +138,26 @@ export default function DashboardPage() {
     const avg = scores.reduce((s, x) => s + x.score, 0) / scores.length;
     const heavy = avg * 1.8;
     return scores.map((s, i) => ({
-      label: i === 0 ? "Now" : i % 4 === 0 ? `${monthShort(s.start.getMonth())} ${s.start.getDate()}` : "",
+      label:
+        i === 0
+          ? "Now"
+          : i % 4 === 0
+            ? `${monthShort(s.start.getMonth())} ${s.start.getDate()}`
+            : "",
       score: s.score,
-      kind: s.score > 0 && s.score === max ? "Peak" : s.score >= heavy && s.score > 0 ? "Heavy" : "Normal",
+      kind:
+        s.score > 0 && s.score === max
+          ? "Peak"
+          : s.score >= heavy && s.score > 0
+            ? "Heavy"
+            : "Normal",
     }));
   }, [tasks]);
 
   const focus = useMemo(() => {
-    let completed = 0, abandoned = 0, minutes = 0;
+    let completed = 0,
+      abandoned = 0,
+      minutes = 0;
     const days = [0, 0, 0, 0, 0, 0, 0];
     const now = new Date();
     pomodoro.forEach((s) => {
@@ -158,24 +175,39 @@ export default function DashboardPage() {
   }, [pomodoro]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Good day, {firstName} 👋</h1>
+        <p className="text-sm text-muted-foreground">
+          {new Date().toLocaleDateString("en-GB", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          })}
+        </p>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Good day, {firstName}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {sprint && daysLeft !== null && (
             <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-foreground">
               Sprint · {Math.max(0, daysLeft)}d left
             </span>
           )}
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">✨ {weeklyXp} XP this week</span>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{totalXp} total XP</span>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">🔥 {streak}-day streak</span>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+            ✨ {weeklyXp} XP this week
+          </span>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+            {totalXp} total XP
+          </span>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+            🔥 {streak}-day streak
+          </span>
         </div>
       </div>
 
       {heavyWeek && (
-        <div className="flex items-start gap-2 rounded-lg border px-4 py-3 text-sm" style={{ background: "#F2E8D4", color: "#6B4F1E" }}>
+        <div
+          className="flex items-start gap-2 rounded-lg border px-4 py-3 text-sm"
+          style={{ background: "#F2E8D4", color: "#6B4F1E" }}
+        >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{heavyWeek}</span>
         </div>
@@ -197,8 +229,18 @@ export default function DashboardPage() {
                 <span className="text-2xl font-bold text-primary">{sprintPct}%</span>
               </div>
               <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
-                <div style={{ width: `${(sprintDone / Math.max(1, sprintTasks.length)) * 100}%`, background: "#6fa187" }} />
-                <div style={{ width: `${(sprintProg / Math.max(1, sprintTasks.length)) * 100}%`, background: "#27326b" }} />
+                <div
+                  style={{
+                    width: `${(sprintDone / Math.max(1, sprintTasks.length)) * 100}%`,
+                    background: "#6fa187",
+                  }}
+                />
+                <div
+                  style={{
+                    width: `${(sprintProg / Math.max(1, sprintTasks.length)) * 100}%`,
+                    background: "#27326b",
+                  }}
+                />
               </div>
               <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
                 <Legend color="#6fa187" label="Done" value={sprintDone} />
@@ -206,7 +248,10 @@ export default function DashboardPage() {
                 <Legend color="#c9c9c2" label="To Do" value={sprintTodo} />
               </div>
               {capacity?.exceeds_capacity && (
-                <div className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm" style={{ background: "#F2E8D4", color: "#6B4F1E" }}>
+                <div
+                  className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+                  style={{ background: "#F2E8D4", color: "#6B4F1E" }}
+                >
                   <AlertTriangle className="h-4 w-4" />
                   Sprint exceeds capacity by {Number(capacity.excess_hours || 0).toFixed(1)}h
                 </div>
@@ -214,7 +259,11 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">
-              No active sprint. <Link to="/spaces" className="text-primary">Open a space</Link> to start one.
+              No active sprint.{" "}
+              <Link to="/spaces" className="text-primary">
+                Open a space
+              </Link>{" "}
+              to start one.
             </div>
           )}
         </section>
@@ -226,21 +275,33 @@ export default function DashboardPage() {
               {urgentTasks.map((t) => {
                 const isEmergency = t.isEmergency;
                 const dueDate = t.deadlineDate;
-                const formattedDue = dueDate && !Number.isNaN(dueDate.getTime())
-                  ? dueDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                  : null;
+                const formattedDue =
+                  dueDate && !Number.isNaN(dueDate.getTime())
+                    ? dueDate.toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : null;
                 const overdue = dueDate && dueDate < new Date();
                 return (
                   <Link
                     key={t.id}
                     to="/tasks/$id"
                     params={{ id: String(t.id) }}
-                    className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 hover:bg-muted/40 transition-colors"
+                    className="flex items-start gap-3 rounded-xl border bg-card px-3 py-3 transition-colors hover:bg-muted/40 sm:items-center sm:px-4"
                     style={{ borderLeft: `4px solid ${isEmergency ? "#BA1A1A" : "#dc2626"}` }}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className={cn("truncate text-sm font-medium", isDone(t) && "text-muted-foreground line-through")}>{t.title}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div
+                        className={cn(
+                          "text-sm font-medium leading-5 sm:truncate",
+                          isDone(t) && "text-muted-foreground line-through",
+                        )}
+                      >
+                        {t.title}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                         <span className="truncate">{t.domain || "—"}</span>
                         {formattedDue && (
                           <>
@@ -253,7 +314,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <span
-                      className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                      className="hidden shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold sm:inline-flex"
                       style={{
                         background: isEmergency ? "#FEE2E2" : "#FEF9C3",
                         color: isEmergency ? "#991B1B" : "#854D0E",
@@ -266,26 +327,45 @@ export default function DashboardPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">No urgent tasks right now.</div>
+            <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">
+              No urgent tasks right now.
+            </div>
           )}
         </section>
       </div>
 
       {/* Today's Coaching */}
-      <div className="rounded-xl border-l-4 p-4" style={{ background: "#F1EDE2", borderColor: "#C9A66B" }}>
+      <div
+        className="max-h-[220px] overflow-y-auto rounded-xl border-l-4 p-4 sm:max-h-none"
+        style={{ background: "#F1EDE2", borderColor: "#C9A66B" }}
+      >
         <div className="mb-2 flex items-center gap-2">
           <BrainCircuit className="h-4 w-4" style={{ color: "#6B4F1E" }} />
-          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#6B4F1E" }}>Today's Coaching</span>
+          <span
+            className="text-[11px] font-bold uppercase tracking-wider"
+            style={{ color: "#6B4F1E" }}
+          >
+            Today's Coaching
+          </span>
           {submitted ? (
             <span className="ml-auto text-xs text-emerald-700">Checked in</span>
           ) : (
-            <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={() => setStandupOpen(true)}>Check in</Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-7"
+              onClick={() => setStandupOpen(true)}
+            >
+              Check in
+            </Button>
           )}
         </div>
         {coaching ? (
           <p className="text-sm leading-relaxed">{coaching}</p>
         ) : (
-          <p className="text-sm text-muted-foreground">Do your 3-tap check-in to get today's coaching.</p>
+          <p className="text-sm text-muted-foreground">
+            Do your 3-tap check-in to get today's coaching.
+          </p>
         )}
         {suggestedTask && (
           <div className="mt-2 flex items-start gap-1.5 text-sm" style={{ color: "#7C6FDB" }}>
@@ -301,15 +381,39 @@ export default function DashboardPage() {
         <section>
           <SectionHead label="Workload Planning" title="Workload Timeline" />
           <div className="rounded-xl border bg-card p-4">
-            <p className="mb-3 text-xs text-muted-foreground">Task density over the next 4 months</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Task density over the next 4 months
+            </p>
             <div className="h-40">
               <ResponsiveContainer>
                 <BarChart data={workload}>
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={10} interval={0} />
-                  <Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }} />
+                  <XAxis
+                    dataKey="label"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={10}
+                    interval={0}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "var(--muted)" }}
+                    contentStyle={{
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                      fontSize: 12,
+                    }}
+                  />
                   <Bar dataKey="score" radius={[4, 4, 0, 0]}>
                     {workload.map((w, i) => (
-                      <Cell key={i} fill={w.kind === "Peak" ? "var(--primary)" : w.kind === "Heavy" ? "#BA1A1A" : "#E8E8EF"} />
+                      <Cell
+                        key={i}
+                        fill={
+                          w.kind === "Peak"
+                            ? "var(--primary)"
+                            : w.kind === "Heavy"
+                              ? "#BA1A1A"
+                              : "#E8E8EF"
+                        }
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -327,19 +431,36 @@ export default function DashboardPage() {
         <section>
           <SectionHead label="Focus Habits" title="Focus Analytics" />
           <div className="rounded-xl border bg-card p-4">
-            <div className="grid grid-cols-3 gap-3">
-              <FocusStat icon={CheckCircle2} color="#2E7D32" label="Completed" value={focus.completed} />
-              <FocusStat icon={Timer} color="var(--primary)" label="Focus Time" value={`${Math.floor(focus.minutes / 60)}h ${focus.minutes % 60}m`} />
+            <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-3">
+              <FocusStat
+                icon={CheckCircle2}
+                color="#2E7D32"
+                label="Completed"
+                value={focus.completed}
+              />
+              <FocusStat
+                icon={Timer}
+                color="var(--primary)"
+                label="Focus Time"
+                value={`${Math.floor(focus.minutes / 60)}h ${focus.minutes % 60}m`}
+              />
               <FocusStat icon={XCircle} color="#BA1A1A" label="Abandoned" value={focus.abandoned} />
             </div>
-            <div className="mt-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sessions — last 7 days</div>
+            <div className="mt-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Sessions — last 7 days
+            </div>
             <div className="mt-2 flex items-end gap-1.5 h-16">
               {(() => {
                 const max = Math.max(1, ...focus.days);
                 return focus.days.map((c, i) => (
                   <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                    <div className="w-full rounded-sm bg-primary" style={{ height: `${c ? (c / max) * 48 : 3}px`, opacity: c ? 1 : 0.25 }} />
-                    <span className="text-[10px] text-muted-foreground">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
+                    <div
+                      className="w-full rounded-sm bg-primary"
+                      style={{ height: `${c ? (c / max) * 48 : 3}px`, opacity: c ? 1 : 0.25 }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">
+                      {["M", "T", "W", "T", "F", "S", "S"][i]}
+                    </span>
                   </div>
                 ));
               })()}
@@ -364,7 +485,9 @@ export default function DashboardPage() {
 function SectionHead({ label, title }) {
   return (
     <div className="mb-2">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
       <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
     </div>
   );
@@ -389,7 +512,6 @@ function FocusStat({ icon: Icon, color, label, value }) {
     </div>
   );
 }
-
 
 function YearHeatmap({ activity }) {
   const currentYear = new Date().getFullYear();
@@ -439,7 +561,12 @@ function YearHeatmap({ activity }) {
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold">{year}</span>
           <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setYear((y) => y - 1)}>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              onClick={() => setYear((y) => y - 1)}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
@@ -455,13 +582,17 @@ function YearHeatmap({ activity }) {
         </div>
         <div className="flex gap-1 pl-8 text-[10px] text-muted-foreground">
           {monthLabels.map((m, i) => (
-            <div key={i} className="flex-1 min-w-[16px]">{m}</div>
+            <div key={i} className="flex-1 min-w-[16px]">
+              {m}
+            </div>
           ))}
         </div>
         <div className="flex gap-2">
           <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
             {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-              <div key={i} className="flex flex-1 items-center">{i % 2 === 0 ? d : ""}</div>
+              <div key={i} className="flex flex-1 items-center">
+                {i % 2 === 0 ? d : ""}
+              </div>
             ))}
           </div>
           <div className="flex flex-1 gap-1">
@@ -476,7 +607,11 @@ function YearHeatmap({ activity }) {
                       key={di}
                       className="aspect-square min-h-[16px] rounded-[3px]"
                       style={{ background: future ? "#F3F3F3" : heatColor(mins) }}
-                      title={future ? "" : `${monthShort(d.getMonth())} ${d.getDate()}: ${mins} min focused`}
+                      title={
+                        future
+                          ? ""
+                          : `${monthShort(d.getMonth())} ${d.getDate()}: ${mins} min focused`
+                      }
                     />
                   );
                 })}

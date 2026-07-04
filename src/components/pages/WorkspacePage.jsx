@@ -26,11 +26,29 @@ import {
   UserCircle,
   Zap,
 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useReducer } from "react";
-import { useActiveSprint, useBacklog, useCapacity, useSpace, useSprints, useStudyMutations } from "@/lib/query-hooks";
+import {
+  useActiveSprint,
+  useBacklog,
+  useCapacity,
+  useSpace,
+  useSprints,
+  useStudyMutations,
+} from "@/lib/query-hooks";
 import { PRIORITY_COLOURS } from "@/lib/priority";
 import { aiApi } from "@/lib/api";
 import { useUI } from "@/store/ui";
@@ -165,13 +183,20 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   const [modals, dispatchModal] = useReducer(
     (state, action) => {
       switch (action) {
-        case "OPEN_CREATE_TASK":   return { ...state, createTask: true };
-        case "OPEN_CREATE_SPRINT": return { ...state, createSprint: true };
-        case "OPEN_COMPLETE":      return { ...state, complete: true };
-        case "CLOSE_TASK":         return { ...state, createTask: false };
-        case "CLOSE_SPRINT":       return { ...state, createSprint: false };
-        case "CLOSE_COMPLETE":     return { ...state, complete: false };
-        default:                   return state;
+        case "OPEN_CREATE_TASK":
+          return { ...state, createTask: true };
+        case "OPEN_CREATE_SPRINT":
+          return { ...state, createSprint: true };
+        case "OPEN_COMPLETE":
+          return { ...state, complete: true };
+        case "CLOSE_TASK":
+          return { ...state, createTask: false };
+        case "CLOSE_SPRINT":
+          return { ...state, createSprint: false };
+        case "CLOSE_COMPLETE":
+          return { ...state, complete: false };
+        default:
+          return state;
       }
     },
     { createTask: false, createSprint: false, complete: false },
@@ -185,10 +210,16 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
   if (spaceError) return <WorkspaceError message={spaceError.message} />;
 
   const actions = {
-    createTask:           () => { setPendingSprintId(null); dispatchModal("OPEN_CREATE_TASK"); },
-    createSprintTask:     (sprintId) => { setPendingSprintId(sprintId); dispatchModal("OPEN_CREATE_TASK"); },
-    createSprint:         () => dispatchModal("OPEN_CREATE_SPRINT"),
-    completeSprint:       () => dispatchModal("OPEN_COMPLETE"),
+    createTask: () => {
+      setPendingSprintId(null);
+      dispatchModal("OPEN_CREATE_TASK");
+    },
+    createSprintTask: (sprintId) => {
+      setPendingSprintId(sprintId);
+      dispatchModal("OPEN_CREATE_TASK");
+    },
+    createSprint: () => dispatchModal("OPEN_CREATE_SPRINT"),
+    completeSprint: () => dispatchModal("OPEN_COMPLETE"),
   };
 
   const spaceName = space?.name || space?.space_name || space?.title || `Space ${spaceId}`;
@@ -199,31 +230,44 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
     // Scope a subtle compaction to this page only so its density matches the
     // sidebar. `zoom` is layout-affecting in Chromium, so percentage widths
     // still fill the column correctly — no width override needed.
-    <div className="space-y-0" style={{ zoom: 0.9 }}>
-      <div className="-mx-4 -mt-6 border-b bg-background px-4 pb-4 pt-4 lg:-mx-8 lg:px-8">
-        <div className="flex h-9 items-center gap-2 text-xs text-muted-foreground">
+    <div className="space-y-0 lg:[zoom:0.9]">
+      <div className="-mx-2 -mt-3 border-b bg-background px-2 pb-4 pt-3 sm:-mx-4 sm:-mt-6 sm:px-4 sm:pt-4 lg:-mx-8 lg:px-8">
+        <div className="flex h-auto min-h-8 flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Link to="/spaces" className="inline-flex items-center gap-1 hover:text-foreground">
             <ArrowLeft className="h-3.5 w-3.5" /> Spaces
           </Link>
           <span>/</span>
-          <span className="rounded px-1.5 py-0.5 font-semibold" style={{ color: spaceColor, background: "color-mix(in oklab, currentColor 10%, transparent)" }}>
+          <span
+            className="rounded px-1.5 py-0.5 font-semibold"
+            style={{
+              color: spaceColor,
+              background: "color-mix(in oklab, currentColor 10%, transparent)",
+            }}
+          >
             {spaceKey}
           </span>
-          <span className="text-foreground">{spaceName}</span>
+          <span className="min-w-0 truncate text-foreground">{spaceName}</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 py-4">
-          <div className="grid h-10 w-10 place-items-center rounded-lg text-sm font-bold text-white" style={{ background: spaceColor }}>
+        <div className="flex flex-wrap items-center gap-3 py-3 sm:py-4">
+          <div
+            className="grid h-10 w-10 place-items-center rounded-lg text-sm font-bold text-white"
+            style={{ background: spaceColor }}
+          >
             {spaceName[0]}
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold tracking-tight">{spaceName}</h1>
+              <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
+                {spaceName}
+              </h1>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="text-sm text-muted-foreground">{space?.description || "Sprint workspace for summary, board, and backlog."}</p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {space?.description || "Sprint workspace for summary, board, and backlog."}
+            </p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
             {sprint && (
               <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                 <Zap className="h-3.5 w-3.5" /> Sprint Active
@@ -231,17 +275,18 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
             )}
             <Button
               variant="outline"
-              className="border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5"
+              className="flex-1 border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5 sm:flex-none"
               onClick={() => openAI({ spaceId, sprintId: sprint?.id })}
             >
               <Sparkles className="mr-1.5 h-4 w-4" /> Azzam
             </Button>
             <Button
               variant="outline"
-              className="border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5"
+              className="flex-1 border-[color:var(--ai)]/50 text-[color:var(--ai)] hover:bg-[color:var(--ai)]/5 sm:flex-none"
               onClick={() => setHeaderPlannerOpen(true)}
             >
-              <Bot className="mr-1.5 h-4 w-4" /> Azzam · Sprint Planner
+              <Bot className="mr-1.5 h-4 w-4" />{" "}
+              <span className="truncate">Azzam · Sprint Planner</span>
             </Button>
           </div>
         </div>
@@ -252,8 +297,10 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
               key={id}
               onClick={() => navigate({ to: `/spaces/${spaceId}/${id}` })}
               className={cn(
-                "flex h-10 items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors",
-                tab === id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                "flex h-10 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors sm:gap-2 sm:text-sm",
+                tab === id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="h-4 w-4" /> {label}
@@ -262,28 +309,68 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
         </div>
       </div>
 
-      <div className="py-5">
-        {tab === "summary" && <WorkspaceSummary sprint={sprint} loadingSprint={loadingSprint} spaceId={spaceId} />}
-        {tab === "board" && <WorkspaceBoard sprint={sprint} loadingSprint={loadingSprint} spaceId={spaceId} actions={actions} />}
-        {tab === "backlog" && <WorkspaceBacklog spaceId={spaceId} activeSprintId={sprint?.id} actions={actions} onSprintComplete={triggerSprintReview} />}
-        {tab === "sprints" && <WorkspaceBacklog spaceId={spaceId} activeSprintId={sprint?.id} actions={actions} onSprintComplete={triggerSprintReview} />}
+      <div className="py-4 sm:py-5">
+        {tab === "summary" && (
+          <WorkspaceSummary sprint={sprint} loadingSprint={loadingSprint} spaceId={spaceId} />
+        )}
+        {tab === "board" && (
+          <WorkspaceBoard
+            sprint={sprint}
+            loadingSprint={loadingSprint}
+            spaceId={spaceId}
+            actions={actions}
+          />
+        )}
+        {tab === "backlog" && (
+          <WorkspaceBacklog
+            spaceId={spaceId}
+            activeSprintId={sprint?.id}
+            actions={actions}
+            onSprintComplete={triggerSprintReview}
+          />
+        )}
+        {tab === "sprints" && (
+          <WorkspaceBacklog
+            spaceId={spaceId}
+            activeSprintId={sprint?.id}
+            actions={actions}
+            onSprintComplete={triggerSprintReview}
+          />
+        )}
         {tab === "members" && <WorkspaceMembersPlaceholder />}
       </div>
 
       <TaskEntryModal
         open={modals.createTask}
-        onOpenChange={(o) => { if (!o) { dispatchModal("CLOSE_TASK"); setPendingSprintId(null); } }}
+        onOpenChange={(o) => {
+          if (!o) {
+            dispatchModal("CLOSE_TASK");
+            setPendingSprintId(null);
+          }
+        }}
         spaceId={spaceId}
         sprintId={pendingSprintId}
       />
-      <CreateSprintModal open={modals.createSprint} onOpenChange={(o) => !o && dispatchModal("CLOSE_SPRINT")} spaceId={spaceId} />
-      <AISprintPlannerModal open={headerPlannerOpen} onOpenChange={setHeaderPlannerOpen} spaceId={spaceId} />
-      <AlertDialog open={modals.complete} onOpenChange={(o) => !o && dispatchModal("CLOSE_COMPLETE")}>
+      <CreateSprintModal
+        open={modals.createSprint}
+        onOpenChange={(o) => !o && dispatchModal("CLOSE_SPRINT")}
+        spaceId={spaceId}
+      />
+      <AISprintPlannerModal
+        open={headerPlannerOpen}
+        onOpenChange={setHeaderPlannerOpen}
+        spaceId={spaceId}
+      />
+      <AlertDialog
+        open={modals.complete}
+        onOpenChange={(o) => !o && dispatchModal("CLOSE_COMPLETE")}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Complete this sprint?</AlertDialogTitle>
             <AlertDialogDescription>
-              {sprint?.name || "The active sprint"} will be closed. Incomplete tasks move back to the backlog.
+              {sprint?.name || "The active sprint"} will be closed. Incomplete tasks move back to
+              the backlog.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -294,7 +381,12 @@ export default function WorkspacePage({ tab = "summary", spaceId }) {
                 if (!sprint?.id) return;
                 mutations.closeSprint.mutate(
                   { sprintId: sprint.id, body: { move_incomplete_to: "backlog" }, spaceId },
-                  { onSuccess: () => { dispatchModal("CLOSE_COMPLETE"); triggerSprintReview(sprint.id); } },
+                  {
+                    onSuccess: () => {
+                      dispatchModal("CLOSE_COMPLETE");
+                      triggerSprintReview(sprint.id);
+                    },
+                  },
                 );
               }}
             >
@@ -327,12 +419,20 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
           <div className="flex items-start justify-between gap-5">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Active</span>
-                <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">{dateLabel(sprint.end_date || sprint.endDate, "No end date")}</span>
+                <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold uppercase tracking-wide">
+                  Active
+                </span>
+                <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                  {dateLabel(sprint.end_date || sprint.endDate, "No end date")}
+                </span>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight">{sprint.name || "Active Sprint"}</h2>
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight">
+                {sprint.name || "Active Sprint"}
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">{dateRange(sprint)}</p>
-              {sprint.goal && <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{sprint.goal}</p>}
+              {sprint.goal && (
+                <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{sprint.goal}</p>
+              )}
             </div>
             <ProgressRing value={velocity} />
           </div>
@@ -340,7 +440,11 @@ function WorkspaceSummary({ sprint, loadingSprint, spaceId }) {
 
         <div className="grid grid-cols-3 rounded-xl border bg-card p-5 text-center">
           <Metric icon={CheckCircle2} label="Tasks Done" value={`${done}/${tasks.length}`} />
-          <Metric icon={Zap} label="Points" value={`${points.done}/${points.total || capacity?.capacity_points || 0}`} />
+          <Metric
+            icon={Zap}
+            label="Points"
+            value={`${points.done}/${points.total || capacity?.capacity_points || 0}`}
+          />
           <Metric icon={TrendingUp} label="Velocity" value={`${velocity.toFixed(1)}%`} />
         </div>
       </section>
@@ -396,9 +500,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
   }, [tasks]);
 
   const resolvedStatus = (task) =>
-    task.id in optimisticStatuses
-      ? optimisticStatuses[task.id]
-      : task.status;
+    task.id in optimisticStatuses ? optimisticStatuses[task.id] : task.status;
 
   const tasksWithResolved = tasks.map((t) => ({ ...t, _resolvedStatus: resolvedStatus(t) }));
   const inProgress = tasksWithResolved.filter((t) => t._resolvedStatus === "In Progress").length;
@@ -408,7 +510,7 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
     setOptimisticStatuses((prev) => ({ ...prev, [taskId]: newStatus }));
     mutations.updateSprintTaskStatus.mutate(
       { sprintId: sprint.id, taskId, status: newStatus, spaceId },
-      { onError: () => setOptimisticStatuses((prev) => ({ ...prev, [taskId]: prevStatus })) }
+      { onError: () => setOptimisticStatuses((prev) => ({ ...prev, [taskId]: prevStatus })) },
     );
   };
 
@@ -435,7 +537,10 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
         <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <span className="inline-flex min-w-0 items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span className="truncate">{inProgress} tasks in progress. Consider narrowing your focus to complete one item before starting another.</span>
+            <span className="truncate">
+              {inProgress} tasks in progress. Consider narrowing your focus to complete one item
+              before starting another.
+            </span>
           </span>
         </div>
       )}
@@ -444,7 +549,11 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
         <div className="font-semibold">{sprint.name || "Active Sprint"}</div>
         <div className="text-sm text-muted-foreground">{dateRange(sprint)}</div>
-        <Button variant="outline" className="ml-auto border-emerald-200 text-emerald-700" onClick={actions?.completeSprint}>
+        <Button
+          variant="outline"
+          className="ml-auto border-emerald-200 text-emerald-700"
+          onClick={actions?.completeSprint}
+        >
           <CheckCircle2 className="mr-1.5 h-4 w-4" /> Complete
         </Button>
         <Button variant="outline" onClick={() => setCreateTaskOpen(true)}>
@@ -478,11 +587,17 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
             >
               <div className="flex items-center gap-2 border-b px-4 py-3">
                 <span className="h-3 w-3 rounded-full" style={{ background: col.color }} />
-                <h3 className="text-sm font-bold tracking-wide text-muted-foreground">{col.label}</h3>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">{colTasks.length}</span>
+                <h3 className="text-sm font-bold tracking-wide text-muted-foreground">
+                  {col.label}
+                </h3>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">
+                  {colTasks.length}
+                </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" className="ml-auto h-7 w-7"><MoreVertical className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="ml-auto h-7 w-7">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={actions?.createTask}>
@@ -501,7 +616,9 @@ function WorkspaceBoard({ sprint, loadingSprint, spaceId, actions }) {
                   />
                 ))}
                 {colTasks.length === 0 && (
-                  <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Drop tasks here</div>
+                  <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    Drop tasks here
+                  </div>
                 )}
               </div>
             </section>
@@ -518,8 +635,16 @@ function todayISO() {
 }
 
 function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }) {
-  const { data: backlogPayload = [], isLoading: loadingBacklog, error: backlogError } = useBacklog(spaceId);
-  const { data: sprintsPayload = [], isLoading: loadingSprints, error: sprintsError } = useSprints(spaceId);
+  const {
+    data: backlogPayload = [],
+    isLoading: loadingBacklog,
+    error: backlogError,
+  } = useBacklog(spaceId);
+  const {
+    data: sprintsPayload = [],
+    isLoading: loadingSprints,
+    error: sprintsError,
+  } = useSprints(spaceId);
   const m = useStudyMutations();
   const backlog = asArray(backlogPayload);
   const sprints = asArray(sprintsPayload);
@@ -535,7 +660,8 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   const [addFromDomainOpen, setAddFromDomainOpen] = useState(false);
   const [createTaskOpen2, setCreateTaskOpen2] = useState(false);
 
-  if (loadingBacklog || loadingSprints) return <WorkspaceLoading label="Loading backlog and sprints..." />;
+  if (loadingBacklog || loadingSprints)
+    return <WorkspaceLoading label="Loading backlog and sprints..." />;
   if (backlogError) return <WorkspaceError message={backlogError.message} />;
   if (sprintsError) return <WorkspaceError message={sprintsError.message} />;
 
@@ -554,11 +680,19 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
     );
   };
   const deleteTask = (task) =>
-    m.deleteTask.mutate({ id: task.id, spaceId }, { onSuccess: () => toast.success("Task deleted") });
+    m.deleteTask.mutate(
+      { id: task.id, spaceId },
+      { onSuccess: () => toast.success("Task deleted") },
+    );
 
   const changeStatus = (task, fromSprintId, newStatus) => {
     if (fromSprintId) {
-      m.updateSprintTaskStatus.mutate({ sprintId: fromSprintId, taskId: task.id, status: newStatus, spaceId });
+      m.updateSprintTaskStatus.mutate({
+        sprintId: fromSprintId,
+        taskId: task.id,
+        status: newStatus,
+        spaceId,
+      });
     } else {
       m.updateTaskStatus.mutate({ id: task.id, status: newStatus, spaceId });
     }
@@ -576,7 +710,10 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   const doStart = (sprint, updateDate) => {
     setStartEarly(null);
     const run = () =>
-      m.startSprint.mutate({ sprintId: sprint.id, spaceId }, { onSuccess: () => toast.success("Sprint started") });
+      m.startSprint.mutate(
+        { sprintId: sprint.id, spaceId },
+        { onSuccess: () => toast.success("Sprint started") },
+      );
     if (updateDate) {
       m.updateSprint.mutate(
         { sprintId: sprint.id, body: { start_date: todayISO() }, spaceId },
@@ -610,17 +747,19 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   };
 
   const completeTasks = completeFor ? getTasks(completeFor) : [];
-  const completeDone = completeTasks.filter(
-    (t) => t.status === "Done",
-  ).length;
+  const completeDone = completeTasks.filter((t) => t.status === "Done").length;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" className="ml-auto" onClick={actions?.createSprint}>
+        <Button
+          variant="outline"
+          className="flex-1 sm:ml-auto sm:flex-none"
+          onClick={actions?.createSprint}
+        >
           <Zap className="mr-1.5 h-4 w-4" /> Create sprint
         </Button>
-        <Button onClick={() => setCreateTaskOpen2(true)}>
+        <Button className="flex-1 sm:flex-none" onClick={() => setCreateTaskOpen2(true)}>
           <Plus className="mr-1.5 h-4 w-4" /> Add task
         </Button>
       </div>
@@ -680,7 +819,11 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
         sprint={editSprint}
       />
 
-      <AddFromDomainModal open={addFromDomainOpen} onOpenChange={setAddFromDomainOpen} spaceId={spaceId} />
+      <AddFromDomainModal
+        open={addFromDomainOpen}
+        onOpenChange={setAddFromDomainOpen}
+        spaceId={spaceId}
+      />
       <TaskEntryModal open={createTaskOpen2} onOpenChange={setCreateTaskOpen2} spaceId={spaceId} />
 
       <AlertDialog open={Boolean(forceStart)} onOpenChange={(o) => !o && setForceStart(null)}>
@@ -688,8 +831,9 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
           <AlertDialogHeader>
             <AlertDialogTitle>Another sprint is already active</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>{forceStart?.existingSprint?.name || "A sprint"}</strong> is currently active. Starting{" "}
-              <strong>{forceStart?.newSprint?.name || "this sprint"}</strong> will close the active sprint and update its end date to today. Continue?
+              <strong>{forceStart?.existingSprint?.name || "A sprint"}</strong> is currently active.
+              Starting <strong>{forceStart?.newSprint?.name || "this sprint"}</strong> will close
+              the active sprint and update its end date to today. Continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -719,12 +863,15 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
             <AlertDialogTitle>Start sprint early?</AlertDialogTitle>
             <AlertDialogDescription>
               {startEarly?.name || "This sprint"} is scheduled to start on{" "}
-              {dateLabel(startEarly?.start_date || startEarly?.startDate)}. Update the start date to today?
+              {dateLabel(startEarly?.start_date || startEarly?.startDate)}. Update the start date to
+              today?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="outline" onClick={() => doStart(startEarly, false)}>Start anyway</Button>
+            <Button variant="outline" onClick={() => doStart(startEarly, false)}>
+              Start anyway
+            </Button>
             <Button onClick={() => doStart(startEarly, true)}>Yes, update date</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -750,7 +897,13 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
                 const sprint = completeFor;
                 m.closeSprint.mutate(
                   { sprintId: sprint.id, body: { move_incomplete_to: "backlog" }, spaceId },
-                  { onSuccess: () => { toast.success("Sprint completed"); setCompleteFor(null); onSprintComplete?.(sprint.id); } },
+                  {
+                    onSuccess: () => {
+                      toast.success("Sprint completed");
+                      setCompleteFor(null);
+                      onSprintComplete?.(sprint.id);
+                    },
+                  },
                 );
               }}
             >
@@ -776,7 +929,12 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
                 const sprint = deleteFor;
                 m.deleteSprint.mutate(
                   { sprintId: sprint.id, spaceId },
-                  { onSuccess: () => { toast.success("Sprint deleted"); setDeleteFor(null); } },
+                  {
+                    onSuccess: () => {
+                      toast.success("Sprint deleted");
+                      setDeleteFor(null);
+                    },
+                  },
                 );
               }}
             >
@@ -789,26 +947,44 @@ function WorkspaceBacklog({ spaceId, activeSprintId, actions, onSprintComplete }
   );
 }
 
-function BacklogSection({ tasks, onCreateTask, sprints, activeSprintId, move, onDragStart, onDropHere }) {
+function BacklogSection({
+  tasks,
+  onCreateTask,
+  sprints,
+  activeSprintId,
+  move,
+  onDragStart,
+  onDropHere,
+}) {
   const counts = countByStatus(tasks);
   const [over, setOver] = useState(false);
   return (
     <section
-      onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
       onDragLeave={() => setOver(false)}
-      onDrop={() => { setOver(false); onDropHere(); }}
+      onDrop={() => {
+        setOver(false);
+        onDropHere();
+      }}
       className={cn("rounded-xl border bg-card transition-shadow", over && "ring-2 ring-primary")}
     >
-      <div className="flex items-center gap-3 border-b px-5 py-4">
+      <div className="flex items-center gap-2 border-b px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
         <h2 className="font-semibold">Backlog</h2>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           {counts.map((item) => (
-            <span key={item.key} className="rounded-md px-2 py-1 text-xs font-bold text-white" style={{ background: item.color }}>
+            <span
+              key={item.key}
+              className="rounded-md px-1.5 py-0.5 text-xs font-bold text-white sm:px-2 sm:py-1"
+              style={{ background: item.color }}
+            >
               {item.count}
             </span>
           ))}
-          <Button size="icon" variant="outline" onClick={onCreateTask}>
+          <Button size="icon" variant="outline" className="h-8 w-8" onClick={onCreateTask}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -836,7 +1012,18 @@ function BacklogSection({ tasks, onCreateTask, sprints, activeSprintId, move, on
   );
 }
 
-function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints, activeSprintId, move, onDragStart, onDropHere, sprintActions }) {
+function SprintBacklogSection({
+  sprint,
+  active,
+  completed,
+  onCreateTask,
+  sprints,
+  activeSprintId,
+  move,
+  onDragStart,
+  onDropHere,
+  sprintActions,
+}) {
   const [expanded, setExpanded] = useState(active || !completed);
   const [over, setOver] = useState(false);
   const tasks = getTasks(sprint);
@@ -846,27 +1033,50 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
 
   return (
     <section
-      onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
       onDragLeave={() => setOver(false)}
-      onDrop={() => { setOver(false); onDropHere?.(); }}
+      onDrop={() => {
+        setOver(false);
+        onDropHere?.();
+      }}
       className={cn("rounded-xl border bg-card transition-shadow", over && "ring-2 ring-primary")}
     >
-      <div className="flex flex-wrap items-center gap-3 px-5 py-4">
-        <button onClick={() => setExpanded((value) => !value)} className="rounded-md p-1 hover:bg-muted">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <button
+          onClick={() => setExpanded((value) => !value)}
+          className="rounded-md p-1 hover:bg-muted"
+        >
           {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{sprint.name || `Sprint ${sprint.id}`}</h3>
-            {active && <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Active</span>}
-            {completed && <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Completed</span>}
+            <h3 className="truncate font-semibold">{sprint.name || `Sprint ${sprint.id}`}</h3>
+            {active && (
+              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                Active
+              </span>
+            )}
+            {completed && (
+              <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                Completed
+              </span>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">{dateRange(sprint)}</p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="rounded-md bg-muted px-2.5 py-1 text-sm font-semibold">{done}/{tasks.length}</span>
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold sm:px-2.5 sm:py-1 sm:text-sm">
+            {done}/{tasks.length}
+          </span>
           {counts.map((item) => (
-            <span key={item.key} className="rounded-md px-2 py-1 text-xs font-bold text-white" style={{ background: item.color }}>
+            <span
+              key={item.key}
+              className="rounded-md px-1.5 py-0.5 text-xs font-bold text-white sm:px-2 sm:py-1"
+              style={{ background: item.color }}
+            >
               {item.count}
             </span>
           ))}
@@ -877,7 +1087,9 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost"><MoreVertical className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {!active && !completed && (
@@ -895,15 +1107,18 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
                   <Pencil className="mr-2 h-4 w-4" /> Edit sprint
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem className="text-destructive" onClick={() => sprintActions?.remove(sprint)}>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => sprintActions?.remove(sprint)}
+              >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete sprint
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-      <div className="px-5 pb-4">
-        <div className="flex items-center gap-3 rounded-lg border bg-muted/20 px-4 py-3">
+      <div className="px-3 pb-3 sm:px-5 sm:pb-4">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 px-3 py-3 sm:gap-3 sm:px-4">
           <span className="text-sm text-muted-foreground">{tasks.length} work items</span>
           <span className="text-sm text-muted-foreground">{done} done</span>
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -925,7 +1140,11 @@ function SprintBacklogSection({ sprint, active, completed, onCreateTask, sprints
               onDragStart={onDragStart}
             />
           ))}
-          {tasks.length === 0 && <div className="p-5 text-sm text-muted-foreground">No tasks in this sprint yet. Drag tasks here.</div>}
+          {tasks.length === 0 && (
+            <div className="p-5 text-sm text-muted-foreground">
+              No tasks in this sprint yet. Drag tasks here.
+            </div>
+          )}
         </div>
       )}
     </section>
@@ -957,12 +1176,22 @@ function TaskCard({ task, draggable, onDragStart }) {
           </Link>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Chip>{task.domain}</Chip>
-            {task.deadline && <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline)}</Chip>}
-            {atRisk && <Chip className="bg-amber-50 text-amber-800"><AlertTriangle className="h-3 w-3" /> At Risk</Chip>}
+            {task.deadline && (
+              <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline)}</Chip>
+            )}
+            {atRisk && (
+              <Chip className="bg-amber-50 text-amber-800">
+                <AlertTriangle className="h-3 w-3" /> At Risk
+              </Chip>
+            )}
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
             <span>{task.code}</span>
-            {task.points > 0 && <span className="ml-auto rounded bg-muted px-2 py-1 text-xs font-semibold">{task.points} pt</span>}
+            {task.points > 0 && (
+              <span className="ml-auto rounded bg-muted px-2 py-1 text-xs font-semibold">
+                {task.points} pt
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -980,41 +1209,46 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
     <div
       draggable
       onDragStart={() => onDragStart?.({ task, fromSprintId: fromSprintId ?? null })}
-      className="flex items-center gap-4 px-5 py-4 cursor-grab active:cursor-grabbing"
+      className="flex flex-col gap-3 px-3 py-4 cursor-grab active:cursor-grabbing sm:flex-row sm:items-center sm:gap-4 sm:px-5"
       style={{ borderLeft: `4px solid ${priorityColour}` }}
     >
-      {status === "Done"
-        ? <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-        : <Circle className="h-5 w-5 text-muted-foreground/50" />
-      }
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/tasks/$id"
-            params={{ id: String(task.id) }}
-            className={cn("font-semibold hover:text-primary", status === "Done" && "text-muted-foreground line-through")}
-          >
-            {task.title}
-          </Link>
-          <Chip>{task.domain}</Chip>
-          {task.deadline && <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline)}</Chip>}
-        </div>
-        <div className="mt-1 text-sm text-muted-foreground">
-          {task.code} · {task.priority} · {task.points} pts · {task.hours}h · {task.deadlineLabel}
+      <div className="flex min-w-0 gap-3 sm:flex-1">
+        {status === "Done" ? (
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+        ) : (
+          <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground/50" />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/tasks/$id"
+              params={{ id: String(task.id) }}
+              className={cn(
+                "font-semibold hover:text-primary",
+                status === "Done" && "text-muted-foreground line-through",
+              )}
+            >
+              {task.title}
+            </Link>
+            <Chip>{task.domain}</Chip>
+            {task.deadline && (
+              <Chip className="bg-emerald-50 text-emerald-700">{dateLabel(task.deadline)}</Chip>
+            )}
+          </div>
+          <div className="mt-1 text-sm text-muted-foreground">
+            {task.code} · {task.priority} · {task.points} pts · {task.hours}h · {task.deadlineLabel}
+          </div>
         </div>
       </div>
 
-      <Select
-        value={status}
-        onValueChange={(v) => move?.changeStatus(task, fromSprintId, v)}
-      >
+      <Select value={status} onValueChange={(v) => move?.changeStatus(task, fromSprintId, v)}>
         <SelectTrigger
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            "h-7 w-32 rounded-full border-0 px-3 text-xs font-semibold shadow-none focus:ring-1 focus:ring-primary",
-            status === "Done"        && "bg-emerald-100 text-emerald-700",
+            "h-8 w-full rounded-full border-0 px-3 text-xs font-semibold shadow-none focus:ring-1 focus:ring-primary sm:h-7 sm:w-32",
+            status === "Done" && "bg-emerald-100 text-emerald-700",
             status === "In Progress" && "bg-primary/10 text-primary",
-            status === "To Do"       && "bg-muted text-muted-foreground",
+            status === "To Do" && "bg-muted text-muted-foreground",
           )}
         >
           <SelectValue />
@@ -1026,21 +1260,27 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
         </SelectContent>
       </Select>
 
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost"><MoreVertical className="h-4 w-4" /></Button>
+          <Button size="icon" variant="ghost" className="self-end sm:self-auto">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link to="/tasks/$id" params={{ id: String(task.id) }}>Open task</Link>
+            <Link to="/tasks/$id" params={{ id: String(task.id) }}>
+              Open task
+            </Link>
           </DropdownMenuItem>
           {moveTargets.length > 0 && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Move to sprint</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {moveTargets.map((s) => (
-                  <DropdownMenuItem key={s.id} onClick={() => move?.toSprint(task, fromSprintId ?? null, s.id)}>
+                  <DropdownMenuItem
+                    key={s.id}
+                    onClick={() => move?.toSprint(task, fromSprintId ?? null, s.id)}
+                  >
                     {s.name || `Sprint ${s.id}`}
                   </DropdownMenuItem>
                 ))}
@@ -1048,7 +1288,9 @@ function TaskRow({ task, fromSprintId = null, sprints = [], activeSprintId, move
             </DropdownMenuSub>
           )}
           {inSprint && (
-            <DropdownMenuItem onClick={() => move?.toBacklog(task, fromSprintId)}>Move to backlog</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => move?.toBacklog(task, fromSprintId)}>
+              Move to backlog
+            </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-destructive" onClick={() => move?.deleteTask(task)}>
@@ -1099,7 +1341,10 @@ function StatusDistribution({ counts, total }) {
       </div>
       <div className="flex h-3 overflow-hidden rounded-full bg-muted">
         {counts.map((item) => (
-          <div key={item.key} style={{ width: `${total ? (item.count / total) * 100 : 0}%`, background: item.color }} />
+          <div
+            key={item.key}
+            style={{ width: `${total ? (item.count / total) * 100 : 0}%`, background: item.color }}
+          />
         ))}
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -1126,9 +1371,13 @@ function PriorityBreakdown({ tasks }) {
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis dataKey="priority" fontSize={11} tickLine={false} axisLine={false} />
             <YAxis allowDecimals={false} fontSize={11} tickLine={false} axisLine={false} />
-            <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }} />
+            <Tooltip
+              contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }}
+            />
             <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-              {data.map((entry) => <Cell key={entry.priority} fill={entry.color} />)}
+              {data.map((entry) => (
+                <Cell key={entry.priority} fill={entry.color} />
+              ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -1150,13 +1399,17 @@ function SprintTaskPreview({ tasks }) {
             <span className="h-8 w-1 rounded-full bg-primary/60" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">{task.title}</div>
-              <div className="text-xs text-muted-foreground">{task.code} · {task.domain}</div>
+              <div className="text-xs text-muted-foreground">
+                {task.code} · {task.domain}
+              </div>
             </div>
             <Chip>{task.priority || "Medium"}</Chip>
             <span className="text-xs text-muted-foreground">{dateLabel(task.deadline, "")}</span>
           </div>
         ))}
-        {tasks.length === 0 && <div className="py-6 text-sm text-muted-foreground">No tasks in this sprint.</div>}
+        {tasks.length === 0 && (
+          <div className="py-6 text-sm text-muted-foreground">No tasks in this sprint.</div>
+        )}
       </div>
     </section>
   );
@@ -1171,7 +1424,8 @@ function DeadlineAwareness({ tasks }) {
     <section className="rounded-xl border bg-card p-5">
       <h3 className="font-semibold">Deadline Awareness</h3>
       <div className="mt-4 flex items-center gap-2 text-sm font-medium text-amber-700">
-        <Calendar className="h-4 w-4" /> Due in 7 days <span className="rounded-full bg-amber-50 px-2 py-0.5">{dueSoon.length}</span>
+        <Calendar className="h-4 w-4" /> Due in 7 days{" "}
+        <span className="rounded-full bg-amber-50 px-2 py-0.5">{dueSoon.length}</span>
       </div>
       <div className="mt-4 space-y-3">
         {dueSoon.slice(0, 6).map((task) => (
@@ -1181,7 +1435,9 @@ function DeadlineAwareness({ tasks }) {
             <span className="text-sm text-muted-foreground">{dateLabel(task.deadline)}</span>
           </div>
         ))}
-        {dueSoon.length === 0 && <p className="text-sm text-muted-foreground">No urgent deadlines in the active sprint.</p>}
+        {dueSoon.length === 0 && (
+          <p className="text-sm text-muted-foreground">No urgent deadlines in the active sprint.</p>
+        )}
       </div>
     </section>
   );
@@ -1213,20 +1469,27 @@ function SprintHealth({ sprint, tasks }) {
           <div className="mt-0.5 text-[11px] text-muted-foreground">Remaining</div>
         </div>
         <div className={`rounded-lg p-3 ${overdue > 0 ? "bg-rose-50" : "bg-muted/60"}`}>
-          <div className={`text-2xl font-bold ${overdue > 0 ? "text-rose-600" : ""}`}>{overdue}</div>
+          <div className={`text-2xl font-bold ${overdue > 0 ? "text-rose-600" : ""}`}>
+            {overdue}
+          </div>
           <div className="mt-0.5 text-[11px] text-muted-foreground">Overdue</div>
         </div>
       </div>
       {daysLeft !== null && remaining > 0 && (
         <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2.5 text-sm">
           <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
-          <span>Complete <strong>{dailyTarget}</strong> task{dailyTarget !== 1 ? "s" : ""}/day to finish on time</span>
+          <span>
+            Complete <strong>{dailyTarget}</strong> task{dailyTarget !== 1 ? "s" : ""}/day to finish
+            on time
+          </span>
         </div>
       )}
       {overdue > 0 && (
         <div className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span><strong>{overdue}</strong> overdue task{overdue !== 1 ? "s" : ""} need attention</span>
+          <span>
+            <strong>{overdue}</strong> overdue task{overdue !== 1 ? "s" : ""} need attention
+          </span>
         </div>
       )}
     </section>
@@ -1235,7 +1498,9 @@ function SprintHealth({ sprint, tasks }) {
 
 function EffortOverview({ tasks }) {
   const total = tasks.reduce((s, t) => s + parseFloat(t.hours || t.expected_hours || 0), 0);
-  const done  = tasks.filter((t) => t.status === "Done").reduce((s, t) => s + parseFloat(t.hours || t.expected_hours || 0), 0);
+  const done = tasks
+    .filter((t) => t.status === "Done")
+    .reduce((s, t) => s + parseFloat(t.hours || t.expected_hours || 0), 0);
   const remaining = total - done;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -1274,17 +1539,27 @@ function EffortOverview({ tasks }) {
 
 function isSprintCompleted(sprint) {
   const status = String(sprint?.status || "").toLowerCase();
-  return sprint?.is_completed || sprint?.completed || status === "completed" || status === "closed" || status === "done";
+  return (
+    sprint?.is_completed ||
+    sprint?.completed ||
+    status === "completed" ||
+    status === "closed" ||
+    status === "done"
+  );
 }
 
 function Chip({ children, className }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground", className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground",
+        className,
+      )}
+    >
       {children}
     </span>
   );
 }
-
 
 function EmptySprint({ spaceId }) {
   return (
@@ -1293,7 +1568,9 @@ function EmptySprint({ spaceId }) {
         <LayoutDashboard className="h-7 w-7 text-primary/60" />
       </div>
       <h2 className="mt-5 text-xl font-semibold">No active sprint</h2>
-      <p className="mt-2 text-sm text-muted-foreground">Plan your work in the Backlog, then start a sprint for this space.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Plan your work in the Backlog, then start a sprint for this space.
+      </p>
       <Link to="/spaces/$spaceId/backlog" params={{ spaceId: String(spaceId) }}>
         <Button className="mt-5">Go to Backlog</Button>
       </Link>
@@ -1304,7 +1581,8 @@ function EmptySprint({ spaceId }) {
 function WorkspaceMembersPlaceholder() {
   return (
     <div className="rounded-xl border bg-card p-8 text-sm text-muted-foreground">
-      Members stay available from the space actions, but the main workspace follows Summary, Board, and Backlog.
+      Members stay available from the space actions, but the main workspace follows Summary, Board,
+      and Backlog.
     </div>
   );
 }
@@ -1318,5 +1596,9 @@ function WorkspaceLoading({ label = "Loading workspace..." }) {
 }
 
 function WorkspaceError({ message }) {
-  return <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{message}</div>;
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+      {message}
+    </div>
+  );
 }
