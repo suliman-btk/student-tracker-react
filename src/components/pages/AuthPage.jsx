@@ -173,6 +173,12 @@ export default function AuthPage({ mode = "login" }) {
                 alt="RAQIP - Smart Study Companion"
                 className="h-11 w-auto object-contain"
               />
+              <Link
+                to="/landing"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                ← Back to home page
+              </Link>
             </div>
 
             <div className="mb-8">

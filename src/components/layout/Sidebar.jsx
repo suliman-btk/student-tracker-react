@@ -89,13 +89,11 @@ function SidebarContent({ onNavigate }) {
   return (
     <>
       <div className="px-5 py-5 shrink-0">
-        <Link to="/landing" onClick={onNavigate} aria-label="Go to RAQIP landing page">
-          <img
-            src="/logo.png"
-            alt="RAQIP — Smart Study Companion"
-            className="h-12 w-auto object-contain"
-          />
-        </Link>
+        <img
+          src="/logo.png"
+          alt="RAQIP — Smart Study Companion"
+          className="h-12 w-auto object-contain"
+        />
       </div>
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-6">
         {overviewGroup && renderGroup(overviewGroup)}

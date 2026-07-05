@@ -785,7 +785,10 @@ function VoicePanel({
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5 sm:p-3">
         {members.map((m) => {
           const vol = volumes[m.agoraUid] || 0;
-          const speaking = vol > 5;
+          // Muted/blocked members never show waves — Agora keeps the last
+          // volume value around after someone stops publishing, so raw volume
+          // alone draws phantom "speaking" rings.
+          const speaking = !voiceLocked && !m.isMuted && vol > 5;
           const isStudying = phase === "focus" && !speaking;
           return (
             <MemberRow
