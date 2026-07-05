@@ -102,6 +102,7 @@ import {
   uploadUserAvatar,
   uploadUserBanner,
   setRoomMemberCount,
+  kickMember,
 } from "@/lib/realtime";
 import { createAgoraRoomClient } from "@/lib/agora";
 import { auth } from "@/lib/firebase";
@@ -163,6 +164,9 @@ export function RoomsPage() {
         setCodeError("Room not found");
         return;
       }
+      // Hand the code to the room page: private rooms only auto-join when the
+      // visitor arrived with the correct code.
+      sessionStorage.setItem(`raqip:room-code:${firestoreId}`, code);
       navigate({ to: "/rooms/$id", params: { id: firestoreId } });
     } catch {
       setCodeError("Room not found");
@@ -654,7 +658,16 @@ function TimerRing({ room, phase }) {
 
 // memo + primitive props: only rows whose speaking/mute state actually flips
 // re-render when a volume snapshot arrives.
-const MemberRow = memo(function MemberRow({ name, isMuted, speaking, isStudying, voiceLocked }) {
+const MemberRow = memo(function MemberRow({
+  uid,
+  name,
+  isMuted,
+  speaking,
+  isStudying,
+  voiceLocked,
+  canKick,
+  onKick,
+}) {
   return (
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-300
@@ -714,6 +727,15 @@ const MemberRow = memo(function MemberRow({ name, isMuted, speaking, isStudying,
           ))}
         </div>
       )}
+      {canKick && (
+        <button
+          onClick={() => onKick(uid, name)}
+          title="Remove from room"
+          className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+        >
+          <UserX className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 });
@@ -721,7 +743,17 @@ const MemberRow = memo(function MemberRow({ name, isMuted, speaking, isStudying,
 // Owns the Agora volumes state so volume snapshots re-render only this panel.
 // The parent hands us a ref; we register our state setter into it on mount and
 // the parent's onVolume callback writes through it.
-function VoicePanel({ members, phase, voiceLocked, isMuted, toggleMute, onVolumeRef }) {
+function VoicePanel({
+  members,
+  phase,
+  voiceLocked,
+  isMuted,
+  toggleMute,
+  onVolumeRef,
+  isHost,
+  currentUid,
+  onKick,
+}) {
   const [volumes, setVolumes] = useState({});
 
   useEffect(() => {
@@ -758,11 +790,14 @@ function VoicePanel({ members, phase, voiceLocked, isMuted, toggleMute, onVolume
           return (
             <MemberRow
               key={m.uid}
+              uid={m.uid}
               name={m.displayName}
               isMuted={!!m.isMuted}
               speaking={speaking}
               isStudying={isStudying}
               voiceLocked={voiceLocked}
+              canKick={Boolean(isHost && m.uid !== currentUid)}
+              onKick={onKick}
             />
           );
         })}
@@ -964,11 +999,56 @@ export function RoomDetailPage({ id }) {
     if (!room || !currentUser || autoJoinedRef.current || isJoined) return;
     if (room.isEnded === true) return; // don't (re)join a closed room
     autoJoinedRef.current = true;
-    joinRoom(id)
+    joinRoom(id, sessionStorage.getItem(`raqip:room-code:${id}`) || undefined)
       .then(() => initAgora().then(() => setJoined(true)))
-      .catch(console.error);
+      .catch((e) => {
+        if (e?.code === "room/banned" || e?.code === "room/private") {
+          intentionalLeaveRef.current = true;
+          toast.error(e.message);
+          navigate({ to: "/rooms" });
+          return;
+        }
+        console.error(e);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.hostUid, currentUser?.uid, isJoined]);
+
+  // Kicked mid-session: the host put our UID on the room's banned list and
+  // deleted our member doc — tear down voice and bounce to the rooms list.
+  const amBanned = Boolean(
+    room &&
+      currentUser &&
+      Array.isArray(room.banned) &&
+      room.banned.includes(currentUser.uid) &&
+      room.hostUid !== currentUser.uid,
+  );
+  useEffect(() => {
+    if (!amBanned) return;
+    (async () => {
+      intentionalLeaveRef.current = true;
+      if (agoraRef.current) {
+        await agoraRef.current.leave().catch(() => {});
+        agoraRef.current = null;
+      }
+      toast.error("You were removed from this room by the host");
+      navigate({ to: "/rooms" });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amBanned]);
+
+  const handleKick = useCallback(
+    async (uid, name) => {
+      if (!window.confirm(`Remove ${name || "this member"}? They won't be able to join again.`))
+        return;
+      try {
+        await kickMember(id, uid);
+        toast.success(`${name || "Member"} was removed`);
+      } catch (e) {
+        toast.error(e?.message || "Could not remove member");
+      }
+    },
+    [id],
+  );
 
   // Auto-navigate when host ends the session or room is deleted.
   // Clean up Firestore membership before navigating so memberCount decrements
@@ -1049,10 +1129,16 @@ export function RoomDetailPage({ id }) {
     if (joined || joining) return;
     setJoining(true);
     try {
-      await joinRoom(id);
+      await joinRoom(id, sessionStorage.getItem(`raqip:room-code:${id}`) || undefined);
       await initAgora();
       setJoined(true);
     } catch (e) {
+      if (e?.code === "room/banned" || e?.code === "room/private") {
+        intentionalLeaveRef.current = true;
+        toast.error(e.message);
+        navigate({ to: "/rooms" });
+        return;
+      }
       console.error(e);
     } finally {
       setJoining(false);
@@ -1093,7 +1179,14 @@ export function RoomDetailPage({ id }) {
   const toggleMute = useCallback(async () => {
     if (!agoraRef.current || voiceLocked) return;
     const next = !isMuted;
-    agoraRef.current.mute(next);
+    try {
+      // Await the SDK call: only flip the UI once the track actually
+      // (un)muted, otherwise the button says "unmuted" while you're silent.
+      await agoraRef.current.mute(next);
+    } catch (e) {
+      console.error("mute toggle failed", e);
+      return;
+    }
     setIsMuted(next);
     await updateMutedState(id, next).catch(() => {});
   }, [isMuted, voiceLocked, id]);
@@ -1383,6 +1476,9 @@ export function RoomDetailPage({ id }) {
           isMuted={isMuted}
           toggleMute={toggleMute}
           onVolumeRef={onVolumeRef}
+          isHost={isHost}
+          currentUid={currentUser?.uid}
+          onKick={handleKick}
         />
 
         {/* Center: Timer */}

@@ -91,7 +91,15 @@ export default function DashboardPage() {
   const sprintDone = sprintTasks.filter(isDone).length;
   const sprintProg = sprintTasks.filter(isProg).length;
   const sprintTodo = sprintTasks.length - sprintDone - sprintProg;
-  const sprintPct = sprintTasks.length ? Math.round((sprintDone / sprintTasks.length) * 100) : 0;
+  // Same math as the workspace summary ring (points-based velocity from the
+  // server when present, task ratio as fallback) so the two screens can never
+  // show different percentages for the same sprint.
+  const sprintPct = Number.isFinite(Number(sprint?.velocity))
+    ? Math.round(Number(sprint.velocity))
+    : sprintTasks.length
+      ? Math.round((sprintDone / sprintTasks.length) * 100)
+      : 0;
+  const sprintSpaceName = spaces.find((s) => String(s.id) === String(sprint?.space_id))?.name;
   const sprintEnd = parseDate(sprint?.end_date || sprint?.endDate);
   const daysLeft = sprintEnd ? Math.ceil((sprintEnd - new Date()) / 86400000) : null;
 
@@ -162,9 +170,13 @@ export default function DashboardPage() {
     const now = new Date();
     pomodoro.forEach((s) => {
       const status = s.status || "";
-      if (status === "completed") completed += 1;
+      if (status === "completed") {
+        completed += 1;
+        // Focus time counts completed sessions only — same rule as the server
+        // stats block and the mobile dashboard.
+        minutes += Number(s.total_focus_minutes ?? s.totalFocusMinutes ?? 0);
+      }
       if (status === "abandoned") abandoned += 1;
-      minutes += Number(s.total_focus_minutes ?? s.totalFocusMinutes ?? 0);
       const started = parseDate(s.started_at || s.startedAt || s.created_at);
       if (started && (now - started) / 86400000 < 7) {
         const idx = (started.getDay() + 6) % 7; // Mon=0
@@ -224,6 +236,7 @@ export default function DashboardPage() {
                   <h3 className="font-semibold">{sprint.name || "Active Sprint"}</h3>
                   <p className="text-xs text-muted-foreground">
                     {fmtDate(sprint.start_date)} – {fmtDate(sprint.end_date)}
+                    {sprintSpaceName ? ` · ${sprintSpaceName}` : ""}
                   </p>
                 </div>
                 <span className="text-2xl font-bold text-primary">{sprintPct}%</span>

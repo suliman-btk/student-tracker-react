@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -145,16 +146,32 @@ export function watchSharedFiles(roomId, callback, onError) {
   return onSnapshot(filesQuery, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError);
 }
 
-export async function joinRoom(roomId) {
+export async function joinRoom(roomId, code) {
   const user = currentUserOrThrow();
   const roomRef = doc(db, "pomodoro_rooms", roomId);
   const memberRef = doc(db, "pomodoro_rooms", roomId, "members", user.uid);
   await runTransaction(db, async (tx) => {
     const roomSnap = await tx.get(roomRef);
     if (!roomSnap.exists()) throw new Error("Room not found");
+    const data = roomSnap.data();
+    if ((data.banned || []).includes(user.uid)) {
+      const err = new Error("You were removed from this room by the host");
+      err.code = "room/banned";
+      throw err;
+    }
     // Only count a join once — re-joining an existing membership must not
     // inflate memberCount (the leave path decrements only once).
     const alreadyMember = (await tx.get(memberRef)).exists();
+    // Private rooms are code-gated: only the host, existing members, or
+    // someone presenting the correct room code may join.
+    if (data.isPrivate === true && data.hostUid !== user.uid && !alreadyMember) {
+      const provided = (code || "").trim().toUpperCase();
+      if (!provided || provided !== data.roomCode) {
+        const err = new Error("This room is private — join it with its room code");
+        err.code = "room/private";
+        throw err;
+      }
+    }
     tx.set(memberRef, {
       displayName: user.displayName || user.email?.split("@")[0],
       joinedAt: serverTimestamp(),
@@ -178,6 +195,24 @@ export async function leaveRoom(roomId) {
     const current = roomSnap.data().memberCount ?? 0;
     await updateDoc(roomRef, { memberCount: Math.max(0, current - 1) });
   }
+}
+
+// Host-only: remove a member and permanently ban them. The banned UID lives on
+// the room doc, so joinRoom refuses it and the kicked client's room snapshot
+// sees itself banned and bounces out.
+export async function kickMember(roomId, uid) {
+  const roomRef = doc(db, "pomodoro_rooms", roomId);
+  const memberRef = doc(db, "pomodoro_rooms", roomId, "members", uid);
+  await runTransaction(db, async (tx) => {
+    const memberSnap = await tx.get(memberRef);
+    const roomSnap = await tx.get(roomRef);
+    if (!roomSnap.exists()) throw new Error("Room not found");
+    const current = roomSnap.data().memberCount ?? 0;
+    const update = { banned: arrayUnion(uid) };
+    if (memberSnap.exists()) update.memberCount = Math.max(0, current - 1);
+    tx.update(roomRef, update);
+    if (memberSnap.exists()) tx.delete(memberRef);
+  });
 }
 
 export async function sendRoomMessage(roomId, text) {

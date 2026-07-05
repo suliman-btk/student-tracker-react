@@ -6,6 +6,10 @@ export const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID;
 export async function createAgoraRoomClient({ roomId, uid, useServerToken = true, onUserJoined, onUserLeft, onVolume }) {
   const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
   const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+  // Mute BEFORE join/publish. Publishing hot and muting afterwards leaves a
+  // 1–2s window where the whole room hears you, then you go silent while the
+  // UI still looks like you're audible — reported as "voice cuts after 2s".
+  await localAudioTrack.setMuted(true);
   let token = null;
 
   if (useServerToken) {
@@ -32,7 +36,6 @@ export async function createAgoraRoomClient({ roomId, uid, useServerToken = true
     // Must be enabled AFTER join + publish — the SDK needs an active channel to
     // attach the volume-reporting interval to, otherwise volume-indicator never fires.
     client.enableAudioVolumeIndicator();
-    await localAudioTrack.setMuted(true);
   } catch (err) {
     // The mic track was already created above; without this cleanup a failed
     // join leaves the microphone captured (browser recording indicator on).
