@@ -17,13 +17,28 @@ function NotFoundComponent() {
       </div>
     </div>);
 }
+const CHUNK_ERROR_RELOAD_KEY = "raqip-chunk-reload-at";
+function isChunkLoadError(error) {
+    return /Failed to fetch dynamically imported module|Importing a module script failed|Failed to import/i.test(error?.message || "");
+}
 function ErrorComponent({ error, reset }) {
     const router = useRouter();
+    useEffect(() => {
+        if (!isChunkLoadError(error)) return;
+        // New deploy replaced the hashed chunk files this tab still references —
+        // retrying the import can never succeed, only a fresh document load can.
+        // Guard with a timestamp so a genuinely broken build doesn't reload-loop forever.
+        const lastReload = Number(sessionStorage.getItem(CHUNK_ERROR_RELOAD_KEY) || 0);
+        if (Date.now() - lastReload > 10000) {
+            sessionStorage.setItem(CHUNK_ERROR_RELOAD_KEY, String(Date.now()));
+            window.location.reload();
+        }
+    }, [error]);
     return (<div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">Something went wrong</h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-        <button onClick={() => { router.invalidate(); reset(); }} className="mt-4 inline-flex h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm items-center">
+        <button onClick={() => { if (isChunkLoadError(error)) { window.location.reload(); } else { router.invalidate(); reset(); } }} className="mt-4 inline-flex h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm items-center">
           Try again
         </button>
       </div>
