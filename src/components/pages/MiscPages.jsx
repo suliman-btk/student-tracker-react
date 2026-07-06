@@ -2339,6 +2339,7 @@ export function NotificationsPage() {
     mutationFn: (uid) => socialApi.friends.accept(uid),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "friends"] });
+      qc.invalidateQueries({ queryKey: ["social", "friends", "requests"] });
       toast.success("Connection accepted");
     },
   });
