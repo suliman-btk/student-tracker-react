@@ -55,7 +55,7 @@ export function dismissPrompt() {
 async function acquireAndRegisterToken() {
   const { getMessaging, getToken } = await import("firebase/messaging");
   const { firebaseApp } = await import("./firebase");
-  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  const vapidKey = String(import.meta.env.VITE_FIREBASE_VAPID_KEY || "").replace(/\s+/g, "");
   if (!vapidKey) {
     throw new Error("Missing VITE_FIREBASE_VAPID_KEY in the web build environment.");
   }
