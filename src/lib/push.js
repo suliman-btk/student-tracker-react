@@ -80,7 +80,9 @@ function validateVapidKey(vapidKey) {
       throw new Error();
     }
   } catch {
-    throw new Error("Invalid VITE_FIREBASE_VAPID_KEY. Copy the full Web Push certificates public key from Firebase; it should be one complete 87-character key.");
+    throw new Error(
+      `Invalid VITE_FIREBASE_VAPID_KEY. Current length: ${vapidKey.length}. Copy the full Web Push certificates public key from Firebase; it should be one complete 87-character key.`,
+    );
   }
 }
 
