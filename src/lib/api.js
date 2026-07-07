@@ -7,7 +7,8 @@ export const userApi = {
   stats: () => apiRequest("/user/profile/stats").then(unwrapData),
   activity: () => apiRequest("/user/profile/activity").then(unwrapData),
   sync: (body = {}) => apiRequest("/user/sync", { method: "POST", body }).then(unwrapData),
-  updateFcmToken: (token) => apiRequest("/user/fcm-token", { method: "PATCH", body: { fcm_token: token } }).then(unwrapData),
+  updateFcmToken: (token, platform = "web") =>
+    apiRequest("/user/fcm-token", { method: "PATCH", body: { fcm_token: token, platform } }).then(unwrapData),
   updateStudyStatus: (study_status) => apiRequest("/user/study-status", { method: "PATCH", body: { study_status } }).then(unwrapData),
 };
 

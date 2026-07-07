@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Globe, Lock, Hourglass, RefreshCcw, ChevronRight, Loader2, Check, Pencil, ArrowLeft } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Globe, Lock, Hourglass, RefreshCcw, ChevronRight, Loader2, Check, Pencil, ArrowLeft, Bell } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useProfile } from "@/lib/query-hooks";
 import { userApi, socialApi } from "@/lib/api";
 import { qk } from "@/lib/query-hooks";
 import { Link } from "@tanstack/react-router";
+import { disablePush, enablePush, pushEnabled, pushPermission, pushSupported } from "@/lib/push";
 
 const COMMON_TZ = [
   "UTC","Asia/Karachi","Asia/Dubai","Asia/Kolkata","Asia/Riyadh","Asia/Singapore",
@@ -68,6 +69,42 @@ export default function SettingsPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["social", "day-settings"] }); toast.success("Daily reset time updated"); },
     onError: (e) => toast.error(e?.message || "Could not update reset time"),
   });
+
+  // ── Push notifications ───────────────────────────────────────────────────
+  // Read after mount only: Notification/localStorage don't exist during SSR.
+  const [pushOn, setPushOn] = useState(false);
+  const [pushOk, setPushOk] = useState(false);
+  const [pushPerm, setPushPerm] = useState("default");
+  const [pushBusy, setPushBusy] = useState(false);
+  useEffect(() => {
+    setPushOn(pushEnabled());
+    setPushPerm(pushPermission());
+    pushSupported().then(setPushOk);
+  }, []);
+
+  const togglePush = async (on) => {
+    setPushBusy(true);
+    try {
+      if (on) {
+        const result = await enablePush();
+        setPushPerm(result);
+        if (result === "granted") {
+          setPushOn(true);
+          toast.success("Notifications enabled");
+        } else if (result === "denied") {
+          toast.error("Notifications are blocked in your browser settings");
+        }
+      } else {
+        disablePush();
+        setPushOn(false);
+        toast.success("Notifications turned off on this device");
+      }
+    } catch {
+      toast.error("Could not enable notifications. Please try again.");
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   // ── Local state ──────────────────────────────────────────────────────────
   const [tzOpen, setTzOpen] = useState(false);
@@ -127,6 +164,35 @@ export default function SettingsPage() {
             onClick={() => { setTzQuery(""); setTzOpen(true); }}
             disabled={tzMut.isPending}
           />
+        </Card>
+      </div>
+
+      {/* ── Notifications ── */}
+      <div>
+        <SectionLabel>Notifications</SectionLabel>
+        <Card>
+          <div className="flex items-start gap-3 px-4 py-4">
+            <Bell className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold">Push notifications</div>
+              <div className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                {!pushOk
+                  ? "Not supported in this browser"
+                  : pushPerm === "denied"
+                    ? "Blocked in your browser settings — allow notifications for this site to turn them on"
+                    : "Deadline, sprint and event reminders on this device"}
+              </div>
+            </div>
+            {pushBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin shrink-0 mt-0.5" />
+            ) : (
+              <Switch
+                checked={pushOn}
+                disabled={!pushOk || pushPerm === "denied"}
+                onCheckedChange={togglePush}
+              />
+            )}
+          </div>
         </Card>
       </div>
 
