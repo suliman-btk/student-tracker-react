@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, MoreHorizontal, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Header } from "./SpacesPage";
 import { useDomains, useStudyMutations } from "@/lib/query-hooks";
+import { studyApi } from "@/lib/api";
 import CreateDomainModal from "@/components/study/CreateDomainModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -42,6 +44,13 @@ export default function DomainsPage() {
   const [deleting, setDeleting] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [pausedOpen, setPausedOpen] = useState(false);
+  const { data: allDomainsPayload = [], isLoading: isLoadingAllDomains } = useQuery({
+    queryKey: ["study", "domains", "all"],
+    queryFn: () => studyApi.domains.list({ all: 1 }),
+    enabled: pausedOpen,
+    retry: 1,
+  });
+  const allDomains = asArray(allDomainsPayload);
 
   const openCreate = () => {
     setEditing(null);
@@ -60,7 +69,7 @@ export default function DomainsPage() {
           className="flex-1 sm:flex-none"
           onClick={() => setPausedOpen(true)}
         >
-          <Power className="h-4 w-4 mr-1.5" /> Paused domains
+          <Power className="h-4 w-4 mr-1.5" /> Inactive domains
         </Button>
         <Button className="flex-1 sm:flex-none" onClick={openCreate}>
           <Plus className="h-4 w-4 mr-1.5" /> New domain
@@ -208,10 +217,11 @@ export default function DomainsPage() {
       <Dialog open={pausedOpen} onOpenChange={setPausedOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Paused Domains</DialogTitle>
+            <DialogTitle>Inactive Domains</DialogTitle>
           </DialogHeader>
           <PausedDomainsPanel
-            domains={domains}
+            domains={allDomains}
+            isLoading={isLoadingAllDomains}
             toggleDomain={toggleDomain}
             onDelete={(d) => {
               setPausedOpen(false);
@@ -263,12 +273,20 @@ export default function DomainsPage() {
   );
 }
 
-function PausedDomainsPanel({ domains, toggleDomain, onDelete }) {
+function PausedDomainsPanel({ domains, isLoading, toggleDomain, onDelete }) {
+  if (isLoading) {
+    return (
+      <div className="py-6 text-sm text-muted-foreground flex items-center justify-center gap-2">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading inactive domains...
+      </div>
+    );
+  }
+
   const paused = domains.filter((d) => !d.is_active);
   if (paused.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-muted-foreground">
-        No paused domains. All domains are active.
+        No inactive domains. All domains are active.
       </p>
     );
   }
