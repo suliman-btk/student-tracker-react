@@ -55,10 +55,14 @@ export function dismissPrompt() {
 async function acquireAndRegisterToken() {
   const { getMessaging, getToken } = await import("firebase/messaging");
   const { firebaseApp } = await import("./firebase");
+  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  if (!vapidKey) {
+    throw new Error("Missing VITE_FIREBASE_VAPID_KEY in the web build environment.");
+  }
 
   const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
   const token = await getToken(getMessaging(firebaseApp), {
-    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+    vapidKey,
     serviceWorkerRegistration: registration,
   });
   if (!token) throw new Error("No registration token received");
