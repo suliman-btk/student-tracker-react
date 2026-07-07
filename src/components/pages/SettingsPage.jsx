@@ -99,8 +99,9 @@ export default function SettingsPage() {
         setPushOn(false);
         toast.success("Notifications turned off on this device");
       }
-    } catch {
-      toast.error("Could not enable notifications. Please try again.");
+    } catch (error) {
+      console.error("Push notification toggle failed", error);
+      toast.error(error?.message || "Could not enable notifications. Please try again.");
     } finally {
       setPushBusy(false);
     }
