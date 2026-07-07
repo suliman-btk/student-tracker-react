@@ -75,8 +75,8 @@ export default function PushManager() {
       const result = await enablePush();
       if (result === "granted") toast.success("Notifications enabled");
       else if (result === "denied") toast.error("Notifications are blocked in your browser settings");
-    } catch {
-      toast.error("Could not enable notifications. Please try again.");
+    } catch (error) {
+      toast.error(error?.message || "Could not enable notifications. Please try again.");
     } finally {
       setEnabling(false);
       closeBanner();
