@@ -59,6 +59,7 @@ async function acquireAndRegisterToken() {
   if (!vapidKey) {
     throw new Error("Missing VITE_FIREBASE_VAPID_KEY in the web build environment.");
   }
+  validateVapidKey(vapidKey);
 
   const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
   const token = await getToken(getMessaging(firebaseApp), {
@@ -68,6 +69,19 @@ async function acquireAndRegisterToken() {
   if (!token) throw new Error("No registration token received");
   await userApi.updateFcmToken(token, "web");
   return token;
+}
+
+function validateVapidKey(vapidKey) {
+  try {
+    const padding = "=".repeat((4 - (vapidKey.length % 4)) % 4);
+    const base64 = `${vapidKey}${padding}`.replace(/-/g, "+").replace(/_/g, "/");
+    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+    if (bytes.length !== 65 || bytes[0] !== 4) {
+      throw new Error();
+    }
+  } catch {
+    throw new Error("Invalid VITE_FIREBASE_VAPID_KEY. Copy the full Web Push certificates public key from Firebase; it should be one complete 87-character key.");
+  }
 }
 
 /**
