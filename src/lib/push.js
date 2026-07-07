@@ -61,11 +61,25 @@ async function acquireAndRegisterToken() {
   }
   validateVapidKey(vapidKey);
 
-  const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-  const token = await getToken(getMessaging(firebaseApp), {
-    vapidKey,
-    serviceWorkerRegistration: registration,
-  });
+  await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+  const registration = await navigator.serviceWorker.ready;
+  let token;
+  try {
+    token = await getToken(getMessaging(firebaseApp), {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+  } catch (error) {
+    if (
+      error?.name === "AbortError" ||
+      /push service error|registration failed/i.test(error?.message || "")
+    ) {
+      throw new Error(
+        "Browser push registration failed. In Brave/Chromium, enable Google push messaging/site notifications or try Chrome, then reload RAQIP.",
+      );
+    }
+    throw error;
+  }
   if (!token) throw new Error("No registration token received");
   await userApi.updateFcmToken(token, "web");
   return token;
@@ -91,6 +105,9 @@ function validateVapidKey(vapidKey) {
  * Returns "granted" | "denied" | "default".
  */
 export async function enablePush() {
+  if (!(await pushSupported())) {
+    throw new Error("This browser does not support web push notifications.");
+  }
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return permission;
   await acquireAndRegisterToken();
