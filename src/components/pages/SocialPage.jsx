@@ -1578,10 +1578,15 @@ function NetworkPanel() {
 const STORAGE_KEY = "social_usage_v1";
 
 function getTodayKey(resetHour = 0) {
-  // Day boundary shifts at resetHour (e.g. resetHour=3 → day rolls at 03:00)
+  // Day boundary shifts at resetHour (e.g. resetHour=3 → day rolls at 03:00).
+  // Built from LOCAL date components — toISOString() is UTC, which made the
+  // limit reset at UTC midnight instead of the user's local reset hour.
   const now = new Date();
   const adjusted = new Date(now.getTime() - resetHour * 3600 * 1000);
-  return adjusted.toISOString().split("T")[0];
+  const y = adjusted.getFullYear();
+  const m = String(adjusted.getMonth() + 1).padStart(2, "0");
+  const d = String(adjusted.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function loadUsedSeconds(resetHour = 0) {
@@ -1659,6 +1664,10 @@ function SocialUsageGuard({ children }) {
   useEffect(() => {
     if (limitSecs <= 0 || blocked) return;
     const id = setInterval(() => {
+      // Hidden tabs must not consume the allowance: browsers throttle
+      // background intervals erratically, so counting them both over- and
+      // under-reported time the user never actually spent on the page.
+      if (document.hidden) return;
       usedSecsRef.current += 1;
       // Persist every 5th tick instead of every second; the cleanup flush
       // below bounds any loss to <5s on abrupt exit.
@@ -1672,8 +1681,15 @@ function SocialUsageGuard({ children }) {
         return next;
       });
     }, 1000);
+    // Flush the counter the moment the tab is hidden — the interval may never
+    // fire again if the tab is closed from the background.
+    const onVisibility = () => {
+      if (document.hidden) saveUsedSeconds(usedSecsRef.current, resetHour);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
       saveUsedSeconds(usedSecsRef.current, resetHour);
     };
   }, [limitSecs, resetHour, blocked]);

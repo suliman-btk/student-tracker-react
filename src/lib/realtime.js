@@ -172,13 +172,20 @@ export async function joinRoom(roomId, code) {
         throw err;
       }
     }
-    tx.set(memberRef, {
-      displayName: user.displayName || user.email?.split("@")[0],
-      joinedAt: serverTimestamp(),
-      lastSeen: serverTimestamp(),
-      isMuted: false,
-      status: "active",
-    });
+    // merge: joinRoom races with Agora's onJoined (which writes agoraUid to
+    // this same doc) — a plain set() would wipe the agoraUid and other
+    // members would never get speaking waves drawn for this user.
+    tx.set(
+      memberRef,
+      {
+        displayName: user.displayName || user.email?.split("@")[0],
+        joinedAt: serverTimestamp(),
+        lastSeen: serverTimestamp(),
+        isMuted: false,
+        status: "active",
+      },
+      { merge: true },
+    );
     if (!alreadyMember) tx.update(roomRef, { memberCount: increment(1) });
   });
 }
@@ -275,7 +282,14 @@ export async function uploadRoomFile(roomId, file) {
 
 export async function updateAgoraUid(roomId, agoraUid) {
   const user = currentUserOrThrow();
-  await updateDoc(doc(db, "pomodoro_rooms", roomId, "members", user.uid), { agoraUid });
+  // set+merge, not updateDoc: Agora can join before the joinRoom transaction
+  // creates the member doc, and updateDoc on a missing doc throws — silently
+  // dropping the agoraUid mapping (no speaking waves for this user).
+  await setDoc(
+    doc(db, "pomodoro_rooms", roomId, "members", user.uid),
+    { agoraUid },
+    { merge: true },
+  );
 }
 
 export async function deleteRoomFile(roomId, fileId, fileUrl) {
