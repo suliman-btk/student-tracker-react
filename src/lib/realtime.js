@@ -20,6 +20,22 @@ import {
 import { getDownloadURL, ref, uploadBytes, deleteObject } from "firebase/storage";
 import { auth, db, storage } from "@/lib/firebase";
 
+export const ROOM_HOST_STALE_MS = 90 * 1000;
+
+function timestampToMillis(value) {
+  if (!value) return null;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") return value.seconds * 1000;
+  if (value instanceof Date) return value.getTime();
+  return null;
+}
+
+export function isRoomHostStale(room) {
+  if (!room || room.isEnded === true) return false;
+  const hostLastSeen = timestampToMillis(room.hostLastSeen) ?? timestampToMillis(room.createdAt);
+  return hostLastSeen != null && Date.now() - hostLastSeen > ROOM_HOST_STALE_MS;
+}
+
 const currentUserOrThrow = () => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
@@ -27,7 +43,11 @@ const currentUserOrThrow = () => {
 };
 
 export function watchPresence(uid, callback, onError) {
-  return onSnapshot(doc(db, "users", uid), (snap) => callback(snap.exists() ? { uid, ...snap.data() } : null), onError);
+  return onSnapshot(
+    doc(db, "users", uid),
+    (snap) => callback(snap.exists() ? { uid, ...snap.data() } : null),
+    onError,
+  );
 }
 
 export async function setPresence(status, visible = true) {
@@ -45,7 +65,18 @@ export async function setPresence(status, visible = true) {
   );
 }
 
-export async function createFirestoreRoom({ name, subjectTag, focusDuration, breakDuration, hostUid, hostName, roomCode, isPrivate = false, allowVoiceDuringFocus = true, allowChatDuringFocus = true }) {
+export async function createFirestoreRoom({
+  name,
+  subjectTag,
+  focusDuration,
+  breakDuration,
+  hostUid,
+  hostName,
+  roomCode,
+  isPrivate = false,
+  allowVoiceDuringFocus = true,
+  allowChatDuringFocus = true,
+}) {
   const docRef = await addDoc(collection(db, "pomodoro_rooms"), {
     roomName: name,
     subjectTag: subjectTag || null,
@@ -65,12 +96,16 @@ export async function createFirestoreRoom({ name, subjectTag, focusDuration, bre
     phaseEndsAt: null,
     remainingSeconds: 0,
     createdAt: serverTimestamp(),
+    hostLastSeen: serverTimestamp(),
   });
   return docRef.id;
 }
 
 export async function joinRoomByCode(code) {
-  const q = query(collection(db, "pomodoro_rooms"), where("roomCode", "==", code.toUpperCase().trim()));
+  const q = query(
+    collection(db, "pomodoro_rooms"),
+    where("roomCode", "==", code.toUpperCase().trim()),
+  );
   const snap = await getDocs(q);
   if (snap.empty) return null;
   return snap.docs[0].id;
@@ -102,7 +137,33 @@ export async function setRoomMemberCount(roomId, count) {
 }
 
 export async function endRoom(roomId) {
-  await updateDoc(doc(db, "pomodoro_rooms", roomId), { isEnded: true, phase: "idle", isRunning: false, phaseEndsAt: null });
+  await updateDoc(doc(db, "pomodoro_rooms", roomId), {
+    isEnded: true,
+    phase: "idle",
+    isRunning: false,
+    phaseEndsAt: null,
+    memberCount: 0,
+  });
+}
+
+export async function endStaleRoomIfNeeded(roomId) {
+  const roomRef = doc(db, "pomodoro_rooms", roomId);
+  return runTransaction(db, async (tx) => {
+    const roomSnap = await tx.get(roomRef);
+    if (!roomSnap.exists()) return false;
+    const data = roomSnap.data();
+    if (data.isEnded === true) return false;
+    const lastSeen = timestampToMillis(data.hostLastSeen) ?? timestampToMillis(data.createdAt);
+    if (lastSeen == null || Date.now() - lastSeen <= ROOM_HOST_STALE_MS) return false;
+    tx.update(roomRef, {
+      isEnded: true,
+      phase: "idle",
+      isRunning: false,
+      phaseEndsAt: null,
+      memberCount: 0,
+    });
+    return true;
+  });
 }
 
 export async function updateMutedState(roomId, isMuted) {
@@ -117,33 +178,79 @@ export function watchPublicRooms(callback, onError) {
   // entirely if that index is missing), so we apply those filters in memory.
   const cutoffSeconds = (Date.now() - 24 * 60 * 60 * 1000) / 1000;
   const roomsQuery = query(collection(db, "pomodoro_rooms"), where("isPrivate", "==", false));
-  return onSnapshot(roomsQuery, (snap) => {
-    const rooms = snap.docs
+  let latestDocs = [];
+  const emit = () => {
+    const rooms = latestDocs
       .map((d) => ({ id: d.id, ...d.data() }))
       // Exclude ended (ghost) rooms, rooms older than 24h, and empty/abandoned
       // (or count-corrupted) rooms — none of those are joinable "active" sessions.
-      .filter((r) => r.isEnded !== true && (r.memberCount ?? 0) > 0 && (r.createdAt?.seconds ?? 0) > cutoffSeconds)
+      .filter((r) => {
+        const stale = isRoomHostStale(r);
+        if (stale) endStaleRoomIfNeeded(r.id).catch(() => {});
+        return (
+          r.isEnded !== true &&
+          !stale &&
+          (r.memberCount ?? 0) > 0 &&
+          (r.createdAt?.seconds ?? 0) > cutoffSeconds
+        );
+      })
       .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
     callback(rooms);
-  }, onError);
+  };
+  const unsubscribe = onSnapshot(
+    roomsQuery,
+    (snap) => {
+      latestDocs = snap.docs;
+      emit();
+    },
+    onError,
+  );
+  const timer = window.setInterval(emit, 15000);
+  return () => {
+    window.clearInterval(timer);
+    unsubscribe();
+  };
 }
 
 export function watchRoom(roomId, callback, onError) {
-  return onSnapshot(doc(db, "pomodoro_rooms", roomId), (snap) => callback(snap.exists() ? { id: snap.id, ...snap.data() } : null), onError);
+  return onSnapshot(
+    doc(db, "pomodoro_rooms", roomId),
+    (snap) => callback(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    onError,
+  );
 }
 
 export function watchRoomMembers(roomId, callback, onError) {
-  return onSnapshot(collection(db, "pomodoro_rooms", roomId, "members"), (snap) => callback(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))), onError);
+  return onSnapshot(
+    collection(db, "pomodoro_rooms", roomId, "members"),
+    (snap) => callback(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))),
+    onError,
+  );
 }
 
 export function watchRoomMessages(roomId, callback, onError) {
-  const messagesQuery = query(collection(db, "pomodoro_rooms", roomId, "messages"), orderBy("sentAt", "desc"), limit(50));
-  return onSnapshot(messagesQuery, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError);
+  const messagesQuery = query(
+    collection(db, "pomodoro_rooms", roomId, "messages"),
+    orderBy("sentAt", "desc"),
+    limit(50),
+  );
+  return onSnapshot(
+    messagesQuery,
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    onError,
+  );
 }
 
 export function watchSharedFiles(roomId, callback, onError) {
-  const filesQuery = query(collection(db, "pomodoro_rooms", roomId, "files"), orderBy("uploadedAt", "desc"));
-  return onSnapshot(filesQuery, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError);
+  const filesQuery = query(
+    collection(db, "pomodoro_rooms", roomId, "files"),
+    orderBy("uploadedAt", "desc"),
+  );
+  return onSnapshot(
+    filesQuery,
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    onError,
+  );
 }
 
 export async function joinRoom(roomId, code) {
@@ -154,6 +261,7 @@ export async function joinRoom(roomId, code) {
     const roomSnap = await tx.get(roomRef);
     if (!roomSnap.exists()) throw new Error("Room not found");
     const data = roomSnap.data();
+    if (data.isEnded === true) throw new Error("Room session already ended");
     if ((data.banned || []).includes(user.uid)) {
       const err = new Error("You were removed from this room by the host");
       err.code = "room/banned";
@@ -187,6 +295,21 @@ export async function joinRoom(roomId, code) {
       { merge: true },
     );
     if (!alreadyMember) tx.update(roomRef, { memberCount: increment(1) });
+  });
+}
+
+export async function updateRoomPresence(roomId) {
+  const user = currentUserOrThrow();
+  const roomRef = doc(db, "pomodoro_rooms", roomId);
+  const memberRef = doc(db, "pomodoro_rooms", roomId, "members", user.uid);
+  await runTransaction(db, async (tx) => {
+    const roomSnap = await tx.get(roomRef);
+    if (!roomSnap.exists()) return;
+    const data = roomSnap.data();
+    tx.set(memberRef, { lastSeen: serverTimestamp() }, { merge: true });
+    if (data.hostUid === user.uid) {
+      tx.update(roomRef, { hostLastSeen: serverTimestamp() });
+    }
   });
 }
 
@@ -238,7 +361,11 @@ export async function uploadPostAttachment(file) {
   const storageRef = ref(storage, `posts/${user.uid}/${Date.now()}_${safeName}`);
   await uploadBytes(storageRef, file);
   const url = await getDownloadURL(storageRef);
-  const type = file.type?.startsWith("image/") ? "image" : file.type === "application/pdf" ? "pdf" : "document";
+  const type = file.type?.startsWith("image/")
+    ? "image"
+    : file.type === "application/pdf"
+      ? "pdf"
+      : "document";
   return { url, type, name: file.name, size: file.size };
 }
 
@@ -267,7 +394,11 @@ export async function uploadRoomFile(roomId, file) {
   const storageRef = ref(storage, `rooms/${roomId}/${Date.now()}_${safeName}`);
   await uploadBytes(storageRef, file);
   const fileUrl = await getDownloadURL(storageRef);
-  const fileType = file.type?.startsWith("image/") ? "image" : file.type === "application/pdf" ? "pdf" : "document";
+  const fileType = file.type?.startsWith("image/")
+    ? "image"
+    : file.type === "application/pdf"
+      ? "pdf"
+      : "document";
   const docRef = await addDoc(collection(db, "pomodoro_rooms", roomId, "files"), {
     uploaderUid: user.uid,
     uploaderName: user.displayName || user.email?.split("@")[0],

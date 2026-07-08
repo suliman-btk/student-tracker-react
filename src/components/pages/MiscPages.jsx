@@ -105,6 +105,9 @@ import {
   uploadUserBanner,
   setRoomMemberCount,
   kickMember,
+  updateRoomPresence,
+  endStaleRoomIfNeeded,
+  isRoomHostStale,
 } from "@/lib/realtime";
 import { createAgoraRoomClient } from "@/lib/agora";
 import { auth } from "@/lib/firebase";
@@ -989,16 +992,49 @@ export function RoomDetailPage({ id }) {
   // earlier join/leave bugs). Guarded on members.length > 0 so a transient
   // empty snapshot during load never writes a bogus 0.
   useEffect(() => {
-    if (!isHost || !joined || !room) return;
+    if (!isHost || !joined || !room || room.isEnded === true) return;
     if (members.length > 0 && room.memberCount !== members.length) {
       setRoomMemberCount(id, members.length).catch(() => {});
     }
-  }, [isHost, joined, members.length, room?.memberCount, id]);
+  }, [isHost, joined, members.length, room?.memberCount, room?.isEnded, id]);
 
   // Sync joined flag when another tab/device already put this user in the room
   useEffect(() => {
     if (isJoined && !joined) setJoined(true);
   }, [isJoined, joined]);
+
+  // Refresh member presence; for the host this also updates the room-level
+  // hostLastSeen field used to hide/end abandoned rooms after network loss.
+  useEffect(() => {
+    if (!joined || !room || room.isEnded === true) return;
+    updateRoomPresence(id).catch(() => {});
+    const timer = window.setInterval(() => {
+      updateRoomPresence(id).catch(() => {});
+    }, 30000);
+    return () => window.clearInterval(timer);
+  }, [id, joined, room?.isEnded]);
+
+  // Firestore will not emit a new snapshot merely because hostLastSeen aged.
+  // Re-check locally so participants leave when the host disappears silently.
+  useEffect(() => {
+    if (!joined || !room || isHost || room.isEnded === true) return;
+    const checkHost = async () => {
+      if (!isRoomHostStale(room)) return;
+      intentionalLeaveRef.current = true;
+      await endStaleRoomIfNeeded(id).catch(() => {});
+      if (agoraRef.current) {
+        await agoraRef.current.leave().catch(() => {});
+        agoraRef.current = null;
+      }
+      await leaveRoom(id).catch(() => {});
+      toast.info("The host left this room");
+      navigate({ to: "/rooms" });
+    };
+    checkHost();
+    const timer = window.setInterval(checkHost, 10000);
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, joined, isHost, room?.hostLastSeen, room?.isEnded]);
 
   // Auto-join: anyone who opens the room (host or guest) is added to the lobby
   // immediately. Clicking "Join" on a room card should put you in without a
@@ -1026,10 +1062,10 @@ export function RoomDetailPage({ id }) {
   // deleted our member doc — tear down voice and bounce to the rooms list.
   const amBanned = Boolean(
     room &&
-      currentUser &&
-      Array.isArray(room.banned) &&
-      room.banned.includes(currentUser.uid) &&
-      room.hostUid !== currentUser.uid,
+    currentUser &&
+    Array.isArray(room.banned) &&
+    room.banned.includes(currentUser.uid) &&
+    room.hostUid !== currentUser.uid,
   );
   useEffect(() => {
     if (!amBanned) return;
