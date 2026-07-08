@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useInfiniteQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -335,15 +341,22 @@ function CreatePostBox() {
 
   function submit() {
     const trimmed = content.trim();
-    if (!trimmed && !attachment) return;
+    const linkVal = link.trim();
+    if (!trimmed && !attachment && !linkVal) return;
     const body = { content: trimmed, visibility };
     if (subjectTag) body.subject_tag = subjectTag;
     if (attachment) {
       body.attachment_url = attachment.url;
       body.attachment_type = attachment.type;
       body.attachment_name = attachment.name;
+    } else if (linkVal) {
+      // Link posts reuse the attachment slot with type "link" — the same
+      // contract the server already uses for shared achievements. (The old
+      // separate `link` field was silently dropped server-side.)
+      body.attachment_url = /^https?:\/\//i.test(linkVal) ? linkVal : `https://${linkVal}`;
+      body.attachment_type = "link";
+      body.attachment_name = linkVal;
     }
-    if (link.trim()) body.link = link.trim();
     mutate(body);
   }
 
@@ -585,7 +598,7 @@ function CreatePostBox() {
           </button>
         </div>
         <Button
-          disabled={(!content.trim() && !attachment) || isPending || uploading}
+          disabled={(!content.trim() && !attachment && !link.trim()) || isPending || uploading}
           onClick={submit}
           className="rounded-full px-5"
         >
@@ -1058,21 +1071,16 @@ function PostCard({ post, currentUserId }) {
           href={post.attachment_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 flex items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm hover:bg-muted"
+          className={`mt-3 flex items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm hover:bg-muted ${
+            post.attachment_type === "link" ? "text-primary" : ""
+          }`}
         >
-          <Paperclip className="h-4 w-4" />
+          {post.attachment_type === "link" ? (
+            <LinkIcon className="h-4 w-4 shrink-0" />
+          ) : (
+            <Paperclip className="h-4 w-4 shrink-0" />
+          )}
           <span className="truncate">{post.attachment_name || `View ${post.attachment_type}`}</span>
-        </a>
-      )}
-      {post.link && (
-        <a
-          href={post.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 flex items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm text-primary hover:bg-muted"
-        >
-          <LinkIcon className="h-4 w-4" />
-          <span className="truncate">{post.link}</span>
         </a>
       )}
 
@@ -1121,16 +1129,23 @@ function FeedList({ tag }) {
   const currentUserId = profile?.uid || profile?.firebase_uid || profile?.id;
 
   const {
-    data: feed = [],
+    data,
     isLoading,
     error,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: qk.social.feed({ tag }),
-    queryFn: () => socialApi.feed(tag ? { tag } : undefined),
+    queryFn: ({ pageParam = 1 }) =>
+      socialApi.feedPaged({ page: pageParam, ...(tag ? { tag } : {}) }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      (last?.current_page ?? 1) < (last?.last_page ?? 1) ? (last.current_page ?? 1) + 1 : undefined,
     retry: 1,
   });
 
-  const posts = Array.isArray(feed) ? feed : feed?.data || [];
+  const posts = (data?.pages ?? []).flatMap((p) => (Array.isArray(p) ? p : p?.data || []));
 
   if (isLoading) {
     return (
@@ -1178,6 +1193,16 @@ function FeedList({ tag }) {
         ) : (
           <PostCard key={post.id} post={post} currentUserId={currentUserId} />
         ),
+      )}
+      {hasNextPage && (
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={isFetchingNextPage}
+          onClick={() => fetchNextPage()}
+        >
+          {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin" /> : "Load more"}
+        </Button>
       )}
     </div>
   );
@@ -1356,12 +1381,16 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
     retry: false,
   });
 
-  const { data: results = [], isFetching } = useQuery({
-    queryKey: ["social", "discover", dq],
-    queryFn: () => socialApi.discovery.search(dq),
+  const {
+    data: results = [],
+    isFetching,
+    isError,
+  } = useQuery({
+    queryKey: ["social", "discover", dq.trim()],
+    queryFn: () => socialApi.discovery.search(dq.trim()),
     enabled: dq.trim().length >= 2,
     placeholderData: keepPreviousData,
-    retry: false,
+    retry: 1,
   });
 
   const [sentUids, setSentUids] = useState(new Set());
@@ -1424,10 +1453,16 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
       {(isFetching || (!isSearching && loadingSuggestions)) && (
         <div className="text-xs text-muted-foreground">Loading…</div>
       )}
-      {!isFetching && isSearching && list.length === 0 && (
-        <div className="text-xs text-muted-foreground">No users found.</div>
+      {!isFetching && isSearching && isError && (
+        <div className="text-xs text-destructive">Search failed — try again.</div>
       )}
-      {!loadingSuggestions && !isSearching && list.length === 0 && (
+      {q.trim().length === 1 && (
+        <div className="text-xs text-muted-foreground">Type at least 2 characters to search.</div>
+      )}
+      {!isFetching && isSearching && !isError && list.length === 0 && (
+        <div className="text-xs text-muted-foreground">No students match "{dq.trim()}".</div>
+      )}
+      {!loadingSuggestions && !isSearching && q.trim().length === 0 && list.length === 0 && (
         <div className="text-xs text-muted-foreground">
           No suggestions yet — connect with more people first.
         </div>
@@ -1535,12 +1570,10 @@ function NetworkPanel() {
           </div>
         </div>
       </div>
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
-        <DiscoverCard className="xl:order-1" limit={12} wide />
-        <div className="xl:order-2">
-          <FriendRequestsCard />
-        </div>
-      </div>
+      {/* Requests stack above discovery so an empty requests card (returns null)
+          leaves no reserved gap beside "People you may know". */}
+      <FriendRequestsCard />
+      <DiscoverCard limit={12} wide />
       <div className="rounded-xl border bg-card p-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
@@ -1575,7 +1608,11 @@ function NetworkPanel() {
 
 // ─── Social Usage Timer Guard ─────────────────────────────────────────────────
 
-const STORAGE_KEY = "social_usage_v1";
+// Buffer of seconds spent on StudyConnect this session that have NOT yet been
+// POSTed to the server. The authoritative daily total lives server-side (shared
+// with the mobile app); localStorage only guards against losing the last few
+// unsynced seconds on an abrupt tab close.
+const STORAGE_KEY = "social_unflushed_v1";
 
 function getTodayKey(resetHour = 0) {
   // Day boundary shifts at resetHour (e.g. resetHour=3 → day rolls at 03:00).
@@ -1589,13 +1626,13 @@ function getTodayKey(resetHour = 0) {
   return `${y}-${m}-${d}`;
 }
 
-function loadUsedSeconds(resetHour = 0) {
+function loadUnflushed(resetHour = 0) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return 0;
-    const { date, usedSeconds } = JSON.parse(raw);
-    if (date === getTodayKey(resetHour)) return usedSeconds ?? 0;
-    // Different day → stale, clear it
+    const { date, seconds } = JSON.parse(raw);
+    if (date === getTodayKey(resetHour)) return seconds ?? 0;
+    // Different study day → stale, clear it
     localStorage.removeItem(STORAGE_KEY);
     return 0;
   } catch {
@@ -1603,11 +1640,11 @@ function loadUsedSeconds(resetHour = 0) {
   }
 }
 
-function saveUsedSeconds(seconds, resetHour = 0) {
+function saveUnflushed(seconds, resetHour = 0) {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ date: getTodayKey(resetHour), usedSeconds: seconds }),
+      JSON.stringify({ date: getTodayKey(resetHour), seconds }),
     );
   } catch {}
 }
@@ -1623,6 +1660,7 @@ function fmtTime(secs) {
 
 function SocialUsageGuard({ children }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const { data: daySettings } = useQuery({
     queryKey: ["social", "day-settings"],
@@ -1643,24 +1681,56 @@ function SocialUsageGuard({ children }) {
   const limitMinutes = usages[0]?.daily_limit_minutes ?? usages[0]?.dailyLimitMinutes ?? 0;
   const limitSecs = limitMinutes * 60;
 
-  const usedSecsRef = useRef(loadUsedSeconds(resetHour));
-  const [remaining, setRemaining] = useState(() => {
-    if (limitSecs <= 0) return Infinity;
-    return Math.max(0, limitSecs - usedSecsRef.current);
-  });
-  const [blocked, setBlocked] = useState(() => limitSecs > 0 && usedSecsRef.current >= limitSecs);
+  // Global budget spent so far, per the server — the sum across every tracked
+  // platform (mirrors the mobile app), including StudyConnect time already
+  // flushed from any device. This is the shared source of truth.
+  const totalServerUsed = (Array.isArray(usages) ? usages : []).reduce(
+    (a, u) => a + (u.total_seconds_today ?? u.totalSecondsToday ?? 0),
+    0,
+  );
 
-  // Recalculate when settings load
-  useEffect(() => {
-    if (limitSecs <= 0) return;
-    const used = loadUsedSeconds(resetHour);
-    usedSecsRef.current = used;
+  const serverUsedRef = useRef(0);
+  const unflushedRef = useRef(loadUnflushed(resetHour));
+  const [remaining, setRemaining] = useState(Infinity);
+  const [blocked, setBlocked] = useState(false);
+
+  const recompute = useCallback(() => {
+    if (limitSecs <= 0) {
+      setRemaining(Infinity);
+      return;
+    }
+    const used = serverUsedRef.current + unflushedRef.current;
     const r = Math.max(0, limitSecs - used);
     setRemaining(r);
-    if (r === 0) setBlocked(true);
-  }, [limitSecs, resetHour]);
+    if (r <= 0) setBlocked(true);
+  }, [limitSecs]);
 
-  // Tick
+  // POST the seconds accrued since the last flush. The server ADDS to the stored
+  // total, so we send only the delta (never the cumulative) or it double-counts.
+  const flush = useCallback(() => {
+    const delta = unflushedRef.current;
+    if (delta <= 0) return;
+    unflushedRef.current = 0;
+    saveUnflushed(0, resetHour);
+    serverUsedRef.current += delta; // optimistic: keeps `remaining` stable pre-refetch
+    socialApi.platforms
+      .log({ platform: "studyconnect", duration_seconds: delta, study_date: getTodayKey(resetHour) })
+      .then(() => qc.invalidateQueries({ queryKey: qk.social.platforms({}) }))
+      .catch(() => {
+        // Roll back so these seconds are retried on the next flush.
+        serverUsedRef.current -= delta;
+        unflushedRef.current += delta;
+        saveUnflushed(unflushedRef.current, resetHour);
+      });
+  }, [resetHour, qc]);
+
+  // Seed / re-seed the server baseline whenever the usage query resolves.
+  useEffect(() => {
+    serverUsedRef.current = totalServerUsed;
+    recompute();
+  }, [totalServerUsed, recompute]);
+
+  // Tick + periodic flush
   useEffect(() => {
     if (limitSecs <= 0 || blocked) return;
     const id = setInterval(() => {
@@ -1668,31 +1738,30 @@ function SocialUsageGuard({ children }) {
       // background intervals erratically, so counting them both over- and
       // under-reported time the user never actually spent on the page.
       if (document.hidden) return;
-      usedSecsRef.current += 1;
-      // Persist every 5th tick instead of every second; the cleanup flush
-      // below bounds any loss to <5s on abrupt exit.
-      if (usedSecsRef.current % 5 === 0) saveUsedSeconds(usedSecsRef.current, resetHour);
-      setRemaining((r) => {
-        const next = r - 1;
-        if (next <= 0) {
-          setBlocked(true);
-          return 0;
-        }
-        return next;
-      });
+      unflushedRef.current += 1;
+      // Persist every 5th tick; the cleanup flush bounds any loss to <5s.
+      if (unflushedRef.current % 5 === 0) saveUnflushed(unflushedRef.current, resetHour);
+      recompute();
     }, 1000);
-    // Flush the counter the moment the tab is hidden — the interval may never
-    // fire again if the tab is closed from the background.
+    // Sync to the server every 30s so the shared budget stays current across devices.
+    const flushId = setInterval(flush, 30000);
+    // Flush the moment the tab is hidden — the interval may never fire again if
+    // the tab is closed from the background.
     const onVisibility = () => {
-      if (document.hidden) saveUsedSeconds(usedSecsRef.current, resetHour);
+      if (document.hidden) {
+        saveUnflushed(unflushedRef.current, resetHour);
+        flush();
+      }
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       clearInterval(id);
+      clearInterval(flushId);
       document.removeEventListener("visibilitychange", onVisibility);
-      saveUsedSeconds(usedSecsRef.current, resetHour);
+      saveUnflushed(unflushedRef.current, resetHour);
+      flush();
     };
-  }, [limitSecs, resetHour, blocked]);
+  }, [limitSecs, resetHour, blocked, flush, recompute]);
 
   if (blocked) {
     return (

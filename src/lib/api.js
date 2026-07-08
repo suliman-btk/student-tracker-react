@@ -109,6 +109,8 @@ export const focusApi = {
 
 export const socialApi = {
   feed: (params) => apiRequest("/social/feed", { params }).then((p) => unwrapData(p, [])),
+  // Keeps the { data, current_page, last_page } envelope for infinite scroll.
+  feedPaged: (params) => apiRequest("/social/feed", { params }),
   posts: {
     create: (body) => apiRequest("/social/posts", { method: "POST", body }).then(unwrapData),
     show: (id) => apiRequest(`/social/posts/${id}`).then(unwrapData),
