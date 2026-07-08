@@ -132,9 +132,6 @@ export default function LandingPage() {
                 <CheckCircle2 className="h-4 w-4 text-primary" /> Free for students
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-primary" /> Works offline
-              </span>
-              <span className="inline-flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-primary" /> Set up in 2 minutes
               </span>
             </div>

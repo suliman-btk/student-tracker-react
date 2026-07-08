@@ -75,17 +75,18 @@ function RootComponent() {
     const isAuthPage = path === "/login" || path === "/register";
     const navigate = useNavigate();
     const { user, loading, initialized } = useAuthStore();
-    // Logged-out visitors can see the public landing page at "/" (no app shell).
-    const isPublicLanding = path === "/" && !user;
+    // Logged-out visitors can see the public landing page at "/" or "/landing" (no app shell).
+    const isLandingPath = path === "/" || path === "/landing";
+    const isPublicLanding = isLandingPath && !user;
     const isPublic = isAuthPage || isPublicLanding;
     useEffect(() => {
         startAuthListener();
     }, []);
     useEffect(() => {
         if (!initialized || loading) return;
-        if (!user && !isAuthPage && path !== "/") navigate({ to: "/login" });
+        if (!user && !isAuthPage && !isLandingPath) navigate({ to: "/login" });
         if (user && isAuthPage) navigate({ to: "/" });
-    }, [initialized, loading, user, isAuthPage, path, navigate]);
+    }, [initialized, loading, user, isAuthPage, isLandingPath, navigate]);
     if (!initialized || loading) {
         return (<QueryClientProvider client={queryClient}>
         <BrandLoader fullscreen label="Loading RAQIP…" />
