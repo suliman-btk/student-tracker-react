@@ -355,7 +355,8 @@ function CreatePostBox() {
       // separate `link` field was silently dropped server-side.)
       body.attachment_url = /^https?:\/\//i.test(linkVal) ? linkVal : `https://${linkVal}`;
       body.attachment_type = "link";
-      body.attachment_name = linkVal;
+      // Server caps attachment_name at 255; a longer URL would 422 the whole post.
+      body.attachment_name = linkVal.slice(0, 255);
     }
     mutate(body);
   }
