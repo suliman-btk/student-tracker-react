@@ -944,7 +944,7 @@ function PostCard({ post, currentUserId }) {
     mutationFn: () => socialApi.posts.remove(post.id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "feed"] });
-      toast.success("Post deleted");
+      toast.success("Feed post deleted");
     },
     onError: () => toast.error("Failed to delete"),
   });
@@ -1040,7 +1040,7 @@ function PostCard({ post, currentUserId }) {
                   }}
                   className="w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-muted flex items-center gap-2"
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                  <Trash2 className="h-3.5 w-3.5" /> Delete feed post
                 </button>
               </div>
             )}
@@ -1224,6 +1224,7 @@ function FriendRequestsCard() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "friends"] });
       qc.invalidateQueries({ queryKey: ["social", "friends", "requests"] });
+      qc.invalidateQueries({ queryKey: ["social", "users"] });
       toast.success("Connection accepted");
     },
   });
@@ -1485,12 +1486,22 @@ function DiscoverCard({ className = "", limit = 5, wide = false }) {
 }
 
 function AchievementsPanel() {
+  const qc = useQueryClient();
   const { data: achievements = [], isLoading } = useQuery({
     queryKey: ["social", "achievements", "me"],
     queryFn: socialApi.achievements.list,
     retry: 1,
   });
   const list = Array.isArray(achievements) ? achievements : achievements?.data || [];
+  const { mutate: deleteAchievement } = useMutation({
+    mutationFn: (id) => socialApi.achievements.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["social", "achievements", "me"] });
+      qc.invalidateQueries({ queryKey: ["social", "feed"] });
+      toast.success("Achievement deleted");
+    },
+    onError: (error) => toast.error(error?.message || "Could not delete achievement"),
+  });
 
   return (
     <div className="space-y-3">
@@ -1531,16 +1542,26 @@ function AchievementsPanel() {
                       </span>
                     </div>
                   </div>
-                  {achievement.evidence_url && (
-                    <a
-                      href={achievement.evidence_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-primary hover:underline"
+                  <div className="flex items-center gap-2">
+                    {achievement.evidence_url && (
+                      <a
+                        href={achievement.evidence_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Evidence
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => deleteAchievement(achievement.id)}
+                      className="grid h-7 w-7 place-items-center rounded-md text-destructive hover:bg-muted"
+                      title="Delete achievement"
                     >
-                      Evidence
-                    </a>
-                  )}
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 {achievement.description && (
                   <p className="mt-2 text-sm text-muted-foreground">{achievement.description}</p>

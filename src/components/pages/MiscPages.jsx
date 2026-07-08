@@ -1869,13 +1869,22 @@ export function ProfilePage({ uid }) {
   // Connection state for non-self
   const friends = Array.isArray(friendsList) ? friendsList : friendsList?.data || [];
   const friendIds = new Set(friends.map((f) => String(f.uid || f.firebase_uid || f.id)));
-  const isFriend = !isSelf && friendIds.has(String(uid));
-  const isPending = !isSelf && otherProfile?.has_sent_request === true;
+  const connectionState = otherProfile?.connection_state || "";
+  const isFriend =
+    !isSelf &&
+    (connectionState === "connected" ||
+      otherProfile?.is_friend === true ||
+      friendIds.has(String(uid)));
+  const isPending =
+    !isSelf &&
+    (connectionState === "pending_sent" || otherProfile?.has_sent_request === true);
+  const hasPendingReceived = !isSelf && connectionState === "pending_received";
 
   const { mutate: sendReq, isPending: sending } = useMutation({
     mutationFn: () => socialApi.friends.send(uid),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "users", String(uid), "profile"] });
+      qc.invalidateQueries({ queryKey: ["social", "friends"] });
       toast.success("Connection request sent");
     },
     onError: (error) => toast.error(error?.message || "Could not send request"),
@@ -1908,6 +1917,26 @@ export function ProfilePage({ uid }) {
       toast.success("Project added");
     },
     onError: (error) => toast.error(error?.message || "Could not add project"),
+  });
+
+  const { mutate: deleteAchievement } = useMutation({
+    mutationFn: (id) => socialApi.achievements.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["social", "achievements", profileUid || "me"] });
+      qc.invalidateQueries({ queryKey: ["social", "feed"] });
+      toast.success("Achievement deleted");
+    },
+    onError: (error) => toast.error(error?.message || "Could not delete achievement"),
+  });
+
+  const { mutate: deleteProject } = useMutation({
+    mutationFn: (id) => socialApi.projects.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["social", "projects", profileUid || "me"] });
+      qc.invalidateQueries({ queryKey: ["social", "feed"] });
+      toast.success("Project deleted");
+    },
+    onError: (error) => toast.error(error?.message || "Could not delete project"),
   });
 
   function normalizeUrl(value) {
@@ -1950,6 +1979,7 @@ export function ProfilePage({ uid }) {
     mutationFn: () => socialApi.friends.remove(uid),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "friends"] });
+      qc.invalidateQueries({ queryKey: ["social", "users", String(uid), "profile"] });
       toast.success("Removed connection");
     },
   });
@@ -2027,6 +2057,10 @@ export function ProfilePage({ uid }) {
                 <Button size="sm" variant="outline" disabled>
                   <UserX className="h-3.5 w-3.5 mr-1.5" /> Pending
                 </Button>
+              ) : hasPendingReceived ? (
+                <Button size="sm" variant="outline" disabled>
+                  <UserX className="h-3.5 w-3.5 mr-1.5" /> Request received
+                </Button>
               ) : (
                 <Button size="sm" disabled={sending} onClick={() => sendReq()}>
                   <UserPlusIcon className="h-3.5 w-3.5 mr-1.5" /> Connect
@@ -2071,7 +2105,9 @@ export function ProfilePage({ uid }) {
           <div className="text-xs text-muted-foreground mt-1">Day streak</div>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
-          <div className="text-2xl font-bold">{profile?.friends_count ?? friends.length}</div>
+          <div className="text-2xl font-bold">
+            {profile?.friends_count ?? (isSelf ? friends.length : 0)}
+          </div>
           <div className="text-xs text-muted-foreground mt-1">Connections</div>
         </div>
       </div>
@@ -2164,14 +2200,38 @@ export function ProfilePage({ uid }) {
                     )}
                   </div>
                   {a.evidence_url && (
-                    <a
-                      href={a.evidence_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-primary hover:underline"
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={a.evidence_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Evidence
+                      </a>
+                      {isSelf && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => deleteAchievement(a.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {!a.evidence_url && isSelf && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-destructive"
+                      onClick={() => deleteAchievement(a.id)}
                     >
-                      Evidence
-                    </a>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   )}
                 </div>
                 {a.description && (
@@ -2290,6 +2350,17 @@ export function ProfilePage({ uid }) {
                         Code
                       </a>
                     )}
+                    {isSelf && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => deleteProject(project.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
                 {project.description && (
@@ -2393,6 +2464,7 @@ export function NotificationsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["social", "friends"] });
       qc.invalidateQueries({ queryKey: ["social", "friends", "requests"] });
+      qc.invalidateQueries({ queryKey: ["social", "users"] });
       toast.success("Connection accepted");
     },
   });
