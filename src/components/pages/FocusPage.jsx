@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useBlocker } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Play, Pause, RotateCcw, Settings, Square, Loader2 } from "lucide-react";
+import { Play, Pause, RotateCcw, Settings, Square, Loader2, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -80,6 +82,7 @@ export default function FocusPage() {
   });
   const { data: sessionsPayload } = usePomodoroSessions();
   const sessions = Array.isArray(sessionsPayload) ? sessionsPayload : sessionsPayload?.data || [];
+  const notedSessions = sessions.filter((s) => String(s.notes || "").trim().length > 0);
 
   // ── Settings ──────────────────────────────────────────────────────────────
   const { data: savedSettings } = useQuery({
@@ -169,7 +172,8 @@ export default function FocusPage() {
     onError: (e) => toast.error(e?.message || "Could not start session"),
   });
   const endMut = useMutation({
-    mutationFn: ({ id, status }) => focusApi.pomodoro.end(id, { status }),
+    mutationFn: ({ id, status, notes }) =>
+      focusApi.pomodoro.end(id, { status, ...(notes ? { notes } : {}) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.focus.pomodoro }),
     onError: (e) => {
       // A 404 just means the session was already ended elsewhere — harmless.
@@ -181,12 +185,12 @@ export default function FocusPage() {
   // End the current session exactly once. Clearing the ref first ensures a
   // second trigger (timer + stop, or a StrictMode re-run) can't re-end it.
   const endSession = useCallback(
-    (status) => {
+    (status, notes) => {
       const id = sessionIdRef.current;
-      if (!id) return;
+      if (!id) return Promise.resolve();
       sessionIdRef.current = null;
       setSessionId(null);
-      endMut.mutate({ id, status });
+      return endMut.mutateAsync({ id, status, notes });
     },
     [endMut],
   );
@@ -221,7 +225,7 @@ export default function FocusPage() {
   // ── Completion: fires once when the countdown reaches zero ──────────────────
   useEffect(() => {
     if (!running || seconds > 0) return;
-    endSession("completed");
+    void endSession("completed").catch(() => {});
     setRunning(false);
     if (mode === "focus") {
       soundBreakStart();
@@ -255,7 +259,7 @@ export default function FocusPage() {
   const handleReset = () => {
     setRunning(false);
     setSeconds(total);
-    endSession("abandoned");
+    void endSession("abandoned").catch(() => {});
   };
 
   // ── Stop → task progress dialog ────────────────────────────────────────────
@@ -264,14 +268,13 @@ export default function FocusPage() {
 
   const handleStop = () => {
     setRunning(false);
-    endSession("abandoned");
-    if (sprintTasks.length > 0) setStopOpen(true);
+    if (sessionIdRef.current) setStopOpen(true);
   };
 
   const closeSessionAndLeave = () => {
     leavingFocusRef.current = true;
     setRunning(false);
-    endSession("abandoned");
+    void endSession("abandoned").catch(() => {});
     blockProceed();
   };
 
@@ -438,6 +441,8 @@ export default function FocusPage() {
         </div>
       </section>
 
+      <SessionNotesCard sessions={notedSessions} />
+
       {/* ── Settings dialog ── */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-sm">
@@ -492,7 +497,15 @@ export default function FocusPage() {
       </Dialog>
 
       {/* ── Post-session task progress dialog ── */}
-      <TaskProgressDialog open={stopOpen} onOpenChange={setStopOpen} tasks={sprintTasks} />
+      <TaskProgressDialog
+        open={stopOpen}
+        onOpenChange={setStopOpen}
+        tasks={sprintTasks}
+        onFinish={async ({ status, notes }) => {
+          await endSession(status, notes);
+          setStopOpen(false);
+        }}
+      />
 
       <AlertDialog open={blockStatus === "blocked"}>
         <AlertDialogContent>
@@ -516,9 +529,42 @@ export default function FocusPage() {
 }
 
 // ─── Task progress dialog ──────────────────────────────────────────────────────
-function TaskProgressDialog({ open, onOpenChange, tasks }) {
+function SessionNotesCard({ sessions }) {
+  return (
+    <section className="rounded-xl border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <StickyNote className="h-4 w-4 text-primary" />
+        <h3 className="font-semibold">Session notes</h3>
+      </div>
+      {sessions.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Notes you add after a session will appear here.</p>
+      ) : (
+        <div className="space-y-3">
+          {sessions.slice(0, 5).map((session) => {
+            const focus = session.focus_duration ?? session.focusDuration ?? 25;
+            const rounds = session.rounds_completed ?? session.roundsCompleted ?? 0;
+            return (
+              <div key={session.id} className="rounded-lg border bg-background p-3">
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{fmtDate(session.started_at || session.startedAt || session.created_at)}</span>
+                  <Badge variant="secondary" className="font-medium">
+                    {focus}m · {rounds} rounds
+                  </Badge>
+                </div>
+                <p className="line-clamp-3 whitespace-pre-wrap text-sm">{session.notes}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TaskProgressDialog({ open, onOpenChange, tasks, onFinish }) {
   const qc = useQueryClient();
   const [progMap, setProgMap] = useState({});
+  const [notes, setNotes] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -527,6 +573,7 @@ function TaskProgressDialog({ open, onOpenChange, tasks }) {
         init[t.id] = t.progress_percentage ?? t.progressPercentage ?? 0;
       });
       setProgMap(init);
+      setNotes("");
     }
   }, [open, tasks]);
 
@@ -544,8 +591,18 @@ function TaskProgressDialog({ open, onOpenChange, tasks }) {
       await Promise.all(
         Object.entries(progMap).map(([id, progress]) => updateMut.mutateAsync({ id, progress })),
       );
-      toast.success("Progress updated");
-      onOpenChange(false);
+      await onFinish?.({ status: "completed", notes: notes.trim() || undefined });
+      toast.success("Session saved");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    setSaving(true);
+    try {
+      await onFinish?.({ status: "abandoned", notes: notes.trim() || undefined });
+      toast.success("Session closed");
     } finally {
       setSaving(false);
     }
@@ -559,7 +616,16 @@ function TaskProgressDialog({ open, onOpenChange, tasks }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          onOpenChange(nextOpen);
+          return;
+        }
+        if (!saving) void handleSkip();
+      }}
+    >
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Update Task Progress</DialogTitle>
@@ -601,9 +667,15 @@ function TaskProgressDialog({ open, onOpenChange, tasks }) {
               </div>
             );
           })}
+          <Textarea
+            rows={4}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add notes about this session..."
+          />
         </div>
         <div className="flex justify-end gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleSkip} disabled={saving}>
             Skip
           </Button>
           <Button onClick={handleSave} disabled={saving}>

@@ -44,9 +44,10 @@ import {
   useProfile,
   qk,
 } from "@/lib/query-hooks";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { socialApi, userApi } from "@/lib/api";
+import { routeForNotification } from "@/lib/push";
 import {
   Pencil as PencilIcon,
   Flame,
@@ -968,6 +969,10 @@ export function RoomDetailPage({ id }) {
   // fixed [id]) can read the current value and end the room when the host exits.
   const isHostRef = useRef(false);
 
+  useEffect(() => {
+    autoJoinedRef.current = false;
+  }, [id]);
+
   // Confirm before leaving when navigating away via the sidebar/back button.
   // withResolver lets us render our own dialog; proceed()/reset() resolve it.
   const {
@@ -1015,7 +1020,7 @@ export function RoomDetailPage({ id }) {
         console.error(e);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.hostUid, currentUser?.uid, isJoined]);
+  }, [id, room?.hostUid, currentUser?.uid, isJoined]);
 
   // Kicked mid-session: the host put our UID on the room's banned list and
   // deleted our member doc — tear down voice and bounce to the rooms list.
@@ -2322,6 +2327,7 @@ function Heatmap() {
 
 export function NotificationsPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: requests = [], isLoading: loadingReq } = useQuery({
     queryKey: ["social", "friends", "requests"],
@@ -2329,9 +2335,20 @@ export function NotificationsPage() {
     retry: 1,
   });
 
-  const { data: activityRaw, isLoading: loadingActivity } = useQuery({
+  const {
+    data: activityRaw,
+    isLoading: loadingActivity,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["study", "notifications"],
-    queryFn: () => studyApi.notifications.list(),
+    queryFn: ({ pageParam }) => studyApi.notifications.list({ page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last?.current_page && last?.last_page && last.current_page < last.last_page
+        ? last.current_page + 1
+        : undefined,
     retry: 1,
   });
 
@@ -2351,6 +2368,13 @@ export function NotificationsPage() {
 
   const { mutate: markAllRead } = useMutation({
     mutationFn: studyApi.notifications.readAll,
+    // Optimistic: the topbar badge drops to 0 the instant the page opens.
+    onMutate: () => {
+      qc.setQueryData(["study", "notifications", "unread"], (prev) => ({
+        ...(prev || {}),
+        unread_count: 0,
+      }));
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["study", "notifications"] });
       qc.invalidateQueries({ queryKey: ["study", "notifications", "unread"] });
@@ -2371,7 +2395,9 @@ export function NotificationsPage() {
   });
 
   const reqList = Array.isArray(requests) ? requests : requests?.data || [];
-  const activityList = Array.isArray(activityRaw) ? activityRaw : activityRaw?.data || [];
+  const activityList = (activityRaw?.pages || []).flatMap((p) =>
+    Array.isArray(p) ? p : p?.data || [],
+  );
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

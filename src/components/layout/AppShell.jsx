@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import AIDrawer from "./AIDrawer";
 import WelcomeModal from "@/components/study/WelcomeModal";
+import PushManager from "@/components/notifications/PushManager";
 
 export default function AppShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -18,6 +19,7 @@ export default function AppShell({ children }) {
       </div>
       <AIDrawer />
       <WelcomeModal />
+      <PushManager />
     </div>
   );
 }
